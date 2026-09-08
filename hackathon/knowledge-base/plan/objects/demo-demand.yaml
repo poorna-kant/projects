@@ -1,0 +1,16 @@
+type: Object
+id: plan/objects/demo-demand
+title: Demo Demand
+name: Demo Demand
+domain: plan
+identifiers: [demand_id]
+aliases: [demand]
+description: Synthetic demand records used to demonstrate governed source mappings without exposing operational data.
+lifecycle: Refreshed daily in the demo dataset.
+keystone_mapping:
+  system: plan/systems/demo-platform
+  schema: demo
+  primary_table: demo.demand
+  key_fields: [demand_id]
+  snapshot_policy: Use the latest approved demo snapshot.
+  columns: [demand_id, product_family, period, quantity]

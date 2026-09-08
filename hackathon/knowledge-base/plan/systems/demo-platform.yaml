@@ -1,0 +1,10 @@
+type: System
+id: plan/systems/demo-platform
+name: Demo Data Platform
+display_name: Demo Data Platform
+domain: plan
+aliases: [demo source]
+role: Provides synthetic planning records for the public hackathon demonstration.
+capabilities:
+  - name: Demo Planning Report
+    description: Illustrates an approved report signpost without linking to an internal system.

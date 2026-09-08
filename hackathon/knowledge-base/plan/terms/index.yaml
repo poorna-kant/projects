@@ -1,0 +1,29 @@
+type: Glossary
+id: plan/terms
+domain: plan
+description: Synthetic glossary for the public demo.
+terms:
+  - id: plan/terms/demand-plan
+    term: Demand Plan
+    category: Planning
+    definition: A time-phased statement of expected product demand used to coordinate supply decisions.
+    aliases: [demand forecast, plan]
+    see_also: [Supply Plan, Plan Version]
+  - id: plan/terms/supply-plan
+    term: Supply Plan
+    category: Planning
+    definition: A time-phased statement of available supply and planned production used to satisfy demand.
+    aliases: [production plan]
+    see_also: [Demand Plan, Coverage]
+  - id: plan/terms/coverage
+    term: Coverage
+    category: Measures
+    definition: The share of planned demand that available or committed supply can satisfy for a defined horizon.
+    aliases: [supportability]
+    see_also: [Demand Plan, Supply Plan]
+  - id: plan/terms/plan-version
+    term: Plan Version
+    category: Governance
+    definition: An immutable published release of approved planning knowledge and calculation rules.
+    aliases: [published version, snapshot]
+    see_also: [Demand Plan]

@@ -1,0 +1,20 @@
+{
+  "_meta": {
+    "source": "synthetic-public-demo",
+    "queriedAt": "2026-01-15"
+  },
+  "datasets": [
+    {
+      "stage": "demand",
+      "label": "Synthetic demand",
+      "view": "demo_demand",
+      "cadence": "daily",
+      "cadenceLabel": "Daily demo refresh",
+      "lastRefresh": "2026-01-15",
+      "nextRefresh": "2026-01-16",
+      "freshness": "fresh",
+      "recentRuns": ["2026-01-15", "2026-01-14", "2026-01-13"],
+      "note": "Synthetic dates for the public demonstration."
+    }
+  ]
+}

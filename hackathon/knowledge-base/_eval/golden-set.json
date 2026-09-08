@@ -1,0 +1,15 @@
+{
+  "name": "Synthetic public demo governance checks",
+  "cases": [
+    {
+      "id": "define-demand-plan",
+      "question": "What is a demand plan?",
+      "expectedTerm": "Demand Plan"
+    },
+    {
+      "id": "define-coverage",
+      "question": "What does coverage mean?",
+      "expectedTerm": "Coverage"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+type: ConceptIndex
+id: plan/concepts
+domain: plan
+concepts:
+  - plan/concepts/governed-knowledge

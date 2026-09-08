@@ -1,0 +1,5 @@
+type: PolicyIndex
+id: plan/policies
+domain: plan
+policies:
+  - plan/policies/data-freshness

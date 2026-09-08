@@ -1,0 +1,11 @@
+{
+  "reports": [
+    {
+      "name": "Demo Planning Report",
+      "active": true,
+      "url": "https://example.com/demo-planning-report",
+      "coverageEntities": ["Demand"],
+      "coverageQuestions": ["period trend", "plan comparison", "coverage summary"]
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+type: DomainIndex
+id: plan
+title: Demo Planning
+domain: plan
+description: Synthetic planning domain for the public hackathon demonstration.
+overview: plan/overview
+catalogs:
+  - id: plan/concepts
+    index: concepts/index.yaml
+  - id: plan/objects
+    index: objects/index.yaml
+  - id: plan/policies
+    index: policies/index.yaml
+  - id: plan/terms
+    index: terms/index.yaml
+  - id: plan/systems
+    index: systems/index.yaml
+  - id: plan/metrics
+    index: metrics/index.yaml

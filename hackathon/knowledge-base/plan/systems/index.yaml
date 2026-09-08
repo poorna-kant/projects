@@ -1,0 +1,5 @@
+type: SystemIndex
+id: plan/systems
+domain: plan
+systems:
+  - plan/systems/demo-platform

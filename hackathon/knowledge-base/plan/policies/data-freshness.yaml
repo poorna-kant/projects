@@ -1,0 +1,10 @@
+type: Policy
+id: plan/policies/data-freshness
+policy_id: data_freshness
+name: Demo Data Freshness
+domain: plan
+category: governance
+description: Numeric answers must identify their source snapshot and must not present expired demo data as current.
+how_to_use: Check the dataset freshness state before presenting a current value.
+values:
+  freshness_states: [fresh, due, stale]

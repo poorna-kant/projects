@@ -1,0 +1,2175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Agent Knowledge Base — Wireframe</title>
+<style>
+  :root{
+    --ink:#1f3864; --blue:#2e75b6; --teal:#2c9a8f; --amber:#e08a1e;
+    --red:#c0492f; --green:#2e8b57;
+    --bg:#eef2f8; --panel:#ffffff; --line:#dbe4f0; --line2:#eef2f8;
+    --grey:#5a6372; --grey2:#8a93a3; --light:#f4f7fc; --light2:#e7eef7;
+    --radius:14px; --shadow:0 1px 3px rgba(31,56,100,.08),0 6px 20px rgba(31,56,100,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--ink); font-size:14px; -webkit-font-smoothing:antialiased;
+  }
+  /* ---------- app shell ---------- */
+  .app{display:grid; grid-template-columns:248px 1fr; grid-template-rows:58px 1fr; height:100vh}
+  .topbar{
+    grid-column:1/3; display:flex; align-items:center; gap:16px;
+    background:var(--ink); color:#fff; padding:0 20px; z-index:5;
+  }
+  .logo{display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.2px}
+  .logo .dot{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--blue),var(--teal));display:grid;place-items:center;font-size:14px}
+  .logo small{display:block;font-weight:400;font-size:11px;color:#9dbee6;letter-spacing:.3px}
+  .topbar .spacer{flex:1}
+  .search{
+    display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);
+    border:1px solid rgba(255,255,255,.16);border-radius:9px;padding:7px 12px;width:320px;color:#dbe7f7;
+  }
+  .search input{background:transparent;border:0;outline:0;color:#fff;width:100%;font-size:13px}
+  .search input::placeholder{color:#a9c2e3}
+  .roleswitch{display:flex;background:rgba(255,255,255,.1);border-radius:9px;padding:3px}
+  .roleswitch button{
+    border:0;background:transparent;color:#c7d9f0;font:inherit;font-size:12.5px;font-weight:600;
+    padding:6px 13px;border-radius:7px;cursor:pointer;transition:.15s;
+  }
+  .roleswitch button.active{background:#fff;color:var(--ink)}
+  .avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#5a86c9,#7fb5ad);display:grid;place-items:center;font-weight:700;font-size:12px;color:#fff}
+
+  /* ---------- sidebar ---------- */
+  .side{background:var(--panel);border-right:1px solid var(--line);padding:14px 12px;display:flex;flex-direction:column;gap:3px;overflow:auto}
+  .side .grouplabel{font-size:10.5px;font-weight:700;color:var(--grey2);letter-spacing:.8px;text-transform:uppercase;margin:14px 10px 6px}
+  .navitem{
+    display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;cursor:pointer;
+    color:var(--ink);font-weight:600;font-size:13.5px;transition:.12s;border:1px solid transparent;position:relative;
+  }
+  .navitem svg{width:18px;height:18px;flex:none;stroke:var(--grey);stroke-width:1.8;fill:none}
+  .navitem:hover{background:var(--light2)}
+  .navitem.active{background:var(--ink);color:#fff}
+  .navitem.active svg{stroke:#fff}
+  .navitem .count{margin-left:auto;background:var(--light2);color:var(--blue);font-size:11px;font-weight:700;border-radius:20px;padding:1px 8px}
+  .navitem.active .count{background:rgba(255,255,255,.2);color:#fff}
+  .side .foot{margin-top:auto;padding:12px 10px;color:var(--grey2);font-size:11px;line-height:1.5}
+
+  /* ---------- main ---------- */
+  .main{overflow:auto;padding:26px 34px}
+  .banner{display:flex;align-items:center;gap:10px;background:#fff7e8;border:1px solid #f2d9a8;color:#8a6417;
+    padding:8px 14px;border-radius:10px;font-size:12.5px;margin-bottom:20px;font-weight:600}
+  .page-h{display:flex;align-items:flex-end;gap:14px;margin-bottom:4px}
+  .page-h h1{font-size:25px;margin:0}
+  .page-sub{color:var(--grey);margin:2px 0 22px;font-size:14px}
+  .crumbs{color:var(--grey2);font-size:12.5px;margin-bottom:8px}
+  .crumbs a{color:var(--blue);text-decoration:none;cursor:pointer}
+
+  .view{display:none;animation:fade .18s ease}
+  .view.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+  /* ---------- pills / chips ---------- */
+  .pill{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap}
+  .pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.9}
+  .pill.approved{background:#e6f4ec;color:#2e8b57}
+  .pill.review{background:#e7eef7;color:#2e75b6}
+  .pill.draft{background:#eceef2;color:#6a7385}
+  .pill.update{background:#fdeee6;color:#c0492f}
+  .tag{display:inline-block;background:var(--light2);color:var(--blue);font-size:11.5px;font-weight:600;border-radius:7px;padding:3px 9px;cursor:pointer}
+  .tag:hover{background:#d8e4f5}
+
+  /* ---------- toolbar ---------- */
+  .toolbar{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+  .filterbtn{border:1px solid var(--line);background:#fff;color:var(--grey);font:inherit;font-size:12.5px;font-weight:600;
+    padding:7px 13px;border-radius:20px;cursor:pointer;transition:.12s}
+  .filterbtn:hover{border-color:var(--blue);color:var(--blue)}
+  .filterbtn.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .toolbar .right{margin-left:auto;display:flex;gap:8px}
+  .btn{border:0;border-radius:10px;font:inherit;font-weight:600;font-size:13px;padding:9px 16px;cursor:pointer;transition:.12s;display:inline-flex;align-items:center;gap:7px}
+  .btn.primary{background:var(--blue);color:#fff}
+  .btn.primary:hover{background:#255f95}
+  .btn.ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}
+  .btn.ghost:hover{border-color:var(--blue);color:var(--blue)}
+  .btn.ok{background:var(--green);color:#fff}
+  .btn.warn{background:#fff;border:1px solid #e2b7ab;color:var(--red)}
+  .btn.danger{background:var(--red);color:#fff}
+
+  /* ---------- table ---------- */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+  table{width:100%;border-collapse:collapse}
+  thead th{text-align:left;font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--grey2);padding:14px 18px;border-bottom:1px solid var(--line)}
+  tbody td{padding:15px 18px;border-bottom:1px solid var(--line2);vertical-align:middle}
+  tbody tr{cursor:pointer;transition:.1s}
+  tbody tr:hover{background:var(--light)}
+  tbody tr:last-child td{border-bottom:0}
+  .t-name{font-weight:700;font-size:14px}
+  .t-def{color:var(--grey);font-size:12.5px;margin-top:2px;max-width:440px}
+  .owner{display:flex;align-items:center;gap:8px}
+  .mini{width:26px;height:26px;border-radius:50%;background:var(--light2);color:var(--blue);display:grid;place-items:center;font-weight:700;font-size:11px}
+
+  /* ---------- detail ---------- */
+  .detail-grid{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start}
+  .field-groups{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .fg{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+  .fg .fg-h{padding:11px 16px;color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;gap:8px}
+  .fg.c1 .fg-h{background:var(--blue)} .fg.c2 .fg-h{background:var(--ink)}
+  .fg.c3 .fg-h{background:var(--teal)} .fg.c4 .fg-h{background:var(--amber)}
+  .fg .fg-b{padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+  .kv .k{font-size:11px;color:var(--grey2);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+  .kv .v{font-size:13.5px;color:var(--ink)}
+  .why{background:linear-gradient(180deg,#f4f8fd,#eef4fb);border:1px solid #d6e4f5;border-left:4px solid var(--blue);
+    border-radius:12px;padding:16px 18px;margin-bottom:16px}
+  .why h4{margin:0 0 6px;font-size:13px;color:var(--blue);text-transform:uppercase;letter-spacing:.5px}
+  .why p{margin:0;font-size:14px;line-height:1.55;color:var(--ink)}
+  .trust{display:flex;align-items:center;gap:14px;border-radius:12px;padding:12px 16px;margin-bottom:16px}
+  .trust .score{font-size:22px;font-weight:800;line-height:1}
+  .trust .lbl{font-size:13px;font-weight:700}
+  .trust .checks{margin-left:auto;font-size:12px;font-weight:600;text-align:right}
+  .trust.hi{background:#e6f4ec;border:1px solid #b9e0c8} .trust.hi .score,.trust.hi .lbl,.trust.hi .checks{color:#2e7d4f}
+  .trust.mid{background:#fdf3e6;border:1px solid #f0d6ad} .trust.mid .score,.trust.mid .lbl,.trust.mid .checks{color:#b5730f}
+  .trust.lo{background:#eceef2;border:1px solid #d9dde4} .trust.lo .score,.trust.lo .lbl,.trust.lo .checks{color:#6a7385}
+  .derived{background:#fbf6ee;border:1px solid #f0dcbf;border-left:4px solid var(--amber);border-radius:12px;padding:16px 18px;margin-bottom:16px}
+  .derived h4{margin:0 0 6px;font-size:13px;color:#a5670f;text-transform:uppercase;letter-spacing:.5px}
+  .derived p{margin:0;font-size:14px;line-height:1.55;color:var(--ink)}
+  .side-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);margin-bottom:16px}
+  .side-card h4{margin:0 0 12px;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--grey2)}
+  .status-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .comment{display:flex;gap:10px;margin-bottom:14px}
+  .comment .mini{flex:none}
+  .comment .c-body{font-size:13px}
+  .comment .c-meta{font-size:11px;color:var(--grey2);margin-top:2px}
+  .commentbox{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:13px;resize:vertical;min-height:64px;outline:0}
+  .commentbox:focus{border-color:var(--blue)}
+
+  /* ---------- ontology ---------- */
+  .onto-wrap{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;overflow:auto}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:16px;color:var(--grey);font-size:12.5px}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .legend i{width:14px;height:14px;border-radius:4px;display:inline-block}
+
+  /* ---------- data-flow lineage ---------- */
+  .flow-upstream{display:flex;align-items:center;gap:10px;margin:6px 0 16px;color:var(--grey2);font-size:12px}
+  .flow-upstream .up-box{border:1px dashed var(--line);border-radius:9px;padding:7px 12px;background:var(--light);color:var(--grey);font-weight:600}
+  .flow-upstream .up-arrow{color:var(--grey2);font-weight:700}
+  .flow{display:flex;gap:0;align-items:stretch;overflow-x:auto;padding:4px 2px 10px}
+  .stage{--accent:#2e75b6;flex:1 1 0;min-width:160px;background:#fff;border:1px solid var(--line);border-top:4px solid var(--accent);
+    border-radius:12px;padding:11px 10px 12px;display:flex;flex-direction:column;box-shadow:var(--shadow)}
+  .stage.s-demand{--accent:#2e75b6} .stage.s-supply{--accent:#2c9a8f} .stage.s-network{--accent:#7a5bd0}
+  .stage.s-buffer{--accent:#e08a1e} .stage.s-exec{--accent:#c0492f}
+  .stage-head{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--accent)}
+  .stage-head .ic{width:20px;height:20px;border-radius:6px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:12px}
+  .stage-who{font-size:11.5px;color:var(--grey);margin:8px 0 3px;line-height:1.35}
+  .stage-who b{color:var(--ink)}
+  .stage-data{font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--grey2);margin:10px 0 5px}
+  .node{display:block;width:100%;text-align:left;border:1px solid var(--line);background:var(--light);border-radius:8px;
+    padding:7px 9px;margin-bottom:6px;cursor:pointer;font-size:12px;font-weight:600;color:var(--ink);transition:.12s;position:relative}
+  .node:hover{border-color:var(--accent);background:#fff;box-shadow:0 1px 6px rgba(31,56,100,.08)}
+  .node .n-sub{display:block;font-size:10.5px;font-weight:500;color:var(--grey2);margin-top:1px}
+  .node.emerging{opacity:.78;border-style:dashed}
+  .node .n-count{position:absolute;top:7px;right:8px;font-size:10px;font-weight:700;color:var(--accent);background:rgba(46,117,182,.1);border-radius:20px;padding:1px 7px}
+  .stage-conn{flex:0 0 42px;display:flex;align-items:center;justify-content:center;color:var(--grey2)}
+  .stage-conn .arw{display:block;width:100%;height:14px;position:relative;font-size:0;color:var(--grey2)}
+  .stage-conn .arw::before{content:"";position:absolute;left:6px;right:9px;top:6px;border-top:1.5px solid currentColor}
+  .stage-conn .arw::after{content:"";position:absolute;right:7px;top:3px;width:6px;height:6px;border-top:1.5px solid currentColor;border-right:1.5px solid currentColor;transform:rotate(45deg)}
+  .stage-conn .lbl{font-size:9px;font-weight:700;color:var(--grey2);text-align:center;max-width:42px;line-height:1.15;word-break:break-word}
+  .flow-feedback{margin-top:10px;font-size:11.5px;color:var(--grey);display:flex;align-items:center;gap:8px}
+  .flow-feedback .fb-arrow{color:var(--red);font-weight:700}
+  .flow-lanes{flex:1.25 1 0;min-width:284px;display:flex;flex-direction:column;gap:12px;position:relative}
+  .flow-lanes::before,.flow-lanes::after{content:"";position:absolute;top:25%;bottom:25%;border-left:1px solid var(--grey2);opacity:.4}
+  .flow-lanes::before{left:0}
+  .flow-lanes::after{right:0}
+  .parallel-row{flex:0 0 auto;display:grid;grid-template-columns:42px minmax(200px,1fr) 42px;align-items:stretch}
+  .parallel-row .stage{min-width:0;height:auto}
+  .parallel-row .stage-conn{width:42px}
+  .parallel-row .stage-conn:first-child .arw::before{left:0}
+  .parallel-row .stage-conn:last-child .arw::before{right:9px}
+  .lanes-cap{flex:0 0 auto;font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--grey2);text-align:center;background:var(--light2);border-radius:20px;padding:3px 8px}
+  .flow-gate{flex:0 0 116px;align-self:center;border:1px solid #9dc7bd;border-top:4px solid #2c9a8f;border-radius:10px;background:#f3faf8;
+    padding:12px 10px;text-align:center;color:#236f67;box-shadow:var(--shadow)}
+  .flow-gate b{display:block;font-size:11px;line-height:1.25;text-transform:uppercase}
+  .flow-gate span{display:block;margin-top:5px;font-size:10px;line-height:1.3;color:var(--grey)}
+
+  /* right slide-over drawer for a clicked box */
+  .drawer-back{position:fixed;inset:0;background:rgba(20,30,50,.35);display:none;z-index:55}
+  .drawer-back.show{display:block}
+  .drawer{position:fixed;top:0;right:0;height:100vh;width:min(440px,94vw);background:#fff;box-shadow:-14px 0 44px rgba(0,0,0,.22);
+    transform:translateX(100%);transition:transform .22s ease;z-index:56;display:flex;flex-direction:column}
+  .drawer.show{transform:translateX(0)}
+  .drawer-head{--accent:#2e75b6;padding:18px 20px 14px;border-bottom:1px solid var(--line);border-top:4px solid var(--accent)}
+  .drawer-head .d-stage{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--accent)}
+  .drawer-head h3{margin:3px 0 0;font-size:19px;color:var(--ink)}
+  .drawer-head .d-who{font-size:12.5px;color:var(--grey);margin-top:6px;line-height:1.4}
+  .drawer-close{position:absolute;top:14px;right:16px;border:0;background:var(--light2);width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:15px;color:var(--grey)}
+  .drawer-body{padding:16px 20px 26px;overflow:auto;flex:1}
+  .d-sec{margin-bottom:18px}
+  .d-sec h5{margin:0 0 8px;font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--grey2)}
+  .d-term{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:.12s}
+  .d-term:hover{border-color:var(--blue);box-shadow:0 0 0 3px rgba(46,117,182,.1)}
+  .d-term .dt-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .d-term .dt-name{font-weight:700;font-size:13.5px}
+  .d-term .dt-def{font-size:12px;color:var(--grey);margin-top:3px;line-height:1.4}
+  .d-dataset{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid var(--line2);border-radius:9px;margin-bottom:6px;font-size:12.5px}
+  .d-dataset .dd-ic{width:22px;height:22px;border-radius:6px;background:var(--light2);color:var(--blue);display:grid;place-items:center;flex:none}
+  .d-dataset .dd-note{font-size:11px;color:var(--grey2)}
+  .d-empty{font-size:12.5px;color:var(--grey2);font-style:italic;padding:4px 0}
+
+  /* ---------- review / diff ---------- */
+  .review-grid{display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:start}
+  .queue{display:flex;flex-direction:column;gap:10px}
+  .q-item{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px 15px;cursor:pointer;transition:.12s}
+  .q-item:hover{border-color:var(--blue)}
+  .q-item.active{border-color:var(--blue);box-shadow:0 0 0 3px rgba(46,117,182,.12)}
+  .q-item .q-t{font-weight:700;font-size:13.5px}
+  .q-item .q-m{font-size:11.5px;color:var(--grey2);margin-top:3px}
+  .diff{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .diff .col{padding:16px 18px}
+  .diff .col.old{background:#fbf3f2;border-right:1px solid var(--line)}
+  .diff .col.new{background:#f1f8f3}
+  .diff .col h5{margin:0 0 10px;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+  .diff .old h5{color:#c0492f} .diff .new h5{color:#2e8b57}
+  .diff .row-lbl{font-size:11px;color:var(--grey2);font-weight:700;text-transform:uppercase;margin:12px 0 3px}
+  .diff .row-val{font-size:13.5px;line-height:1.5}
+  .del{background:#f7d9d2;border-radius:4px;padding:0 3px}
+  .add{background:#c9ebd5;border-radius:4px;padding:0 3px}
+
+  /* ---------- dashboard ---------- */
+  .stat-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .stat .bar{position:absolute;left:0;top:0;bottom:0;width:5px}
+  .stat .num{font-size:32px;font-weight:800;letter-spacing:-.5px}
+  .stat .lbl{color:var(--grey);font-size:12.5px;margin-top:2px}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .list-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .list-card h3{margin:0;padding:15px 18px;font-size:14px;border-bottom:1px solid var(--line)}
+  .lc-row{display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid var(--line2);cursor:pointer}
+  .lc-row:hover{background:var(--light)}
+  .lc-row:last-child{border-bottom:0}
+  .lc-row .t{font-weight:600;font-size:13.5px}
+  .lc-row .m{font-size:11.5px;color:var(--grey2)}
+
+  /* ---------- history timeline ---------- */
+  .timeline{position:relative;padding-left:28px}
+  .timeline::before{content:"";position:absolute;left:9px;top:6px;bottom:6px;width:2px;background:var(--line)}
+  .tl{position:relative;margin-bottom:22px}
+  .tl .dot{position:absolute;left:-27px;top:2px;width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid var(--blue);display:grid;place-items:center}
+  .tl .dot i{width:8px;height:8px;border-radius:50%;background:var(--blue)}
+  .tl.approve .dot{border-color:var(--green)} .tl.approve .dot i{background:var(--green)}
+  .tl.edit .dot{border-color:var(--amber)} .tl.edit .dot i{background:var(--amber)}
+  .tl.reject .dot{border-color:var(--red)} .tl.reject .dot i{background:var(--red)}
+  .tl .tl-t{font-weight:700;font-size:13.5px}
+  .tl .tl-m{font-size:12px;color:var(--grey2);margin-top:2px}
+  .tl .tl-body{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-top:8px;font-size:13px;color:var(--grey)}
+
+  /* ---------- toast ---------- */
+  .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;
+    background:var(--ink);color:#fff;padding:13px 20px;border-radius:12px;font-weight:600;font-size:13.5px;
+    box-shadow:0 10px 40px rgba(0,0,0,.25);display:flex;align-items:center;gap:10px;transition:.25s;pointer-events:none;z-index:50}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast .ic{width:22px;height:22px;border-radius:50%;background:var(--green);display:grid;place-items:center;font-size:13px}
+
+  .modal-back{position:fixed;inset:0;background:rgba(20,30,50,.45);display:none;align-items:center;justify-content:center;z-index:60}
+  .modal-back.show{display:flex}
+  .modal{background:#fff;border-radius:16px;padding:24px 26px;width:min(640px,92vw);box-shadow:0 24px 70px rgba(0,0,0,.28);display:flex;flex-direction:column;max-height:92vh}
+  .modal h3{margin:0;font-size:18px;color:var(--ink)}
+  .modal .modal-sub{font-size:12.5px;color:var(--grey2);margin:2px 0 8px}
+  #modalFields{overflow:auto;flex:1 1 auto;min-height:0;padding-right:10px}
+  .modal .fld{margin:14px 0}
+  .modal .fld label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--grey2);margin-bottom:5px}
+  .modal textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:14px;min-height:64px;resize:vertical;outline:0}
+  .modal textarea:focus{border-color:var(--blue)}
+  .modal .fld select{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:14px;background:#fff;outline:0}
+  .modal .fld select:focus{border-color:var(--blue)}
+  /* ---- read-only catalog detail ---- */
+  .d-field{padding:11px 0;border-bottom:1px solid var(--line2)}
+  .d-field:last-child{border-bottom:0}
+  .d-flabel{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--grey2);margin-bottom:4px}
+  .d-fval{font-size:14px;color:var(--ink);line-height:1.5;white-space:pre-wrap;word-break:break-word}
+  .d-body{font-size:13.5px;color:var(--ink);line-height:1.6;white-space:pre-wrap;word-break:break-word;background:var(--light);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:2px}
+  /* ---- adaptive knowledge-file editor ---- */
+  .art-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 12px}
+  .art-bar .art-search{flex:1;min-width:160px;border:1px solid var(--line);border-radius:9px;padding:8px 11px;font:inherit;font-size:13px;outline:0}
+  .art-bar .art-search:focus{border-color:var(--blue)}
+  .art-count{font-size:12px;color:var(--grey2)}
+  .art-newcol{border:1px solid var(--blue);border-radius:9px;padding:8px 11px;font:inherit;font-size:13px;outline:0;min-width:150px}
+  .kb-grid-wrap{max-height:52vh;overflow:auto;border:1px solid var(--line);border-radius:12px}
+  table.kb-grid{border-collapse:separate;border-spacing:0;width:100%;font-size:13px}
+  table.kb-grid th{position:sticky;top:0;background:var(--light2);text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--grey2);padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap;z-index:1}
+  table.kb-grid td{padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.kb-grid td.rownum{color:var(--grey2);font-size:11px;text-align:right;width:34px;padding-top:11px}
+  table.kb-grid textarea,table.kb-grid input{width:100%;min-width:120px;border:1px solid transparent;border-radius:7px;padding:6px 8px;font:inherit;font-size:13px;background:#fbfcfe;outline:0;resize:vertical}
+  table.kb-grid textarea{min-height:34px;line-height:1.4}
+  table.kb-grid textarea.json-cell{font-family:ui-monospace,Consolas,monospace;font-size:12px;min-height:52px;white-space:pre}
+  table.kb-grid textarea:focus,table.kb-grid input:focus{border-color:var(--blue);background:#fff}
+  table.kb-grid td.rowdel{width:30px}
+  .cell-x{border:0;background:none;color:var(--grey2);cursor:pointer;font-size:16px;line-height:1;padding:6px 4px;border-radius:6px}
+  .cell-x:hover{background:#fdecec;color:#c0492f}
+  .col-tag{font-weight:400;text-transform:none;letter-spacing:0;color:var(--blue);font-size:10px;margin-left:4px}
+  .art-add-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .btn.mini{padding:6px 12px;font-size:12.5px}
+  .art-sec{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0;background:#fbfcfe}
+  .art-sec-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .art-sec-head input{flex:1;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit;font-size:14px;font-weight:600;outline:0}
+  .art-sec-head input:focus{border-color:var(--blue)}
+  .art-sec .mv{border:1px solid var(--line);background:#fff;border-radius:7px;cursor:pointer;color:var(--grey2);font-size:13px;width:28px;height:30px}
+  .art-sec .mv:hover{border-color:var(--blue);color:var(--blue)}
+  .art-sec textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font:inherit;font-size:13.5px;min-height:90px;resize:vertical;outline:0;line-height:1.5}
+  .art-sec textarea:focus{border-color:var(--blue)}
+  .art-intro textarea{font-size:13.5px}
+  .art-empty{text-align:center;color:var(--grey2);font-size:13.5px;padding:34px 16px;border:1px dashed var(--line);border-radius:12px;line-height:1.6}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-shrink:0}
+  .modal.wide{width:min(920px,95vw)}
+  .modal textarea.big{min-height:360px;font-family:ui-monospace,Consolas,monospace;font-size:12.5px;white-space:pre;line-height:1.45}
+  /* ---------- app-wide search results ---------- */
+  .s-group{margin-bottom:18px}
+  .s-gh{font-size:12px;font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:.04em;margin:0 2px 8px}
+  .s-gc{display:inline-block;background:#eef2f8;color:var(--grey2);border-radius:10px;padding:1px 8px;font-size:11px;margin-left:6px}
+  .s-row{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 14px;margin-bottom:8px;cursor:pointer}
+  .s-row:hover{border-color:var(--blue);box-shadow:0 1px 6px rgba(46,117,182,.10)}
+  .s-title{font-weight:600;font-size:13.5px;color:var(--ink)}
+  .s-sub{font-size:11.5px;color:var(--grey2);margin-top:1px}
+  .s-snip{font-size:12.5px;color:var(--grey);margin-top:4px}
+  mark{background:#fdf1c4;color:inherit;padding:0 1px;border-radius:2px}
+  .ro-note{font-size:12px;color:#a5670f;background:#fbf6ee;border:1px solid #f0dcbf;border-radius:8px;padding:8px 10px;margin-bottom:10px}
+  .verchip{font-size:11.5px;font-weight:600;color:var(--blue);background:var(--light2);border-radius:20px;padding:5px 12px;align-self:center;margin-right:4px}
+  .steward-only{display:none}
+  body.role-steward .steward-only{display:inline-flex}
+  body.role-steward .business-only{display:none}
+  /* v2: engineer role + domain switcher + reserved / plane styles */
+  .engineer-only{display:none}
+  body.role-engineer .engineer-only{display:inline}
+  body.role-engineer .business-only{display:none}
+  .domainswitch{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);border-radius:9px;padding:4px 6px 4px 10px}
+  .domainswitch .ds-ic{color:#a9c2e3;font-size:13px}
+  .domainswitch select{background:transparent;border:0;outline:0;color:#fff;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+  .domainswitch select option{color:#1f3864}
+  .domainswitch .ds-add{border:0;background:rgba(255,255,255,.14);color:#dbe7f7;font:inherit;font-size:11.5px;font-weight:600;padding:5px 10px;border-radius:7px;cursor:pointer}
+  .domainswitch .ds-add:hover{background:rgba(255,255,255,.24);color:#fff}
+  .reserved-card{background:#fbf6ee;border:1px dashed #e6c98f;border-radius:14px;padding:22px 24px;color:#8a6417;font-size:13.5px;line-height:1.6}
+  .plane-note{font-size:12px;color:var(--grey2);margin:14px 2px 0}
+  .empty{color:var(--grey2);text-align:center;padding:40px;font-size:13px}
+
+  /* ---------- data refresh ---------- */
+  .fresh-dot{display:inline-block;width:9px;height:9px;border-radius:50%;flex:none}
+  .fr-fresh{background:#2e8b57}.fr-due{background:#e0a21e}.fr-stale{background:#c0492f}.fr-reference{background:#8a93a5}
+  .fresh-pill{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap}
+  .fp-fresh{background:#e6f4ec;color:#2e8b57}.fp-due{background:#fbf1dd;color:#a9791a}.fp-stale{background:#fdeee6;color:#c0492f}.fp-reference{background:#eceef2;color:#6a7385}
+  .ref-cad{font-size:11.5px;color:var(--grey2)}
+  .ref-runs{font-size:11px;color:var(--grey2);margin-top:3px}
+  /* Client-side wall-clock hint: the scheduled next refresh has passed and Keystone has not been re-checked since the read date. Does NOT claim the data is stale in Keystone — only that the schedule elapsed. */
+  .ref-overdue{display:inline-flex;align-items:center;gap:4px;margin-top:4px;font-size:10.5px;font-weight:700;color:#a9791a;background:#fbf1dd;border:1px solid #ecd9ad;border-radius:20px;padding:2px 8px;white-space:nowrap}
+  .fd-refresh{border:1px solid var(--line2);border-radius:9px;padding:9px 11px;margin-bottom:6px}
+  .fd-refresh .fr-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .fd-refresh .fr-name{font-weight:700;font-size:12.5px;display:flex;align-items:center;gap:7px}
+  .fd-refresh .fr-when{font-size:11.5px;color:var(--grey);margin-top:5px}
+  .fd-refresh .fr-when b{color:var(--ink)}
+  .stage-refresh{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--grey);margin-top:10px}
+  .btn-check{font-size:11px;font-weight:700;color:var(--blue);background:var(--light2);border:1px solid var(--line2);border-radius:20px;padding:5px 11px;cursor:pointer;white-space:nowrap}
+  .btn-check:hover{background:#e6eefb}
+  .btn-check:disabled{opacity:.55;cursor:default}
+  .chk-state{display:block;font-size:11px;margin-top:6px;font-weight:600;max-width:190px}
+  .chk-state.checking{color:#a9791a}.chk-state.ok{color:#2e8b57}.chk-state.warn{color:#c0492f}.chk-state.muted{color:#8a93a5}.chk-state.error{color:#c0492f}
+  .chk-state.checking::before{content:'';display:inline-block;width:9px;height:9px;margin-right:6px;border-radius:50%;border:2px solid #e0c98a;border-top-color:#a9791a;animation:spin .7s linear infinite;vertical-align:-1px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body class="role-business">
+
+<div class="app">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="logo">
+      <div class="dot">◆</div>
+      <div>Agent Knowledge Base<small>Live · Supply Planning</small></div>
+    </div>
+    <div class="spacer"></div>
+    <div class="search">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#a9c2e3" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="globalSearch" placeholder="Search the whole app — terms, objects, policies, measures…" oninput="onSearch(this.value)"/>
+    </div>
+    <div class="domainswitch" title="Knowledge base domain">
+      <span class="ds-ic">▦</span>
+      <select id="domainSel" onchange="setDomain(this.value)"><option value="plan">Plan</option></select>
+      <button class="ds-add" onclick="addDomain()">+ Add domain</button>
+    </div>
+    <div class="roleswitch">
+      <button id="rb-biz" class="active" onclick="setRole('business')">Business user</button>
+      <button id="rb-stew" onclick="setRole('steward')">Data steward</button>
+      <button id="rb-eng" onclick="setRole('engineer')">Data Architect</button>
+    </div>
+    <div class="avatar" id="avatar">PK</div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <nav class="side">
+    <div class="grouplabel">Overview</div>
+    <div class="navitem active" data-view="onto" onclick="go('onto')">
+      <svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M7.7 7.6 11 16m5.3-8.4L13 16M8 6h8"/></svg> How Data Connects
+    </div>
+
+    <div class="grouplabel">Knowledge</div>
+    <div class="navitem" data-view="objects" onclick="go('objects')">
+      <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9h16M9 4v16"/></svg> Objects <span class="count" id="c-objects">–</span>
+    </div>
+    <div class="navitem" data-view="concepts" onclick="go('concepts')">
+      <svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 3z"/></svg> Concepts <span class="count" id="c-concepts">–</span>
+    </div>
+    <div class="navitem" data-view="policies" onclick="go('policies')">
+      <svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6z"/></svg> Policies <span class="count" id="c-policies">–</span>
+    </div>
+    <div class="navitem" data-view="list" onclick="go('list')">
+      <svg viewBox="0 0 24 24"><path d="M3 5h18M3 12h18M3 19h18"/></svg> Glossary <span class="count" id="c-terms">15</span>
+    </div>
+    <div class="navitem" data-view="systems" onclick="go('systems')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg> Systems <span class="count" id="c-systems">–</span>
+    </div>
+
+    <div class="grouplabel">Semantic layer</div>
+    <div class="navitem" data-view="measures" onclick="go('measures')">
+      <svg viewBox="0 0 24 24"><path d="M4 19V5m0 14h16M8 17V10m4 7V6m4 11v-4"/></svg> Measures <span class="count" id="c-measures">0</span>
+    </div>
+    <div class="navitem" data-view="sources" onclick="go('sources')">
+      <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg> Report signposts <span class="count" id="c-sources">6</span>
+    </div>
+    <div class="navitem" data-view="grounding" onclick="go('grounding')">
+      <svg viewBox="0 0 24 24"><path d="M12 21s-7-5-7-11a7 7 0 0 1 14 0c0 6-7 11-7 11z"/><circle cx="12" cy="10" r="2.4"/></svg> Grounding values <span class="count" id="c-grounding">–</span>
+    </div>
+
+    <div class="grouplabel">Operations</div>
+    <div class="navitem" data-view="refresh" onclick="go('refresh')">
+      <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg> Data refresh <span class="count" id="c-refresh">0</span>
+    </div>
+
+    <div class="grouplabel">Governance</div>
+    <div class="navitem" data-view="review" onclick="go('review')">
+      <svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg> Review &amp; approve <span class="count" id="c-review">3</span>
+    </div>
+    <div class="navitem" data-view="history" onclick="go('history')">
+      <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 8v4l3 2"/></svg> Versions &amp; changes
+    </div>
+    <div class="navitem" data-view="dash" onclick="go('dash')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="10" width="8" height="11" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/></svg> My work
+    </div>
+
+    <div class="foot">
+      Tree-backed knowledge store · domain: <b id="footDomain">Plan</b><br/>objects · concepts · policies · glossary · measures
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="banner">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8a6417" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+      Live app — connected to the Knowledge Base store. Switch to <b>Data steward</b> to approve &amp; publish; the agent answers from the published version.
+    </div>
+
+    <!-- ============ VIEW: TERM LIST ============ -->
+    <section id="view-list" class="view">
+      <div class="page-h"><h1>Glossary</h1></div>
+      <p class="page-sub">The agreed business words behind every answer the agent gives.</p>
+      <div class="toolbar" id="filters">
+        <button class="filterbtn active" data-f="all" onclick="setFilter('all')">All</button>
+        <button class="filterbtn" data-f="Approved" onclick="setFilter('Approved')">Approved</button>
+        <button class="filterbtn" data-f="In review" onclick="setFilter('In review')">In review</button>
+        <button class="filterbtn" data-f="Draft" onclick="setFilter('Draft')">Draft</button>
+        <button class="filterbtn" data-f="Needs update" onclick="setFilter('Needs update')">Needs update</button>
+        <div class="right">
+          <span class="verchip" id="concVer">not published</span>
+          <button class="btn primary" onclick="openProposeTerm()">+ Propose a term</button>
+          <button class="btn ok steward-only" onclick="publishConcepts()">⤴ Publish to agent</button>
+        </div>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Term</th><th>Business area</th><th>Owner</th><th>Status</th></tr></thead>
+          <tbody id="termRows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: APP-WIDE SEARCH ============ -->
+    <section id="view-search" class="view">
+      <div class="page-h"><h1>Search results <span id="searchQ" class="page-sub" style="font-weight:400"></span></h1></div>
+      <p class="page-sub">Everything in the app — glossary, objects, concepts, policies, systems, measures, report signposts, grounding values and data refresh.</p>
+      <div id="searchResults"><p class="page-sub">Type in the search box to find anything across the app.</p></div>
+    </section>
+
+    <!-- ============ VIEW: TERM DETAIL ============ -->
+    <section id="view-detail" class="view">
+      <div class="crumbs"><a onclick="go('list')">Term list</a> › <span id="d-crumb"></span></div>
+      <div class="page-h"><h1 id="d-name"></h1><span id="d-pill"></span></div>
+      <p class="page-sub" id="d-area"></p>
+
+      <div class="detail-grid">
+        <div>
+          <div id="d-trust"></div>
+          <div class="why">
+            <h4>Why it's defined this way</h4>
+            <p id="d-why"></p>
+          </div>
+          <div id="d-derived"></div>
+          <div class="field-groups">
+            <div class="fg c1"><div class="fg-h">① The basics</div><div class="fg-b" id="d-basics"></div></div>
+            <div class="fg c2"><div class="fg-h">② Ownership</div><div class="fg-b" id="d-owner"></div></div>
+            <div class="fg c3"><div class="fg-h">③ Context</div><div class="fg-b" id="d-context"></div></div>
+            <div class="fg c4"><div class="fg-h">④ Traceability</div><div class="fg-b" id="d-trace"></div></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="side-card">
+            <h4>Status &amp; actions</h4>
+            <div class="status-row"><span>Current status</span><span id="d-status-pill"></span></div>
+            <div class="business-only">
+              <button class="btn ghost" style="width:100%;justify-content:center" onclick="openTermEdit()">✎ Suggest an edit</button>
+            </div>
+            <div class="steward-only" style="flex-direction:column;gap:8px;width:100%">
+              <button class="btn ghost" style="width:100%;justify-content:center" onclick="openTermEdit()">✎ Edit definition</button>
+              <button class="btn ok" style="width:100%;justify-content:center" onclick="approveAndPublish(currentTerm&&currentTerm.id)">✓ Approve &amp; publish</button>
+              <button class="btn warn" style="width:100%;justify-content:center" onclick="toast('Sent back with your comment')">↩ Send back</button>
+              <button class="btn danger" style="width:100%;justify-content:center" onclick="deleteTerm()">🗑 Delete term</button>
+            </div>
+          </div>
+          <div class="side-card">
+            <h4>Related terms</h4>
+            <div id="d-related" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+          </div>
+          <div class="side-card">
+            <h4>Discussion</h4>
+            <div id="d-comments"></div>
+            <textarea class="commentbox" placeholder="Add a comment for the owner…"></textarea>
+            <button class="btn primary" style="margin-top:10px;width:100%;justify-content:center" onclick="toast('Comment posted')">Post comment</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: ONTOLOGY (DATA FLOW) ============ -->
+    <section id="view-onto" class="view active">
+      <div class="page-h"><h1>How our planning data connects</h1></div>
+      <p class="page-sub">A plain-language map of how the planning concepts relate. The demand plan receives CAPEX approval, then Supply and Network Planning run in parallel. Click a box to open its definition.</p>
+      <div class="onto-wrap">
+        <div class="flow" id="flowStages"></div>
+        <div class="flow-feedback"><span class="fb-arrow">↩</span> Execution sends <b>actuals &amp; variance</b> back to Demand each cycle — the plan re-forecasts against what actually shipped.</div>
+        <div class="legend">
+          <span><i style="background:#2e75b6"></i> Demand</span>
+          <span><i style="background:#2c9a8f"></i> Supply</span>
+          <span><i style="background:#7a5bd0"></i> Network</span>
+          <span><i style="background:#e08a1e"></i> Buffer</span>
+          <span><i style="background:#c0492f"></i> Execution</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- slide-over drawer: all datasets + terms for a clicked box -->
+    <div class="drawer-back" id="flowDrawerBack" onclick="closeFlowDrawer()"></div>
+    <aside class="drawer" id="flowDrawer">
+      <div class="drawer-head" id="flowDrawerHead">
+        <button class="drawer-close" onclick="closeFlowDrawer()">✕</button>
+        <div class="d-stage" id="fdStage"></div>
+        <h3 id="fdTitle"></h3>
+        <div class="d-who" id="fdWho"></div>
+      </div>
+      <div class="drawer-body">
+        <div class="d-sec"><h5>Governed terms in the knowledge base</h5><div id="fdTerms"></div></div>
+        <div class="d-sec"><h5>Keystone data refresh</h5><div id="fdRefresh"></div></div>
+        <div class="d-sec"><h5>Datasets &amp; reports that feed this</h5><div id="fdDatasets"></div></div>
+      </div>
+    </aside>
+
+    <!-- ============ VIEW: SOURCES & REPORTS ============ -->
+    <section id="view-sources" class="view">
+      <div class="page-h"><h1>Report signposts</h1></div>
+      <p class="page-sub">The governed datasets and Power BI reports the agent is allowed to read — each validated by the business, with a retirement trail so answers never drift to a dead report.</p>
+      <div class="card">
+        <table>
+          <thead><tr><th>Name</th><th>Type</th><th>Owner</th><th>Business-validated</th><th>Lifecycle</th></tr></thead>
+          <tbody id="sourceRows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: DATA REFRESH ============ -->
+    <section id="view-refresh" class="view">
+      <div class="page-h"><h1>Data refresh</h1></div>
+      <p class="page-sub">Synthetic freshness metadata used to demonstrate per-dataset governance without connecting to a live source. <span id="refreshAsOf" class="ref-cad"></span></p>
+      <div class="card">
+        <table>
+          <thead><tr><th>Dataset</th><th>Cadence</th><th>Last refreshed</th><th>Next refresh</th><th>Status</th><th>Verify</th></tr></thead>
+          <tbody id="refreshRows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: MEASURES & RULES ============ -->
+    <section id="view-measures" class="view">
+      <div class="page-h"><h1>Measures</h1></div>
+      <p class="page-sub">The governed calculations behind every <b>number</b> the agent gives — what each measure means and the rules applied. The agent reads these from the published registry. Steward: click a measure to edit its meaning and business rule, or add a new one, then approve &amp; publish.</p>
+      <div class="toolbar">
+        <div class="right">
+          <button class="btn primary steward-only" onclick="openNewMeasure()">+ Add measure</button>
+          <button class="btn ok" onclick="publishRegistry()">⤴ Publish registry</button>
+        </div>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Measure</th><th>Domain</th><th>Business rule</th><th>View status</th></tr></thead>
+          <tbody id="measureRows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: KNOWLEDGE FILES ============ -->
+    <section id="view-artifacts" class="view">
+      <div class="page-h"><h1>Knowledge files</h1></div>
+      <p class="page-sub">The remaining governed files the agent reads — schema-linking glossary, value grounding, and the narrative KB. Everything the agent knows lives in this app; only the data itself sits on the replica. Click a file to edit it as a table or sections — no JSON or markdown needed.</p>
+      <div class="toolbar"><div class="right">
+        <button class="btn primary steward-only" onclick="openNewArtifact()">+ Add file</button>
+        <button class="btn ok" onclick="publishAllArtifacts()">⤴ Publish all</button>
+      </div></div>
+      <div class="card"><table>
+        <thead><tr><th>File</th><th>Kind</th><th>Version</th><th>Status</th></tr></thead>
+        <tbody id="artifactRows"></tbody>
+      </table></div>
+    </section>
+
+    <!-- ============ VIEW: REVIEW & APPROVE ============ -->
+    <section id="view-review" class="view">
+      <div class="page-h"><h1>Review &amp; approve</h1></div>
+      <p class="page-sub business-only">Switch to the <b>Data steward</b> role (top right) to approve items.</p>
+      <p class="page-sub steward-only" style="display:none">Items waiting on your sign-off. Compare the proposed change against what's live.</p>
+      <div class="review-grid">
+        <div class="queue" id="reviewQueue"></div>
+        <div>
+          <div class="card" style="padding:20px" id="reviewDetail"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: DASHBOARD ============ -->
+    <section id="view-dash" class="view">
+      <div class="page-h"><h1 id="dash-title">My dashboard</h1></div>
+      <p class="page-sub" id="dash-sub">A quick view of what you own and what needs attention.</p>
+      <div class="stat-cards" id="statCards"></div>
+      <div class="two-col">
+        <div class="list-card">
+          <h3 id="dash-list1-h">Terms I own</h3>
+          <div id="dashList1"></div>
+        </div>
+        <div class="list-card">
+          <h3 id="dash-list2-h">Due for review</h3>
+          <div id="dashList2"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: VERSIONS & CHANGES ============ -->
+    <section id="view-history" class="view">
+      <div class="page-h"><h1>Versions &amp; changes</h1></div>
+      <p class="page-sub">A full audit trail — who changed what, when, and why. In the tree model each publish is a validated commit / PR into the knowledge-base repo.</p>
+      <div class="card" style="padding:26px 30px">
+        <div class="timeline" id="timeline"></div>
+      </div>
+    </section>
+
+    <!-- ============ V2: OBJECTS ============ -->
+    <section id="view-objects" class="view">
+      <div class="page-h"><h1>Objects</h1></div>
+      <p class="page-sub">The governed entities behind the plan — each maps to a demo source with a validated table and field mapping.<span class="engineer-only" style="color:#a5670f"> Data Architect view: source mapping, columns, snapshot, and key fields are editable here.</span></p>
+      <div class="card"><table><thead><tr><th>Object</th><th>Source view</th><th>Key fields</th><th>Status</th></tr></thead><tbody id="objectRows"></tbody></table></div>
+    </section>
+
+    <!-- ============ V2: CONCEPTS ============ -->
+    <section id="view-concepts" class="view">
+      <div class="page-h"><h1>Concepts</h1></div>
+      <p class="page-sub">Analytical read-models and the mental models the agent explains — governed measures, gating, supportability, CAPEX, buffers, plus enterprise context adopted from the CSCP KB.</p>
+      <div class="card"><table><thead><tr><th>Concept</th><th>Summary</th></tr></thead><tbody id="conceptRows"></tbody></table></div>
+    </section>
+
+    <!-- ============ V2: POLICIES ============ -->
+    <section id="view-policies" class="view">
+      <div class="page-h"><h1>Policies</h1></div>
+      <p class="page-sub">The rules that keep answers honest — snapshot resolution, measure governance, freshness and answerability, plus the Keystone source &amp; load scope.</p>
+      <div class="card"><table><thead><tr><th>Policy</th><th>Category</th><th>Governs</th></tr></thead><tbody id="policyRows"></tbody></table></div>
+    </section>
+
+    <!-- ============ V2: SYSTEMS ============ -->
+    <section id="view-systems" class="view">
+      <div class="page-h"><h1>Systems</h1></div>
+      <p class="page-sub">The software systems that participate in the domain.</p>
+      <div class="card"><table><thead><tr><th>System</th><th>Role</th></tr></thead><tbody id="systemRows"></tbody></table></div>
+    </section>
+
+    <!-- ============ V2: GROUNDING VALUES ============ -->
+    <section id="view-grounding" class="view">
+      <div class="page-h"><h1>Grounding values</h1></div>
+      <p class="page-sub">Real dimension values (sites, parts, codes) the agent snaps fuzzy filters to.</p>
+      <div id="groundingBody"></div>
+    </section>
+
+    <!-- ============ V2: METRICS (reserved — reads the tree; fills when the Metrics-Tree feed lands) ============ -->
+    <section id="view-metrics" class="view">
+      <div class="page-h"><h1>Metrics</h1></div>
+      <p class="page-sub">KPIs from the Keystone Metrics-Tree.</p>
+      <div id="metricsBody"><div class="empty">Loading…</div></div>
+    </section>
+  </main>
+</div>
+
+<div class="modal-back" id="modalBack" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modalCard">
+    <h3 id="modalTitle"></h3>
+    <div class="modal-sub" id="modalSub"></div>
+    <div id="modalFields"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" id="modalSaveBtn" onclick="modalSave(false)">Save (send to review)</button>
+      <button class="btn ok steward-only" id="modalPublishBtn" onclick="modalSave(true)">Save, approve &amp; publish</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span class="ic">✓</span><span id="toastMsg"></span></div>
+
+<script>
+/* ---------------- data (loaded live from the Knowledge Base API; literal is fallback only) ---------------- */
+let TERMS = [
+  {name:"Server Demand", area:"Demand", owner:"R. Mehta", oi:"RM", status:"Approved",
+   def:"Forecasted server demand, counted as distinct demand IDs at the product-family (PFAM) level.",
+   aliases:"Finished-goods demand, publisheddemands", sensitivity:"Internal", hierarchy:"Demand › Server",
+   sources:"Published demands feed", reports:"Build Plan Review", changed:"R. Mehta · 3 days ago",
+   why:"We count DISTINCT demand IDs, not raw quantity, because one order can span many lines and would otherwise be double-counted. PFAM is the level supply commitments are made, so it lines up with how we build.",
+   related:["PFAM (Platform Family)","T1 Rack Forecast","Supportability"]},
+
+  {name:"Network Demand", area:"Demand", owner:"A. Silva", oi:"AS", status:"In review",
+   def:"Demand for network components, planned by master site (MSF) and split into Tier 1 / Tier 2.",
+   aliases:"Component demand, MSF demand, networkplanningbompoline", sensitivity:"Internal", hierarchy:"Demand › Network",
+   sources:"Network BOM pipeline", reports:"Component coverage", changed:"A. Silva · yesterday",
+   why:"Network parts have different suppliers and lead times than servers, so they're planned on their own site grain (MSF, e.g. MKE04), not merged with server demand — merging would hide real coverage gaps.",
+   related:["Master Site (MSF)","Supportability"]},
+
+  {name:"PFAM (Platform Family)", area:"Reference", owner:"R. Mehta", oi:"RM", status:"Approved",
+  def:"The planning grain for demand — a related family of products (for example DEMO-STANDARD).",
+   aliases:"Platform family, product family", sensitivity:"Internal", hierarchy:"Reference › Grain",
+   sources:"Platform master", reports:"All server reports", changed:"R. Mehta · 2 weeks ago",
+   why:"Planning at PFAM (not individual SKU) matches how supply is committed and how the business reviews the plan each week. It's the join key that connects demand, build plan and supportability.",
+   related:["Server Demand","T1 Rack Forecast"]},
+
+  {name:"Master Site (MSF)", area:"Reference", owner:"A. Silva", oi:"AS", status:"Approved",
+   def:"The site code a network component is planned against (e.g. MKE04 = Milwaukee, ATL20).",
+   aliases:"MSF, MasterSiteCode, master site", sensitivity:"Internal", hierarchy:"Reference › Grain",
+   sources:"Site master", reports:"Network reports", changed:"A. Silva · 1 week ago",
+   why:"Nobody plans network demand at country or region level — the actionable grain is the master site. 'Which MSF is blocking my demand?' is a real planner question.",
+   related:["Network Demand"]},
+
+  {name:"T1 Rack Forecast", area:"Supply Planning", owner:"R. Mehta", oi:"RM", status:"Approved",
+   def:"The rack-level plan of record — how many racks are planned to dock, by dock date.",
+   aliases:"Tier-1 forecast, rack POR, RackQty", sensitivity:"Internal", hierarchy:"Plan › Rack (T1)",
+   sources:"T1 POR forecast", reports:"MPS Review – Tier 1", changed:"R. Mehta · 4 days ago",
+   why:"This is the committed rack quantity the whole build plan rolls up to. Splitting it CAPEX-approved vs not-approved shows what supply is actually cleared to build.",
+   related:["T2 Component Forecast","CAPEX Approved","Supportability"]},
+
+  {name:"T2 Component Forecast", area:"Supply Planning", owner:"R. Mehta", oi:"RM", status:"In review",
+   def:"Component demand exploded from the rack plan, shown net (post-netting) or gross (pre-netting).",
+   aliases:"Tier-2 forecast, component demand, BOM unwind", sensitivity:"Internal", hierarchy:"Plan › Component (T2)",
+   sources:"T2 POR forecast", reports:"ISP T2 Forecast – MDM Unwind", changed:"R. Mehta · yesterday",
+   why:"Net removes what inventory already covers; gross is the raw need. The MDM-unwind report is NET, so unless someone says 'gross' the agent should answer net to match what the business sees.",
+   related:["T1 Rack Forecast","Planned Dock Date (PDD)"]},
+
+  {name:"Supportability", area:"Supply Planning", owner:"J. Park", oi:"JP", status:"Needs update",
+   def:"How many racks can actually be built once part-supply limits are applied (constrained vs unconstrained).",
+   aliases:"Coverage, constrained supportable", sensitivity:"Internal", hierarchy:"Constraints › Supportability",
+   sources:"Gating optimizer", reports:"ISP Rack Supportability", changed:"J. Park · 2 weeks ago",
+   why:"Unconstrained is what's wanted; constrained is what parts allow. Flagged for update because the Tier-2 gating rule changed last quarter and the definition must be re-agreed before re-approval.",
+   related:["Gating Gap","Server Demand","Network Demand"]},
+
+  {name:"Gating Gap", area:"Supply Planning", owner:"J. Park", oi:"JP", status:"Approved",
+   def:"Unconstrained demand minus constrained supportable — racks that can't be built yet because a part is short.",
+   aliases:"Supply-demand gap, shortfall", sensitivity:"Internal", hierarchy:"Constraints › Gap",
+   sources:"Gating optimizer", reports:"ISP Rack Supportability", changed:"J. Park · 5 days ago",
+   why:"It names the shortfall (e.g. a 9,224-rack gap) and points at the largest constraining part; the gap clears as those parts arrive. This is the 'why' behind a build that can't be met.",
+   related:["Supportability"]},
+
+  {name:"CAPEX Approved", area:"Supply Planning", owner:"D. Okafor", oi:"DO", status:"Approved",
+   def:"The approved-capital portion of demand: gross demand minus the not-yet-approved forecast.",
+   aliases:"Approved forecast, capex-approved", sensitivity:"Internal", hierarchy:"Plan › CAPEX",
+   sources:"SOP CAPEX demand", reports:"CAPEX approval review", changed:"D. Okafor · 1 week ago",
+   why:"CAPEX approval is a rolling ~9–12-month runway, refreshed each cycle. Near-term demand is ~fully approved and tapers further out. Supply planning works only on the approved side, so this line decides what's real to build.",
+   related:["T1 Rack Forecast"]},
+
+  {name:"LRF Demand", area:"Demand", owner:"R. Mehta", oi:"RM", status:"Approved",
+   def:"Long Range Forecast — the long-range rack demand of record the business plans against.",
+   aliases:"Long range forecast, Conv Rack, open demand", sensitivity:"Internal", hierarchy:"Demand › Long Range",
+   sources:"LRF automation", reports:"LRF plan", changed:"R. Mehta · 1 week ago",
+   why:"LRF is the demand denominator for supportability. The honest number is 'open demand' (still-unfulfilled), which excludes racks already docked — those no longer need supply.",
+   related:["Supportability"]},
+
+  {name:"Planned Dock Date (PDD)", area:"Supply", owner:"J. Park", oi:"JP", status:"Approved",
+   def:"The date a build is planned to dock; a build is 'late' when PDD slips past the need-by date.",
+   aliases:"Plan dock date, plandockdate", sensitivity:"Internal", hierarchy:"Supply › Dates",
+   sources:"Published demands", reports:"Coverage / blocker report", changed:"J. Park · 3 weeks ago",
+   why:"PDD slip is how we measure whether demand is at risk. Agreeing one need-by reference avoids planners using order-to-dock while others use dock-to-build.",
+   related:["T2 Component Forecast","Gating Gap"]},
+
+  {name:"E-commerce Split Rule", area:"Demand", owner:"A. Silva", oi:"AS", status:"In review",
+   def:"A fixed business rule that allocates 10% of a family's weekly demand to the e-commerce channel.",
+   aliases:"10% e-comm rule, channel split", sensitivity:"Internal", hierarchy:"Demand › Rules",
+   sources:"Business rule", reports:"Weekly plan", changed:"A. Silva · yesterday",
+   why:"E-commerce orders behave differently from large enterprise deals — historically a stable ~10% of family demand. Encoding it explicitly lets the agent explain the split instead of it being a hidden assumption in the phasing.",
+   related:["Server Demand"]},
+
+  {name:"Lead Time", area:"Supply", owner:"J. Park", oi:"JP", status:"Approved",
+   def:"Time from placing a component order to it being available to build — the normal assumption vs the current quote.",
+   aliases:"Replenishment lead time, current LT", sensitivity:"Internal", hierarchy:"Supply › Lead Time",
+   sources:"Supplier commits", reports:"Coverage / blocker report", changed:"J. Park · 6 days ago",
+   why:"Normal lead time is a planning assumption (e.g. 12 weeks); the current lead time is what suppliers are actually quoting now. Answering 'what is the lead time now?' needs the live figure, not the assumption.",
+   related:["Blocker (Part Shortage)","T2 Component Forecast"]},
+
+  {name:"Blocker (Part Shortage)", area:"Supply", owner:"J. Park", oi:"JP", status:"In review",
+   def:"A constraining part that delays racks — which part, how many demand IDs it hits, and the resulting dock-date slip.",
+   aliases:"Part shortage, constraint, gating part", sensitivity:"Internal", hierarchy:"Constraints › Blocker",
+   sources:"Supportability + published demands", reports:"Coverage / blocker report", changed:"J. Park · yesterday",
+   why:"An executive asks 'what's stopping my demand?' — the answer names the part (e.g. a component short until December), the count of demand IDs impacted, and how far their planned dock dates slip (e.g. Nov–Dec → Feb).",
+   related:["Gating Gap","Lead Time","Planned Dock Date (PDD)"]},
+
+  {name:"Capacity Translation", area:"Supply Planning", owner:"R. Mehta", oi:"RM", status:"Draft",
+   def:"Converts a rack build plan into the capacity language sales cares about (vCores, and storage in PB).",
+   aliases:"Rack-to-vCore, capacity conversion", sensitivity:"Internal", hierarchy:"Plan › Capacity",
+   sources:"Rack plan + platform specs", reports:"Capacity enablement", changed:"R. Mehta · today",
+   why:"Leadership speaks in capacity, not racks: '100 racks of this platform = so many vCores / so many PB.' This lets planning tell sales how much they can enable — and commit to deliver it.",
+   related:["T1 Rack Forecast"]},
+];
+
+const PILL = {"Approved":"approved","In review":"review","Draft":"draft","Needs update":"update"};
+let currentTerm=null;
+
+/* trust/DQ signal per term — answers Deepak's 'why should I trust this number?' */
+function trustFor(status){
+  if(status==='Approved')    return {cls:'hi',  score:'96%', lbl:'Trusted', checks:'Passes all business rules · DQ-verified'};
+  if(status==='In review')   return {cls:'mid', score:'—',   lbl:'In review', checks:'Business rules pending sign-off'};
+  if(status==='Needs update')return {cls:'mid', score:'72%', lbl:'Re-check needed', checks:'A business rule changed · re-verification pending'};
+  return {cls:'lo', score:'—', lbl:'Draft', checks:'Not yet verified'};
+}
+
+/* functional derivation — the 'double-click' Deepak wanted (how a number is reached, in business terms) */
+const DERIVED = {
+  "Supportability":"Take unconstrained demand → apply part-supply limits from the T1 rack and T2 component forecasts → what remains is the constrained supportable. Whatever doesn't fit is the gating gap.",
+  "Server Demand":"Read published demands → count DISTINCT demand IDs (so multi-line orders aren't double-counted) → roll up to product family (PFAM).",
+  "Network Demand":"Take network BOM lines → group by master site (MSF) → split Tier-1 / Tier-2 → align to the rack build plan's dock dates.",
+  "T2 Component Forecast":"Explode the T1 rack plan through the bill of materials → net off inventory already on hand → the remainder is net T2 demand (gross skips the netting).",
+  "Gating Gap":"Unconstrained demand − constrained supportable = the gap, attributed to the largest constraining part.",
+  "CAPEX Approved":"Gross demand − not-yet-approved forecast = the approved-capital portion the plan can actually build.",
+  "E-commerce Split Rule":"For each family's weekly demand → allocate a fixed 10% to the e-commerce channel, the rest to enterprise.",
+  "Blocker (Part Shortage)":"For a delayed demand → find the constraining part → count DISTINCT demand IDs it blocks → compare planned dock date vs need-by to get the slip.",
+  "Lead Time":"Compare the standard lead-time assumption against suppliers' current quoted lead time → flag wherever current > normal.",
+  "Capacity Translation":"Multiply planned racks by the platform's per-rack capacity spec → express the result as vCores and storage (PB)."
+};
+let curFilter="all", curSearch="", role="business";
+
+/* ---------------- navigation ---------------- */
+function go(view){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+view).classList.add('active');
+  document.querySelectorAll('.navitem').forEach(n=>n.classList.toggle('active', n.dataset.view===view));
+  document.querySelector('.main').scrollTop=0;
+  if(view==='review') renderReview();
+  if(view==='dash') renderDash();
+  if(view==='sources') renderSources();
+  if(view==='measures') renderMeasures();
+  if(view==='artifacts') renderArtifacts();
+  if(view==='onto') renderFlow();
+  if(view==='refresh') renderRefresh();
+  if(view==='objects'||view==='concepts'||view==='policies'||view==='systems') renderCat(view);
+  if(view==='grounding') renderGrounding();
+  if(view==='metrics') renderMetrics();
+}
+
+/* ---------------- role ---------------- */
+function setRole(r){
+  role=r;
+  document.body.className='role-'+r;
+  document.getElementById('rb-biz').classList.toggle('active', r==='business');
+  document.getElementById('rb-stew').classList.toggle('active', r==='steward');
+  var eb=document.getElementById('rb-eng'); if(eb) eb.classList.toggle('active', r==='engineer');
+  document.getElementById('avatar').textContent = r==='steward' ? 'JP' : r==='engineer' ? 'DA' : 'PK';
+  // toggle the review page hint paragraphs
+  document.querySelectorAll('#view-review .business-only').forEach(e=>e.style.display = r==='business'?'block':'none');
+  document.querySelectorAll('#view-review .steward-only').forEach(e=>e.style.display = r==='steward'?'block':'none');
+  if(document.getElementById('view-dash').classList.contains('active')) renderDash();
+  if(document.getElementById('view-review').classList.contains('active')) renderReview();
+  toast(r==='steward' ? 'Now viewing as Data steward' : r==='engineer' ? 'Now viewing as Data Architect' : 'Now viewing as Business user');
+}
+let curDomain='plan';
+async function setDomain(d){
+  curDomain=d;
+  SEARCH_CACHE={};
+  var fd=document.getElementById('footDomain'); if(fd) fd.textContent = d==='all'?'All domains':d.charAt(0).toUpperCase()+d.slice(1);
+  // terms are read per-domain straight from the tree
+  try{ TERMS = await loadTermsFromTree(dref()); const ct=document.getElementById('c-terms'); if(ct) ct.textContent=TERMS.length; }catch(_){}
+  const a=document.querySelector('.view.active'); const v=a? a.id.replace('view-','') : '';
+  if(['objects','concepts','policies','systems'].includes(v)) renderCat(v);
+  else if(v==='grounding') renderGrounding();
+  else if(v==='metrics') renderMetrics();
+  else if(v==='list') renderList();
+  else if(v==='search') renderSearch();
+  else if(v==='dash') renderDash();
+  else if(v==='review') renderReview();
+  toast(d==='all' ? 'Showing all domains (roll-up)' : 'Domain: '+d.charAt(0).toUpperCase()+d.slice(1));
+}
+
+// V2 tree-as-source: the glossary is the domain's terms/index.yaml, mapped into the UI term shape.
+function _slugName(id){ return String(id||'').split('/').pop().replace(/-/g,' '); }
+async function loadTermsFromTree(domain){
+  const doc = await (await fetch('/api/tree/'+domain+'/terms')).json();
+  const raw = (doc && doc.terms) ? doc.terms : [];
+  const byId={}; raw.forEach(t=>{ byId[t.id]=t.term; });
+  return raw.map(t=>({
+    id:t.id, name:t.term, def:t.definition||t.expansion||'', area:t.category||'General',
+    owner:'Knowledge base', oi:'KB', status:'Approved', changed:'in tree',
+    why:t.expansion?('Expands to “'+t.expansion+'”.'):'', derived:'',
+    aliases:((t.aliases||t.synonyms||[])).join(', '),
+    seeAlso:(t.seeAlso||[]).join(', '),
+    related:((t.seeAlso||[]).map(x=>byId[x]||_slugName(x))),
+    sources:'', reports:'', sensitivity:'', hierarchy:'', _domain:domain
+  }));
+}
+
+// V2: scaffold a new domain (folders + empty catalogs) so it is instantly discoverable — no code change.
+async function addDomain(){
+  const name=(prompt('New domain name (e.g. make, fulfill, plm):','')||'').trim();
+  if(!name) return;
+  const res=await fetch('/api/domains/scaffold',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({Name:name})});
+  if(!res.ok){ let m='Could not create domain'; try{ m=(await res.json()).message||m; }catch(e){} toast(m); return; }
+  const j=await res.json();
+  toast(j.msg||('Domain “'+name+'” created.'));
+  await loadDomains();
+  const sel=document.getElementById('domainSel'); if(sel){ sel.value=name.toLowerCase(); }
+  setDomain(name.toLowerCase());
+}
+
+/* ---------------- v2: typed catalog browsers (read straight from the tree) ---------------- */
+function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+function dref(){ return curDomain==='all' ? 'plan' : curDomain; }
+const CAT={
+  objects:{rows:'objectRows',n:4,url:d=>`/api/catalog/${d}/objects`,
+    row:o=>`<td><div class="t-name">${esc(o.title||o.id)}</div><div class="t-def">${esc(o.description)}</div></td><td>${esc(o.table)}</td><td>${esc(o.keyFields)}</td><td><span class="pill ${o.dqGated?'update':'approved'}">${o.dqGated?'DQ-gated':'Validated'}</span></td>`},
+  concepts:{rows:'conceptRows',n:2,url:d=>`/api/catalog/${d}/concepts`,
+    row:c=>`<td><div class="t-name">${esc(c.title||c.id)}</div></td><td class="t-def">${esc(c.summary)}</td>`},
+  policies:{rows:'policyRows',n:3,url:d=>`/api/catalog/${d}/policies`,
+    row:p=>`<td><div class="t-name">${esc(p.name||p.id)}</div></td><td>${esc(p.category)}</td><td class="t-def">${esc(p.description)}</td>`},
+  systems:{rows:'systemRows',n:2,url:d=>`/api/catalog/${d}/systems`,
+    row:s=>`<td><div class="t-name">${esc(s.name||s.id)}</div>${s.display?`<div class="t-def">${esc(s.display)}</div>`:''}</td><td class="t-def">${esc(s.role)}</td>`}
+};
+async function renderCat(cat){
+  const c=CAT[cat]; const tb=document.getElementById(c.rows); if(!tb) return;
+  tb.innerHTML=`<tr><td colspan="${c.n}" class="empty">Loading\u2026</td></tr>`;
+  try{ const items=await (await fetch(c.url(dref()))).json();
+    tb.innerHTML = (items&&items.length) ? items.map(x=>`<tr onclick="openCatItem('${cat}','${jsq(x.id)}')" title="Open details">${c.row(x)}</tr>`).join('') : `<tr><td colspan="${c.n}" class="empty">Nothing in this catalog yet.</td></tr>`;
+  }catch(e){ tb.innerHTML=`<tr><td colspan="${c.n}" class="empty">Could not load ${cat}.</td></tr>`; }
+}
+// safe single-quoted JS string for inline onclick (ids are tree slugs like plan/objects/xxx)
+function jsq(s){ return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+// read-only drill-in: full untruncated record for one catalog item
+async function openCatItem(cat,id){
+  const kind={objects:'Object',concepts:'Concept',policies:'Policy',systems:'System'}[cat]||cat;
+  let d; try{ const r=await fetch(`/api/catalog/${dref()}/${cat}/item?id=${encodeURIComponent(id)}`); if(!r.ok) throw 0; d=await r.json(); }
+  catch(e){ toast('Could not open '+kind.toLowerCase()); return; }
+  document.getElementById('modalTitle').textContent=d.title||id;
+  document.getElementById('modalSub').textContent=kind+(d.file?(' \u00b7 '+d.file):'');
+  let html=(d.fields||[]).map(f=>`<div class="d-field"><div class="d-flabel">${esc(f.label)}</div><div class="d-fval">${esc(f.value)}</div></div>`).join('');
+  if(d.body) html+=`<div class="d-field"><div class="d-flabel">Full write-up</div><div class="d-body">${esc(d.body)}</div></div>`;
+  const editLabel = role==='steward' ? '\u270e Edit' : '\u270e Suggest an edit';
+  const editBtn = CAT[cat] ? `<div style="margin-bottom:14px"><button class="btn" onclick="openCatEdit('${cat}','${jsq(id)}')">${editLabel}</button></div>` : '';
+  document.getElementById('modalFields').innerHTML = editBtn + (html || '<div class="empty">No details recorded.</div>');
+  modalCtx=null;
+  modalChrome(true,false,false);
+  showModal();
+}
+const CATKIND={objects:'Object',concepts:'Concept',policies:'Policy',systems:'System'};
+// governed edit form: business/engineer submit for review, steward can save & approve directly
+async function openCatEdit(cat,id){
+  let d; try{ const r=await fetch(`/api/catalog/${dref()}/${cat}/edit?id=${encodeURIComponent(id)}`); if(!r.ok) throw 0; d=await r.json(); }
+  catch(e){ toast('Could not open the editor'); return; }
+  const steward = role==='steward';
+  modalCtx={type:'catalog', cat, id, keys:(d.fields||[]).map(f=>f.key), hasBody:(d.body!=null)};
+  document.getElementById('modalTitle').textContent=(steward?'Edit \u2014 ':'Suggest an edit \u2014 ')+(d.title||id);
+  document.getElementById('modalSub').textContent=(CATKIND[cat]||cat)+' \u00b7 '+(d.file||'')+(steward?' \u00b7 approving writes straight to the tree':' \u00b7 your change goes to the data steward for review');
+  let html=(d.fields||[]).map(f=>fld(f.label,'cf_'+f.key,f.value)).join('');
+  if(d.body!=null) html+=fld('Write-up (markdown)','cf_body',d.body);
+  html+=`<div class="fld"><button type="button" class="btn" onclick="checkDupes()">\u26a0 Check for duplicates</button><div id="dupeResult" class="plane-note" style="margin-top:8px">A background eval also runs automatically when you submit — the steward sees any matches.</div></div>`;
+  document.getElementById('modalFields').innerHTML=html;
+  modalChrome(true, true, steward, steward?'Submit for review':'Send to steward for review', 'Save & approve');
+  showModal();
+}
+// live duplicate/consistency eval from the edit form (same eval that runs automatically on submit)
+async function checkDupes(){
+  if(!modalCtx||modalCtx.type!=='catalog') return;
+  const fields={}; (modalCtx.keys||[]).forEach(k=>{ const el=document.getElementById('cf_'+k); if(el) fields[k]=el.value; });
+  const body=modalCtx.hasBody?document.getElementById('cf_body').value:null;
+  const el=document.getElementById('dupeResult'); if(el) el.textContent='Checking the knowledge base\u2026';
+  try{
+    const r=await fetch('/api/eval/dupecheck',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({Domain:dref(),Type:modalCtx.cat,ItemId:modalCtx.id,Fields:fields,Body:body})});
+    const m=((await r.json()).matches)||[];
+    if(el) el.innerHTML = m.length
+      ? '\u26a0 '+m.length+' possible duplicate(s): '+m.map(x=>esc(x.title||x.id)+' ('+Math.round((x.score||0)*100)+'%)').join(', ')
+      : '\u2713 No overlapping items found in the knowledge base.';
+  }catch(e){ if(el) el.textContent='Could not run the check.'; }
+}
+async function renderGrounding(){
+  const el=document.getElementById('groundingBody'); if(!el) return; el.innerHTML='<div class="empty">Loading\u2026</div>';
+  try{ const g=await (await fetch(`/api/catalog/${dref()}/grounding`)).json();
+    const cg=document.getElementById('c-grounding'); if(cg) cg.textContent=(g.dimensions&&g.dimensions.length)||0;
+    const rows=(g.dimensions||[]).map(d=>`<tr><td>${esc(d.view)}</td><td>${esc(d.dimension)}</td><td class="t-def">${d.cardinality} \u2014 ${esc((d.sample||[]).join(', '))}</td></tr>`).join('');
+    el.innerHTML=`<div class="ro-note" style="max-width:660px">Machine-generated projection (${dref()}/_generated/grounding-index.json) \u2014 read-only. Objects declare which dimensions are groundable; values come from the active data source and regenerate on every refresh.</div>`+
+      `<div class="card"><table><thead><tr><th>View</th><th>Dimension</th><th>Distinct values</th></tr></thead><tbody>${rows||'<tr><td colspan="3" class="empty">No grounding index generated yet.</td></tr>'}</tbody></table></div>`+
+      `<p class="plane-note">${g.views||0} views indexed${g.generatedUtc?' \u00b7 generated '+esc((g.generatedUtc||'').slice(0,10)):''}.</p>`;
+  }catch(e){ el.innerHTML='<div class="empty">Could not load grounding.</div>'; }
+}
+async function renderMetrics(){
+  const el=document.getElementById('metricsBody'); if(!el) return; el.innerHTML='<div class="empty">Loading\u2026</div>';
+  const eng=document.body.classList.contains('role-engineer');
+  const genBtn=eng?`<div style="margin-top:14px"><button class="btn primary" onclick="generateMetrics()">\u21bb Generate from the semantic layer</button><span class="plane-note" style="margin-left:10px">Derives the catalog from the governed measures (registry.yaml) \u2014 read-only, replace with the Keystone Metrics-Tree feed when connected.</span></div>`:'';
+  const reserved='<div class="reserved-card" style="max-width:740px"><b>Reserved \u2014 populated from the Keystone Metrics-Tree.</b><br/>Nothing is hand-authored here: a metric needs a <code>metric_code</code> from Keystone. This catalog fills automatically once the Metrics-Tree feed is connected.<br/><br/><span style="color:#8a6417">Flows, Process and Workflows are reserved the same way \u2014 shown so the structure stays honest, read-only until their source populates them.</span></div>'+genBtn;
+  try{ const m=await (await fetch(`/api/catalog/${dref()}/metrics`)).json();
+    if(!m.count){ el.innerHTML=reserved; return; }
+    const cm=document.getElementById('c-metrics'); if(cm) cm.textContent=m.count;
+    const rows=(m.metrics||[]).map(x=>`<tr><td><div class="t-name">${esc(x.name||x.id)}</div><div class="t-def">${esc(x.description)}</div></td><td><code>${esc(x.code)}</code></td><td>${esc(x.category)}</td><td>${esc(x.unit)}</td></tr>`).join('');
+    el.innerHTML=`<div class="ro-note" style="max-width:660px">${dref()}/metrics/index.json \u2014 read-only. Each metric is keyed by its <code>metric_code</code>.</div>`+
+      `<div class="card"><table><thead><tr><th>Metric</th><th>Code</th><th>Category</th><th>Unit</th></tr></thead><tbody>${rows}</tbody></table></div>`+
+      `<p class="plane-note">${m.count} metric${m.count===1?'':'s'} ingested.</p>`+genBtn;
+  }catch(e){ el.innerHTML=reserved; }
+}
+async function generateMetrics(){
+  const d=dref();
+  const res=await fetch('/api/domains/'+d+'/metrics/generate',{method:'POST'});
+  if(!res.ok){ let m='Could not generate metrics'; try{ m=(await res.json()).message||m; }catch(e){} toast(m); return; }
+  const j=await res.json();
+  toast(j.msg||('Generated '+j.count+' metrics.'));
+  const e=document.getElementById('c-metrics'); if(e) e.textContent=j.count;
+  renderMetrics();
+}
+async function loadDomains(){
+  try{ const doms=await (await fetch('/api/domains')).json();
+    if(Array.isArray(doms)&&doms.length){
+      const sel=document.getElementById('domainSel');
+      if(sel){ sel.innerHTML=doms.map(d=>`<option value="${d.id}">${esc(d.title||d.id)}</option>`).join('')+(doms.length>1?'<option value="all">All domains</option>':''); sel.value=curDomain; }
+      const cur=doms.find(d=>d.id===curDomain)||doms[0];
+      if(cur&&cur.counts){ const set=(id,n)=>{const e=document.getElementById(id); if(e) e.textContent=n;};
+        set('c-objects',cur.counts.objects); set('c-concepts',cur.counts.concepts); set('c-policies',cur.counts.policies); set('c-systems',cur.counts.systems); }
+      try{ const g=await (await fetch(`/api/catalog/${dref()}/grounding`)).json(); const e=document.getElementById('c-grounding'); if(e) e.textContent=(g.dimensions&&g.dimensions.length)||0; }catch(_){}
+    }
+  }catch(e){ /* standalone: keep defaults */ }
+}
+
+/* ---------------- term list ---------------- */
+function setFilter(f){
+  curFilter=f;
+  document.querySelectorAll('#filters .filterbtn').forEach(b=>b.classList.toggle('active', b.dataset.f===f));
+  renderList();
+}
+function onSearch(v){
+  curSearch=(v||'').toLowerCase();
+  // app-wide search: any query routes to the dedicated results view across every catalog
+  const onSearchView=document.getElementById('view-search').classList.contains('active');
+  if(!curSearch.trim()){
+    if(onSearchView) go('onto');
+    else if(document.getElementById('view-list').classList.contains('active')) renderList();
+    return;
+  }
+  if(!onSearchView) go('search');
+  clearTimeout(window._searchTimer);
+  window._searchTimer=setTimeout(renderSearch, 120);
+}
+
+/* ---------------- app-wide search ---------------- */
+let SEARCH_CACHE={}, SEARCH_HITS=[];
+async function loadCatalogForSearch(d){
+  if(SEARCH_CACHE[d]) return SEARCH_CACHE[d];
+  const out={};
+  await Promise.all(['objects','concepts','policies','systems'].map(async c=>{
+    try{ out[c]=await (await fetch(`/api/catalog/${d}/${c}`)).json()||[]; }catch(e){ out[c]=[]; }
+  }));
+  try{ const g=await (await fetch(`/api/catalog/${d}/grounding`)).json(); out.grounding=g.dimensions||[]; }catch(e){ out.grounding=[]; }
+  SEARCH_CACHE[d]=out;
+  return out;
+}
+function clip(s,n){ s=String(s==null?'':s); return s.length>n? s.slice(0,n-1)+'\u2026':s; }
+function hl(text,q){
+  const t=esc(text);
+  if(!q) return t;
+  try{ return t.replace(new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','ig'),'<mark>$1</mark>'); }catch(e){ return t; }
+}
+function buildSearchEntries(cat){
+  const E=[];
+  (TERMS||[]).forEach(t=>E.push({group:'Glossary term', title:t.name, sub:t.area+' \u00b7 '+t.owner, snip:t.def,
+    hay:((t.name||'')+' '+(t.def||'')+' '+(t.why||'')+' '+(t.owner||'')+' '+(t.area||'')).toLowerCase(),
+    open:()=>openTerm(t)}));
+  const CG={objects:'Object',concepts:'Concept',policies:'Policy',systems:'System'};
+  ['objects','concepts','policies','systems'].forEach(c=>{
+    (cat[c]||[]).forEach(x=>{
+      const title=x.title||x.name||x.id;
+      const snip=x.description||x.summary||x.role||x.category||'';
+      E.push({group:CG[c], title, sub:(c==='policies'?(x.category||''):(x.table||'')), snip,
+        hay:((title||'')+' '+(snip||'')+' '+(x.category||'')+' '+(x.table||'')+' '+(x.keyFields||'')+' '+(x.display||'')+' '+(x.id||'')).toLowerCase(),
+        open:()=>openCatItem(c,x.id)});
+    });
+  });
+  (MEASURES||[]).forEach(m=>E.push({group:'Measure', title:m.qualifier||m.key, sub:m.domain||'', snip:(m.explanation||'')+(m.rule?(' \u2014 '+m.rule):''),
+    hay:((m.qualifier||'')+' '+(m.key||'')+' '+(m.explanation||'')+' '+(m.rule||'')+' '+(m.domain||'')).toLowerCase(),
+    open:()=>{ go('measures'); if(window.openMeasureEdit&&m.key) openMeasureEdit(m.key); }}));
+  (SOURCES||[]).forEach(s=>E.push({group:'Report signpost', title:s.name, sub:s.type+((s.owner&&s.owner!=='\u2014')?(' \u00b7 '+s.owner):''), snip:s.note||'',
+    hay:((s.name||'')+' '+(s.note||'')+' '+(s.type||'')+' '+(s.owner||'')+' '+(s.replacedBy||'')).toLowerCase(),
+    open:()=> s.url? openReport(s.url) : go('sources')}));
+  (REFRESH||[]).forEach(r=>E.push({group:'Data refresh', title:r.label, sub:(r.view||'')+((r.cadenceLabel)?(' \u00b7 '+r.cadenceLabel):''), snip:r.note||'',
+    hay:((r.label||'')+' '+(r.view||'')+' '+(r.note||'')+' '+(r.stage||'')).toLowerCase(),
+    open:()=>go('refresh')}));
+  (cat.grounding||[]).forEach(g=>E.push({group:'Grounding value', title:g.dimension, sub:g.view, snip:(g.sample||[]).join(', '),
+    hay:((g.dimension||'')+' '+(g.view||'')+' '+((g.sample||[]).join(' '))).toLowerCase(),
+    open:()=>go('grounding')}));
+  return E;
+}
+async function renderSearch(){
+  const q=(curSearch||'').trim();
+  const host=document.getElementById('searchResults'); if(!host) return;
+  const qc=document.getElementById('searchQ'); if(qc) qc.textContent = q ? '\u201c'+q+'\u201d' : '';
+  if(!q){ host.innerHTML='<p class="page-sub">Type in the search box to find anything across the app.</p>'; return; }
+  host.innerHTML='<div class="empty">Searching\u2026</div>';
+  const cat=await loadCatalogForSearch(dref());
+  if((curSearch||'').trim()!==q) return; // a newer keystroke superseded this run
+  const entries=buildSearchEntries(cat).filter(e=>e.hay.includes(q));
+  SEARCH_HITS=entries;
+  if(!entries.length){ host.innerHTML=`<p class="page-sub">No matches for <b>${esc(q)}</b> anywhere in the app.</p>`; return; }
+  const order=['Glossary term','Object','Concept','Policy','System','Measure','Report signpost','Grounding value','Data refresh'];
+  const groups={}; entries.forEach(e=>{ (groups[e.group]=groups[e.group]||[]).push(e); });
+  let html=`<p class="page-sub" style="margin-top:-4px">${entries.length} result${entries.length===1?'':'s'} across ${order.filter(g=>groups[g]).length} area${order.filter(g=>groups[g]).length===1?'':'s'}.</p>`;
+  order.filter(g=>groups[g]).forEach(g=>{
+    html+=`<div class="s-group"><div class="s-gh">${esc(g)}<span class="s-gc">${groups[g].length}</span></div>`;
+    groups[g].forEach(e=>{
+      const i=entries.indexOf(e);
+      html+=`<div class="s-row" onclick="searchOpen(${i})">`+
+        `<div class="s-title">${hl(e.title,q)}</div>`+
+        (e.sub?`<div class="s-sub">${esc(e.sub)}</div>`:'')+
+        (e.snip?`<div class="s-snip">${hl(clip(e.snip,160),q)}</div>`:'')+
+      `</div>`;
+    });
+    html+='</div>';
+  });
+  host.innerHTML=html;
+}
+function searchOpen(i){ const e=SEARCH_HITS[i]; if(e&&e.open) e.open(); }
+
+function renderList(){
+  const rows=document.getElementById('termRows'); rows.innerHTML='';
+  const items=TERMS.filter(t=>(curFilter==='all'||t.status===curFilter) &&
+    (t.name.toLowerCase().includes(curSearch)||t.def.toLowerCase().includes(curSearch)||t.owner.toLowerCase().includes(curSearch)));
+  if(!items.length){ rows.innerHTML='<tr><td colspan="4" class="empty">No terms match.</td></tr>'; return; }
+  items.forEach(t=>{
+    const tr=document.createElement('tr'); tr.onclick=()=>openTerm(t);
+    tr.innerHTML=`<td><div class="t-name">${t.name}</div><div class="t-def">${t.def}</div></td>
+      <td>${t.area}</td>
+      <td><div class="owner"><span class="mini">${t.oi}</span>${t.owner}</div></td>
+      <td><span class="pill ${PILL[t.status]}">${t.status}</span></td>`;
+    rows.appendChild(tr);
+  });
+}
+
+/* ---------------- term detail ---------------- */
+function openByName(n){ const t=TERMS.find(x=>x.name===n); if(t) openTerm(t); }
+function kv(k,v){ return `<div class="kv"><div class="k">${k}</div><div class="v">${v}</div></div>`; }
+function openTerm(t){
+  currentTerm=t;
+  go('detail');
+  document.getElementById('d-crumb').textContent=t.name;
+  document.getElementById('d-name').textContent=t.name;
+  document.getElementById('d-area').textContent=t.area+' · owned by '+t.owner;
+  const pill=`<span class="pill ${PILL[t.status]}">${t.status}</span>`;
+  document.getElementById('d-pill').innerHTML=pill;
+  document.getElementById('d-status-pill').innerHTML=pill;
+  document.getElementById('d-why').textContent=t.why;
+  const tf=trustFor(t.status);
+  document.getElementById('d-trust').innerHTML=
+    `<div class="trust ${tf.cls}"><span class="score">${tf.score}</span><span class="lbl">${tf.lbl}</span><span class="checks">${tf.checks}</span></div>`;
+  const dv=t.derived;
+  document.getElementById('d-derived').innerHTML = dv
+    ? `<div class="derived"><h4>How it's derived</h4><p>${dv}</p></div>` : '';
+  document.getElementById('d-basics').innerHTML=kv('Definition',t.def)+kv('Also known as',t.aliases);
+  document.getElementById('d-owner').innerHTML=kv('Owner',t.owner)+kv('Signs off',t.owner)+kv('Business area',t.area);
+  document.getElementById('d-context').innerHTML=kv('Sensitivity',t.sensitivity)+kv('Sits under',t.hierarchy);
+  document.getElementById('d-trace').innerHTML=kv('Comes from',t.sources)+kv('Used in',t.reports)+kv('Last changed',t.changed);
+  document.getElementById('d-related').innerHTML=t.related.map(r=>`<span class="tag" onclick="openByName('${r}')">${r}</span>`).join('');
+  document.getElementById('d-comments').innerHTML=
+    `<div class="comment"><span class="mini">JP</span><div class="c-body">Can we confirm this matches the S&amp;OP definition?<div class="c-meta">J. Park · 2 days ago</div></div></div>
+     <div class="comment"><span class="mini">RM</span><div class="c-body">Yes — aligned with the weekly review.<div class="c-meta">R. Mehta · 1 day ago</div></div></div>`;
+}
+
+/* ---------------- review & approve ---------------- */
+let REVIEW=[], CAT_PROPOSALS=[];
+const CATLABEL={objects:'Object',concepts:'Concept',policies:'Policy',systems:'System',terms:'Glossary term'};
+function roleName(){ return role==='steward'?'Data steward':role==='engineer'?'Data Architect':'Business user'; }
+function humanizeKey(k){ return String(k||'').replace(/^keystone_/,'Keystone ').replace(/_/g,' ').replace(/^./,c=>c.toUpperCase()); }
+// combine live catalog proposals (from the store) with the term-review demo items into one queue
+function rebuildReview(){
+  const cats=(CAT_PROPOSALS||[]).filter(p=>p.type!=='terms').map(p=>({
+    kind:'catalog', id:p.id, domain:p.domain, cat:p.type, itemId:p.itemId, name:p.title||p.itemId,
+    who:p.proposedBy||'a user', when:(p.proposedAt||'').slice(0,10), area:(CATLABEL[p.type]||p.type),
+    fields:p.fields||{}, current:p.current||{}, body:(p.body==null?null:p.body), currentBody:(p.currentBody==null?'':p.currentBody),
+    duplicates:p.duplicates||[]
+  }));
+  const terms=(CAT_PROPOSALS||[]).filter(p=>p.type==='terms').map(p=>({
+    kind:'term-proposal', id:p.id, domain:p.domain, cat:'terms', itemId:p.itemId,
+    name:(p.title||((p.fields||{}).Term)||p.itemId||'Glossary term'),
+    who:p.proposedBy||'a user', when:(p.proposedAt||'').slice(0,10), area:'Glossary',
+    fields:p.fields||{}, current:p.current||{}, duplicates:p.duplicates||[]
+  }));
+  REVIEW=[...cats, ...terms];
+  if(curReview>=REVIEW.length) curReview=0;
+  const cr=document.getElementById('c-review'); if(cr) cr.textContent=REVIEW.length;
+  if(document.getElementById('view-review')&&document.getElementById('view-review').classList.contains('active')) renderReview();
+}
+async function loadReviews(){
+  try{ CAT_PROPOSALS=await (await fetch('/api/reviews')).json(); }catch(e){ CAT_PROPOSALS=[]; }
+  rebuildReview();
+}
+async function approveCatProposal(id){
+  const proposal=REVIEW.find(r=>r.id===id);
+  const res=await fetch('/api/reviews/'+encodeURIComponent(id)+'/approve',{method:'POST'});
+  if(!res.ok){ let m='Could not approve'; try{ m=((await res.json()).errors||[m]).join(' '); }catch(e){} toast(m); return; }
+  toast('Approved \u2014 the tree is updated. (Agent picks it up on next restart.)');
+  SEARCH_CACHE={};
+  if(proposal&&proposal.kind==='term-proposal'&&proposal.domain===dref()){
+    TERMS=await loadTermsFromTree(dref());
+    const ct=document.getElementById('c-terms'); if(ct) ct.textContent=TERMS.length;
+    renderList();
+  }
+  await loadReviews();
+  const a=document.querySelector('.view.active'); const v=a?a.id.replace('view-',''):'';
+  if(['objects','concepts','policies','systems'].includes(v)) renderCat(v);
+}
+async function rejectCatProposal(id){
+  const ta=document.getElementById('rejectReason');
+  const reason=((ta&&ta.value)||'').trim();
+  if(!reason){ toast('Please add a reason before rejecting.'); if(ta) ta.focus(); return; }
+  const res=await fetch('/api/reviews/'+encodeURIComponent(id)+'/reject',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reason, by: roleName()})});
+  if(!res.ok){ let m='Could not reject'; try{ m=((await res.json()).errors||[m]).join(' '); }catch(e){} toast(m); return; }
+  toast('Rejected \u2014 the proposer can see your reason in Versions & changes.');
+  await loadReviews();
+  await refreshHistory();
+}
+function showRejectForm(){ const a=document.getElementById('revActions'); const f=document.getElementById('rejectForm'); if(a)a.style.display='none'; if(f){ f.style.display='block'; const ta=document.getElementById('rejectReason'); if(ta) ta.focus(); } }
+function hideRejectForm(){ const a=document.getElementById('revActions'); const f=document.getElementById('rejectForm'); if(f)f.style.display='none'; if(a)a.style.display='flex'; }
+let curReview=0;
+function renderReview(){
+  const q=document.getElementById('reviewQueue'); q.innerHTML='';
+  REVIEW.forEach((r,i)=>{
+    const d=document.createElement('div'); d.className='q-item'+(i===curReview?' active':'');
+    d.onclick=()=>{curReview=i;renderReview();};
+    const tag=r.kind==='catalog'?`<span class="pill review" style="margin-left:6px">${esc(r.area)}</span>`:'';
+    d.innerHTML=`<div class="q-t">${esc(r.name)}${tag}</div><div class="q-m">Proposed by ${esc(r.who)}${r.when?' · '+esc(r.when):''}</div>`;
+    q.appendChild(d);
+  });
+  if(!REVIEW.length){ document.getElementById('reviewDetail').innerHTML='<p class="page-sub">Nothing waiting for review right now.</p>'; return; }
+  if(curReview>=REVIEW.length) curReview=0;
+  const r=REVIEW[curReview];
+  if(r.kind==='catalog'){ renderCatReview(r); return; }
+  if(r.kind==='term-proposal'){ renderTermProposalReview(r); return; }
+}
+function termFieldLabel(k){
+  const m={Id:'Term id',Term:'Term name',Category:'Business area',Definition:'Definition',Aliases:'Also known as',SeeAlso:'See also'};
+  return m[k]||humanizeKey(k);
+}
+function renderTermProposalReview(r){
+  const order=['Term','Category','Definition','Aliases','SeeAlso','Id'];
+  const keys=[...new Set([
+    ...order.filter(k=>(k in (r.fields||{}))||(k in (r.current||{}))),
+    ...Object.keys(r.fields||{}),
+    ...Object.keys(r.current||{})
+  ])];
+  const rows=keys.map(k=>({lbl:termFieldLabel(k), oldv:(r.current&&r.current[k])||'', newv:(r.fields&&r.fields[k])||''}));
+  const oldCol=rows.map(f=>`<div class="row-lbl">${esc(f.lbl)}</div><div class="row-val">${esc(f.oldv||'—')}</div>`).join('');
+  const newCol=rows.map(f=>{ const diff=(f.oldv||'')!==(f.newv||''); return `<div class="row-lbl">${esc(f.lbl)}</div><div class="row-val"${diff?' style="background:#eef7ee"':''}>${esc(f.newv||'—')}</div>`; }).join('');
+  const actions = role==='steward'
+    ? `<div id="revActions" style="display:flex;gap:10px;margin-top:18px">
+         <button class="btn ok" onclick="approveCatProposal('${jsq(r.id)}')">✓ Approve &amp; apply</button>
+         <button class="btn warn" onclick="showRejectForm()">↩ Reject</button>
+       </div>
+       <div id="rejectForm" style="display:none;margin-top:16px">
+         <div class="row-lbl">Reason for rejection <span style="color:var(--red)">*</span></div>
+         <textarea id="rejectReason" rows="3" style="width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font:inherit;font-size:13px;margin-top:6px" placeholder="Explain why you're rejecting this change — the person who proposed it will see this in Versions &amp; changes."></textarea>
+         <div style="display:flex;gap:10px;margin-top:10px">
+           <button class="btn danger" onclick="rejectCatProposal('${jsq(r.id)}')">Confirm rejection</button>
+           <button class="btn" onclick="hideRejectForm()">Cancel</button>
+         </div>
+       </div>`
+    : `<div class="banner" style="margin-top:18px;margin-bottom:0">Switch to <b>Data steward</b> (top right) to approve this change into the knowledge base.</div>`;
+  document.getElementById('reviewDetail').innerHTML=`
+    <div class="page-h" style="margin-bottom:2px"><h1 style="font-size:19px">${esc(r.name)}</h1><span class="pill review">In review</span></div>
+    <p class="page-sub" style="margin:4px 0 16px">${esc(r.area)} · proposed by ${esc(r.who)}${r.when?' · '+esc(r.when):''}${r.itemId?' · '+esc(r.itemId):''}</p>
+    ${evalPanel(r.duplicates, 'terms')}
+    <div class="diff">
+      <div class="col old"><h5>● Current (live)</h5>${oldCol}</div>
+      <div class="col new"><h5>● Proposed</h5>${newCol}</div>
+    </div>
+    ${actions}`;
+}
+// field-by-field diff for a proposed catalog edit
+function renderCatReview(r){
+  const rows=[];
+  Object.keys(r.fields||{}).forEach(k=>{ rows.push({lbl:humanizeKey(k), oldv:r.current[k]||'', newv:r.fields[k]||''}); });
+  if(r.body!=null) rows.push({lbl:'Write-up', oldv:r.currentBody||'', newv:r.body||''});
+  const oldCol=rows.map(f=>`<div class="row-lbl">${esc(f.lbl)}</div><div class="row-val">${esc(f.oldv||'—')}</div>`).join('');
+  const newCol=rows.map(f=>{ const diff=(f.oldv||'')!==(f.newv||''); return `<div class="row-lbl">${esc(f.lbl)}</div><div class="row-val"${diff?' style="background:#eef7ee"':''}>${esc(f.newv||'—')}</div>`; }).join('');
+  const actions = role==='steward'
+    ? `<div id="revActions" style="display:flex;gap:10px;margin-top:18px">
+         <button class="btn ok" onclick="approveCatProposal('${jsq(r.id)}')">✓ Approve &amp; apply</button>
+         <button class="btn warn" onclick="showRejectForm()">↩ Reject</button>
+       </div>
+       <div id="rejectForm" style="display:none;margin-top:16px">
+         <div class="row-lbl">Reason for rejection <span style="color:var(--red)">*</span></div>
+         <textarea id="rejectReason" rows="3" style="width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font:inherit;font-size:13px;margin-top:6px" placeholder="Explain why you're rejecting this change — the person who proposed it will see this in Versions &amp; changes."></textarea>
+         <div style="display:flex;gap:10px;margin-top:10px">
+           <button class="btn danger" onclick="rejectCatProposal('${jsq(r.id)}')">Confirm rejection</button>
+           <button class="btn" onclick="hideRejectForm()">Cancel</button>
+         </div>
+       </div>`
+    : `<div class="banner" style="margin-top:18px;margin-bottom:0">Switch to <b>Data steward</b> (top right) to approve this change into the knowledge base.</div>`;
+  document.getElementById('reviewDetail').innerHTML=`
+    <div class="page-h" style="margin-bottom:2px"><h1 style="font-size:19px">${esc(r.name)}</h1><span class="pill review">In review</span></div>
+    <p class="page-sub" style="margin:4px 0 16px">${esc(r.area)} · proposed by ${esc(r.who)}${r.when?' · '+esc(r.when):''} · ${esc(r.itemId)}</p>
+    ${evalPanel(r.duplicates, r.cat)}
+    <div class="diff">
+      <div class="col old"><h5>● Current (live)</h5>${oldCol}</div>
+      <div class="col new"><h5>● Proposed</h5>${newCol}</div>
+    </div>
+    ${actions}`;
+}
+// background duplicate/consistency eval result, shown to the steward before they approve
+function evalPanel(dupes, cat){
+  dupes = dupes||[];
+  if(!dupes.length)
+    return `<div style="margin:0 0 14px;padding:10px 12px;border-radius:8px;background:#e6f4ec;color:#256b45;font-size:13px">✓ <b>Duplicate &amp; quality eval passed</b> — no overlapping items found in the knowledge base.</div>`;
+  const items=dupes.map(m=>{ const open=cat==='terms'?`openTermDuplicate('${jsq(m.id)}')`:`openCatItem('${cat}','${jsq(m.id)}')`; return `<li style="margin:3px 0"><a href="#" onclick="${open};return false" style="color:#8a4b00;font-weight:600">${esc(m.title||m.id)}</a> <span style="opacity:.8">(${Math.round((m.score||0)*100)}% match)</span> — ${esc(m.verdict||'')}</li>`; }).join('');
+  return `<div style="margin:0 0 14px;padding:10px 12px;border-radius:8px;background:#fdf0e3;color:#8a4b00;font-size:13px">
+    ⚠ <b>Duplicate &amp; quality eval — ${dupes.length} possible match${dupes.length>1?'es':''}.</b>
+    Approving may create a duplicate of an existing item. Review these first:
+    <ul style="margin:6px 0 0;padding-left:18px">${items}</ul></div>`;
+}
+async function openTermDuplicate(id){
+  let term=TERMS.find(t=>t.id===id);
+  if(!term){ TERMS=await loadTermsFromTree(dref()); term=TERMS.find(t=>t.id===id); }
+  if(term) openTerm(term); else toast('Could not open the matching glossary term.');
+}
+
+/* ---------------- dashboard ---------------- */
+function renderDash(){
+  const steward = role==='steward';
+  document.getElementById('dash-title').textContent = steward ? "Steward dashboard" : "My dashboard";
+  document.getElementById('dash-sub').textContent = steward
+    ? "Everything waiting on your sign-off and up for review."
+    : "The terms you follow and anything that needs your input.";
+  const _ap=TERMS.filter(t=>t.status==='Approved').length, _ir=TERMS.filter(t=>t.status==='In review').length, _nu=TERMS.filter(t=>t.status==='Needs update').length;
+  const stats = steward
+    ? [[String(_ir+_nu),"Pending your sign-off","#2e75b6"],[String(TERMS.length),"Total terms","#1f3864"],[String(_nu),"Needs update","#c0492f"],[String(_ap),"Approved","#2e8b57"]]
+    : [[String(TERMS.length),"Total terms","#1f3864"],[String(_ir),"In review","#2e75b6"],[String(_nu),"Needs your input","#e08a1e"],[String(_ap),"Approved","#2c9a8f"]];
+  document.getElementById('statCards').innerHTML = stats.map(s=>
+    `<div class="stat"><div class="bar" style="background:${s[2]}"></div><div class="num" style="color:${s[2]}">${s[0]}</div><div class="lbl">${s[1]}</div></div>`).join('');
+
+  const owner = "Imported";
+  const mine = TERMS.filter(t=>t.owner===owner);
+  document.getElementById('dash-list1-h').textContent = steward ? "Waiting on your sign-off" : "Terms I own";
+  const list1 = steward ? REVIEW.map(r=>({name:r.name,meta:'Proposed by '+r.who,click:()=>go('review')}))
+                        : mine.map(t=>({name:t.name,meta:t.status,click:()=>openTerm(t)}));
+  document.getElementById('dashList1').innerHTML = list1.map((x,i)=>
+    `<div class="lc-row" onclick="dashClick(1,${i})"><span class="mini">${(x.name[0])}</span><div><div class="t">${x.name}</div><div class="m">${x.meta}</div></div></div>`).join('');
+  window._dl1=list1;
+
+  const due = TERMS.filter(t=>t.status==='Needs update'||t.status==='In review');
+  document.getElementById('dash-list2-h').textContent = "Due for review";
+  document.getElementById('dashList2').innerHTML = due.map((t,i)=>
+    `<div class="lc-row" onclick="openByName('${t.name}')"><span class="pill ${PILL[t.status]}" style="margin-right:2px">${t.status}</span><div><div class="t">${t.name}</div><div class="m">${t.area} · ${t.changed}</div></div></div>`).join('');
+}
+function dashClick(list,i){ if(list===1) window._dl1[i].click(); }
+
+/* ---------------- history ---------------- */
+let HISTORY=[
+  {type:"approve",t:"“Product Family Build Plan” approved & published",m:"R. Mehta · 3 days ago",b:"Signed off after weekly review alignment. Now available to the agent."},
+  {type:"edit",t:"“Supportability” flagged: Needs update",m:"J. Park · 2 weeks ago",b:"Tier-2 rule changed last quarter — definition must be revised before re-approval."},
+  {type:"",t:"“E-commerce Split Rule” proposed",m:"A. Silva · yesterday",b:"New rule drafted to make the 10% split explicit rather than a hidden assumption."},
+  {type:"approve",t:"“Weekly Demand Split” approved",m:"A. Silva · 4 days ago",b:"Confirmed weekly phasing including channel rules."},
+  {type:"edit",t:"“Server Demand” definition updated",m:"R. Mehta · 1 week ago",b:"Clarified that grain is product-family level."},
+];
+function renderHistory(){
+  document.getElementById('timeline').innerHTML=HISTORY.map(h=>
+    `<div class="tl ${h.type}"><div class="dot"><i></i></div>
+       <div class="tl-t">${h.t}</div><div class="tl-m">${h.m}</div>
+       <div class="tl-body">${h.b}</div></div>`).join('');
+}
+let PUBS=[];
+// history = rejected proposals (with the steward's reason, visible to the proposer) + published versions
+async function refreshHistory(){
+  let rejected=[]; try{ rejected=await (await fetch('/api/reviews/rejected')).json(); }catch(e){}
+  const rej=(rejected||[]).map(p=>({type:'reject',
+    t:'\u201c'+esc(p.title||p.itemId)+'\u201d rejected',
+    m:esc(p.rejectedBy||'Data steward')+' \u00b7 '+esc((p.rejectedAt||'').slice(0,10))+' \u00b7 proposed by '+esc(p.proposedBy||'a user'),
+    b:'<b>Reason:</b> '+esc(p.rejectionNote||'\u2014')}));
+  const pub=(PUBS||[]).map(p=>({type:'approve',
+    t:'KB version '+esc(p.version)+' published',
+    m:esc(p.termCount+' approved terms \u00b7 '+p.publishedAt),
+    b:'The agent now answers definitional questions from this version.'}));
+  HISTORY=[...rej, ...pub];
+  renderHistory();
+}
+
+/* ---------------- sources & reports (governed catalog + retirement) ---------------- */
+let SOURCES=[
+  {name:"Published Demands (Keystone gold)", type:"Dataset", owner:"R. Mehta", validated:true,  status:"Active",   note:"Source of server demand &amp; planned dock dates"},
+  {name:"Network BOM Pipeline",              type:"Dataset", owner:"A. Silva", validated:true,  status:"Active",   note:"Network demand by master site (MSF)"},
+  {name:"ISP Rack Supportability",           type:"Report",  owner:"J. Park", validated:true,  status:"Active",   note:"Constrained vs unconstrained supportable"},
+  {name:"T2 Forecast – MDM Unwind",           type:"Report",  owner:"R. Mehta", validated:true,  status:"Active",   note:"Net component demand (post-netting)"},
+  {name:"Legacy Supportability (iHub)",       type:"Report",  owner:"—",        validated:false, status:"Retiring", replacedBy:"ISP Rack Supportability", note:"Being retired — do not cite in answers"},
+  {name:"Ad-hoc Demand Extract v3",           type:"Dataset", owner:"—",        validated:false, status:"Retired",  replacedBy:"Published Demands (Keystone gold)", note:"Removed — superseded by the gold view"},
+];
+function renderSources(){
+  document.getElementById('sourceRows').innerHTML=SOURCES.map(sc=>{
+    const v = sc.validated ? '<span class="pill approved">✓ Validated</span>' : '<span class="pill draft">Not validated</span>';
+    let life;
+    if(sc.status==='Active')        life='<span class="pill review">Active</span>';
+    else if(sc.status==='Retiring') life=`<span class="pill update">Retiring</span> <span class="t-def">→ replaced by ${sc.replacedBy}</span>`;
+    else                            life='<span class="pill draft">Retired</span>'+(sc.replacedBy?` <span class="t-def">→ use ${sc.replacedBy}</span>`:'');
+    const open = sc.url ? `onclick="openReport('${sc.url}')" style="cursor:pointer"` : '';
+    const nameCell = sc.url ? `${sc.name} <span style="color:var(--blue);font-size:11px;font-weight:600">↗ open report</span>` : sc.name;
+    return `<tr ${open}><td><div class="t-name">${nameCell}</div><div class="t-def">${sc.note}</div></td><td>${sc.type}</td><td>${sc.owner}</td><td>${v}</td><td>${life}</td></tr>`;
+  }).join('');
+}
+function openReport(url){ if(url) window.open(url,'_blank','noopener'); }
+
+/* ---------------- data refresh (real Keystone last/next refresh per dataset) ---------------- */
+// Overwritten in boot() from /refresh-registry.json; this seed is the file:// fallback for the standalone wireframe.
+let REFRESH=[
+  {stage:'demand', label:'Published demands (Keystone gold)', view:'publisheddemands', cadenceLabel:'Daily', lastRefresh:'2026-09-01', nextRefresh:'2026-09-02', freshness:'fresh', recentRuns:['2026-09-01','2026-08-24','2026-08-19','2026-08-18','2026-08-17'], note:'Refreshed every day \u2014 the last five runs are consecutive days.'},
+  {stage:'demand', label:'Rack milestone / ETA dates', view:'SapDemandPlanETADates', cadenceLabel:'2\u20133\u00d7 per week', lastRefresh:'2026-08-28', nextRefresh:'2026-08-31', freshness:'fresh', recentRuns:['2026-08-28','2026-08-21','2026-08-18','2026-08-13','2026-08-11'], note:'Re-runs 2\u20133 times a week (2\u20134 day gaps), not strictly daily \u2014 last run 28 Aug.'},
+  {stage:'demand', label:'LRF long-range forecast', view:'lrfautomation', cadenceLabel:'Monthly', lastRefresh:'2026-08-25', nextRefresh:'2026-09-25', freshness:'fresh', recentRuns:['2026-08-25','2026-08-01','2026-07-07','2026-06-26','2026-06-24'], note:'Monthly LRF label branch \u2014 September cycle published 25 Aug; next cycle late September.'},
+  {stage:'network', label:'Network BOM pipeline', view:'networkplanningbompoline', cadenceLabel:'Daily', lastRefresh:'2026-09-01', nextRefresh:'2026-09-02', freshness:'fresh', recentRuns:['2026-09-01','2026-08-24','2026-08-19','2026-08-18','2026-08-17'], note:'Refreshed every day \u2014 the last five runs are consecutive days.'},
+  {stage:'supply', label:'Rack forecast T1 (POR)', view:'T1PORForecast', cadenceLabel:'Weekly', lastRefresh:'2026-08-26', nextRefresh:'2026-09-02', freshness:'fresh', recentRuns:['2026-08-26','2026-08-21','2026-08-12','2026-08-05','2026-07-29'], note:'Fresh POR version lands weekly (every Tuesday) \u2014 landed 26 Aug.'},
+  {stage:'supply', label:'Component forecast T2 (POR)', view:'T2PORForecast', cadenceLabel:'Weekly', lastRefresh:'2026-08-26', nextRefresh:'2026-09-02', freshness:'fresh', recentRuns:['2026-08-26','2026-08-21','2026-08-20','2026-08-12','2026-08-05'], note:'Fresh POR version lands weekly (every Tuesday) \u2014 landed 26 Aug.'},
+  {stage:'supply', label:'Gating optimizer', view:'sapibptdsgatingoptimizer', cadenceLabel:'2\u20133\u00d7 per week', lastRefresh:'2026-08-28', nextRefresh:'2026-08-31', freshness:'fresh', recentRuns:['2026-08-28','2026-08-21','2026-08-18','2026-08-13','2026-08-10'], note:'Re-runs 2\u20133 times a week (2\u20134 day gaps) \u2014 last run 28 Aug.'},
+  {stage:'supply', label:'SOP CAPEX demand (server CAPEX)', view:'sapibpsopcapexdemandlatest', cadenceLabel:'Weekly', lastRefresh:'2026-08-31', nextRefresh:'2026-09-07', freshness:'fresh', recentRuns:['2026-08-31','2026-08-19','2026-08-14','2026-08-12'], note:'Latest twin exposes the newest weekly snapshot (31 Aug) \u2014 next weekly run due 7 Sep.'},
+  {stage:'supply', label:'Lead time', view:'sapibpsidcleadtime', cadenceLabel:'Weekly', lastRefresh:'2026-08-27', nextRefresh:'2026-09-03', freshness:'fresh', recentRuns:['2026-08-27','2026-08-13','2026-08-06','2026-07-31','2026-07-23'], note:'Build + ship lead-time offsets, refreshed about weekly \u2014 last run 27 Aug.'},
+  {stage:'supply', label:'T3N sub-component master', view:'sapibpreferencetdst3nresourcedesign', cadenceLabel:'Reference (on change)', lastRefresh:null, lastRefreshText:'Reference master', nextRefresh:null, nextRefreshText:'On design change', freshness:'reference', recentRuns:[], note:'Reference master data \u2014 changes only when the sub-component design changes.'},
+  {stage:'buffer', label:'Component buffer (safety stock)', view:'sapibpbuffersquareset', cadenceLabel:'Stalled', lastRefresh:'2026-05-15', nextRefresh:null, nextRefreshText:'Overdue \u2014 no run since May', freshness:'stale', recentRuns:['2026-05-15','2026-05-10','2026-05-03','2026-04-27','2026-04-20'], note:'Refreshed weekly until 15 May 2026, then stopped \u2014 ~3 months stale in Keystone. Do not cite buffer figures until it resumes.'}
+];
+let REFRESH_META={queriedAt:'2026-08-12'};
+const FRESH={fresh:{pill:'fp-fresh',dot:'fr-fresh',label:'Fresh'},due:{pill:'fp-due',dot:'fr-due',label:'Due now'},stale:{pill:'fp-stale',dot:'fr-stale',label:'Stale'},reference:{pill:'fp-reference',dot:'fr-reference',label:'Reference'}};
+function fmtRef(d){ if(!d) return null; const dt=new Date(d+'T00:00:00'); return isNaN(dt)?d:dt.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); }
+function refLast(r){ return r.lastRefresh?fmtRef(r.lastRefresh):(r.lastRefreshText||'\u2014'); }
+function refNext(r){ return r.nextRefresh?fmtRef(r.nextRefresh):(r.nextRefreshText||'\u2014'); }
+function todayISO(){ const d=new Date(), z=n=>String(n).padStart(2,'0'); return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate()); }
+// A dataset is "overdue" when its scheduled nextRefresh is strictly before today and it still claims currency
+// (fresh/due). 'stale' already flags a problem and 'reference' has no schedule, so both are skipped.
+function isOverdue(r){
+  if(!r.nextRefresh || r.freshness==='reference' || r.freshness==='stale') return false;
+  return r.nextRefresh < todayISO();
+}
+function overdueTag(r){
+  if(!isOverdue(r)) return '';
+  const since=REFRESH_META.queriedAt?fmtRef(REFRESH_META.queriedAt):'the last read';
+  return `<div class="ref-overdue" title="Scheduled refresh was due ${fmtRef(r.nextRefresh)}; Keystone has not been re-checked since ${since}.">\u23f1 overdue since ${fmtRef(r.nextRefresh)}</div>`;
+}
+function renderRefresh(){
+  const el=document.getElementById('refreshRows'); if(!el) return;
+  const asOf=document.getElementById('refreshAsOf'); if(asOf) asOf.textContent = REFRESH_META.queriedAt ? ('Read from Keystone on '+fmtRef(REFRESH_META.queriedAt)+'.') : '';
+  el.innerHTML=REFRESH.map(r=>{
+    const f=FRESH[r.freshness]||FRESH.reference;
+    const runs=(r.recentRuns&&r.recentRuns.length)?`<div class="ref-runs">recent runs: ${r.recentRuns.slice(0,5).map(fmtRef).join(' \u00b7 ')}</div>`:'';
+    return `<tr><td><div class="t-name">${r.label}</div><div class="t-def">${r.note||''}</div>${runs}</td>`+
+      `<td><span class="ref-cad">${r.cadenceLabel}</span></td>`+
+      `<td>${refLast(r)}</td><td>${refNext(r)}${overdueTag(r)}</td>`+
+      `<td><span class="fresh-pill ${f.pill}"><span class="fresh-dot ${f.dot}"></span>${f.label}</span></td>`+
+      `<td class="ref-act">${refreshAction(r)}</td></tr>`;
+  }).join('');
+}
+function refreshAction(r){
+  // No action needed when there is nothing to verify (reference) or it is already fresh.
+  if(!r.check || r.freshness==='fresh') return '<span class="chk-state muted">\u2014</span>';
+  return `<button class="btn-check steward-only" id="chk-${r.view}" onclick="verifyDataset('${r.view}')">\u21bb Check now</button>`+
+         `<span class="chk-state" id="chks-${r.view}"></span>`;
+}
+function labelOf(v){ const r=REFRESH.find(x=>x.view===v); return r?r.label:v; }
+function setChkState(view,cls,msg){ const st=document.getElementById('chks-'+view); if(st){ st.className='chk-state '+cls; st.textContent=msg; } }
+async function verifyDataset(view){
+  const btn=document.getElementById('chk-'+view); if(btn) btn.disabled=true;
+  setChkState(view,'checking','Freshness check in progress\u2026');
+  toast('Checking Keystone freshness for '+labelOf(view)+'\u2026');
+  try{
+    const j=await (await fetch('/api/refresh/'+encodeURIComponent(view)+'/verify',{method:'POST'})).json();
+    pollJob(view, j.id);
+  }catch(e){ setChkState(view,'error','Could not start the check'); if(btn) btn.disabled=false; }
+}
+async function pollJob(view,id){
+  try{
+    const j=await (await fetch('/api/refresh/jobs/'+id)).json();
+    if(j.state==='checking'){ setChkState(view,'checking','Freshness check in progress\u2026'); return setTimeout(()=>pollJob(view,id),1500); }
+    if(j.state==='pulling'){ setChkState(view,'checking','New data found \u2014 syncing to replica\u2026'); return setTimeout(()=>pollJob(view,id),2500); }
+    finishJob(view,j);
+  }catch(e){ setChkState(view,'error','Status poll failed'); const b=document.getElementById('chk-'+view); if(b) b.disabled=false; }
+}
+async function finishJob(view,j){
+  const b=document.getElementById('chk-'+view); if(b) b.disabled=false;
+  const cls=(j.outcome==='landed')?'ok':(j.outcome==='not-yet'||j.outcome==='current'||j.outcome==='reference')?'muted':'warn';
+  setChkState(view,cls,shortOutcome(j));
+  toast(j.message||'Done.');
+  if(j.synced){
+    try{ const rr=await (await fetch('/refresh-registry.json?_='+Date.now())).json(); if(rr&&Array.isArray(rr.datasets)){ REFRESH=rr.datasets; REFRESH_META={queriedAt:(rr._meta&&rr._meta.keystoneQueriedAt)||''}; } }catch(e){}
+    renderRefresh();
+  }
+}
+function shortOutcome(j){
+  switch(j.outcome){
+    case 'landed': return '\u2713 Landed \u00b7 replica synced'+(j.keystoneLatest?(' ('+j.keystoneLatest+')'):'');
+    case 'landed-not-synced': return '\u25cf New at Keystone'+(j.keystoneLatest?(' ('+j.keystoneLatest+')'):'')+' \u00b7 sync needed';
+    case 'not-yet': return '\u25cb Not refreshed yet at Keystone';
+    case 'current': return '\u2713 Up to date';
+    case 'reference': return '\u2014 Reference master';
+    case 'unavailable': return '\u00d7 Keystone unreadable';
+    default: return '\u00d7 '+(j.message||'error');
+  }
+}
+
+/* ---------------- data-flow lineage map ---------------- */
+const FLOW=[
+  {id:'demand', label:'Demand', cls:'s-demand', icon:'\uD83D\uDCC8', color:'#2e75b6',
+   who:'<b>Demand planners</b> agree how much the business wants, then lock it as the plan of record.',
+   nodes:[{name:'Server demand', sub:'by product family (PFAM)'},
+      {name:'Network demand', sub:'by master site (MSF)'},
+          {name:'Consensus & POR', sub:'unconstrained \u2192 final plan'}]},
+    {id:'supply', label:'Supply Planning', cls:'s-supply', icon:'\uD83C\uDFED', color:'#2c9a8f',
+     who:'<b>Supply planners</b> explode approved demand into components and check what parts can be supported.',
+     nodes:[{name:'Component explosion', sub:'BOM \u2192 parts, net / gross'},
+          {name:'Supportability', sub:'constrained vs unconstrained'},
+          {name:'Gating & lead time', sub:'what\u2019s short, when it lands'}]},
+  {id:'network', label:'Network Planning', cls:'s-network', icon:'\uD83C\uDF10', color:'#7a5bd0',
+    who:'<b>Network planners</b> take demand quantity, prepare MSF-level quantity, and manage Network CAPEX with T1 / T2.',
+   nodes:[{name:'MSF quantity preparation', sub:'demand quantity \u2192 master site need'},
+     {name:'Network CAPEX approval', sub:'network tiers T1 / T2'},
+     {name:'Network supply plan', sub:'DCEP, colo & rows'}]},
+  {id:'buffer', label:'Buffer', cls:'s-buffer', icon:'\uD83D\uDEE1\uFE0F', color:'#e08a1e',
+   who:'<b>Safety stock</b> absorbs demand & supply variability so short parts don\u2019t stall the build.',
+   nodes:[{name:'Component buffer', sub:'safety stock held ahead'},
+          {name:'Days of supply', sub:'how long the buffer lasts', emerging:true}]},
+  {id:'exec', label:'Execution', cls:'s-exec', icon:'\uD83D\uDD27', color:'#c0492f',
+   who:'<b>Fulfillment</b> builds & installs; <b>system integrators</b> raise POs and ship the gear.',
+   nodes:[{name:'Build & install', sub:'build order POR, install base'},
+          {name:'SI fulfillment', sub:'POs / APOs, ship & receive'},
+          {name:'E&O / lag', sub:'excess & obsolete, plan vs actual'}]}
+];
+
+// assign each term to exactly one stage (priority: buffer > network > execution > supply > demand)
+function stageOf(t){
+  const hay=((t.name||'')+' '+(t.area||'')+' '+(t.aliases||'')).toLowerCase();
+  const has=arr=>arr.some(k=>hay.includes(k));
+  if(has(['buffer','safety stock','days of supply'])) return 'buffer';
+  if(has(['network','msf','master site','dcep','colo','network bom'])) return 'network';
+  if(has(['build order','install base','fulfil','fulfill','excess','e&o','lag analysis','minimum commit','system integrator','apo'])) return 'exec';
+  if((t.area||'').toLowerCase().startsWith('supply') ||
+     has(['component','support','gating','bom','netting','explosion','lead time','dock','ex-factory','atp','attach','tier','blocker','shortage','capacity','capex','snapshot','offset'])) return 'supply';
+  return 'demand';
+}
+function termsForStage(id){ return TERMS.filter(t=>stageOf(t)===id); }
+// Minimal per-stage refresh summary for the workflow map (worst-case status + newest last-refresh).
+function stageRefresh(id){
+  const items=REFRESH.filter(r=>r.stage===id);
+  if(!items.length) return null;
+  const stale=items.filter(r=>r.freshness==='stale').length;
+  const due=items.filter(r=>r.freshness==='due').length;
+  const overdue=items.filter(isOverdue).length;
+  let dot='fr-fresh', label='up to date';
+  if(stale){ dot='fr-stale'; label=stale+' stalled'; }
+  else if(due){ dot='fr-due'; label=due+' due now'; }
+  else if(overdue){ dot='fr-due'; label=overdue+' overdue'; }
+  const dated=items.map(r=>r.lastRefresh).filter(Boolean).sort();
+  return {dot, label, newest:dated.length?dated[dated.length-1]:null, count:items.length};
+}
+function datasetsForStage(id){
+  return SOURCES.filter(sc=>{
+    const hay=((sc.name||'')+' '+(sc.note||'')).toLowerCase();
+    if(id==='network') return hay.includes('network');
+    if(id==='buffer')  return hay.includes('buffer');
+    if(id==='exec')    return /build|install|fulfil|ship|order|\bpo\b|\bsi\b/.test(hay);
+    if(id==='supply')  return /component|support|t2|bom|part|netting|explosion|rack/.test(hay) && !hay.includes('network');
+    return hay.includes('demand') && !hay.includes('network');
+  });
+}
+function renderFlow(){
+  const el=document.getElementById('flowStages'); if(!el) return;
+  const byId=Object.fromEntries(FLOW.map(stage=>[stage.id,stage]));
+  const conn=()=>'<div class="stage-conn"><span class="arw">\u2192</span></div>';
+  el.innerHTML=
+    stageBox(byId.demand) +
+    conn() +
+    '<div class="flow-gate"><b>Demand Plan CAPEX Approval</b><span>approved plan released for planning</span></div>' +
+    `<div class="flow-lanes"><div class="lanes-cap">Parallel planning tracks</div>` +
+      `<div class="parallel-row">${conn()}${stageBox(byId.supply)}${conn()}</div>` +
+      `<div class="parallel-row">${conn()}${stageBox(byId.network)}${conn()}</div>` +
+    `</div>` +
+    stageBox(byId.buffer) +
+    conn() +
+    stageBox(byId.exec);
+}
+function stageBox(s){
+  const count=termsForStage(s.id).length;
+  const nodes=s.nodes.map(n=>`<span class="node ${n.emerging?'emerging':''}">${n.name}<span class="n-sub">${n.sub}</span></span>`).join('');
+  const foot=count? `${count} governed term${count===1?'':'s'} \u203a` : 'Terms coming soon \u203a';
+  const rf=stageRefresh(s.id);
+  const rfChip = rf ? `<div class="stage-refresh" title="${rf.count} Keystone dataset${rf.count===1?'':'s'} feed this stage \u2014 click for refresh detail"><span class="fresh-dot ${rf.dot}"></span>Refresh: ${rf.label}${rf.newest?' \u00b7 '+fmtRef(rf.newest):''}</div>` : '';
+  return `<div class="stage ${s.cls}" onclick="openFlowDrawer('${s.id}')" title="Click to see all datasets & terms behind ${s.label}">
+        <div class="stage-head"><span class="ic">${s.icon}</span>${s.label}</div>
+        <div class="stage-who">${s.who}</div>
+        <div class="stage-data">Data generated here</div>
+        ${nodes}
+        ${rfChip}
+        <div class="stage-data" style="margin-top:auto;border-top:1px solid var(--line2);padding-top:8px;color:var(--accent)">${foot}</div>
+      </div>`;
+}
+function openFlowDrawer(id){
+  const s=FLOW.find(x=>x.id===id); if(!s) return;
+  const head=document.getElementById('flowDrawerHead'); head.style.setProperty('--accent', s.color);
+  document.getElementById('fdStage').textContent=s.label+' stage';
+  document.getElementById('fdTitle').textContent=s.label;
+  document.getElementById('fdWho').innerHTML=s.who;
+  const terms=termsForStage(id);
+  document.getElementById('fdTerms').innerHTML = terms.length
+    ? terms.map(t=>`<div class="d-term" onclick="closeFlowDrawer();openByName('${(t.name||'').replace(/'/g,"\\'")}')">
+        <div class="dt-top"><span class="dt-name">${t.name}</span><span class="pill ${PILL[t.status]||'draft'}">${t.status}</span></div>
+        <div class="dt-def">${t.def||''}</div></div>`).join('')
+    : '<div class="d-empty">This stage is emerging \u2014 terms are still being defined in the knowledge base.</div>';
+  const rf=REFRESH.filter(r=>r.stage===id);
+  document.getElementById('fdRefresh').innerHTML = rf.length
+    ? rf.map(r=>{const f=FRESH[r.freshness]||FRESH.reference; return `<div class="fd-refresh"><div class="fr-top"><span class="fr-name"><span class="fresh-dot ${f.dot}"></span>${r.label}</span><span class="fresh-pill ${f.pill}">${f.label}</span></div><div class="fr-when">${r.cadenceLabel} \u00b7 last <b>${refLast(r)}</b> \u00b7 next <b>${refNext(r)}</b></div>${overdueTag(r)}</div>`;}).join('')
+    : '<div class="d-empty">No Keystone dataset with a refresh cadence is tagged to this stage.</div>';
+  const ds=datasetsForStage(id);
+  document.getElementById('fdDatasets').innerHTML = ds.length
+    ? ds.map(sc=>`<div class="d-dataset"><span class="dd-ic">${sc.type==='Report'?'\uD83D\uDCCA':'\uD83D\uDDC3\uFE0F'}</span>
+        <div><div>${sc.name}</div><div class="dd-note">${sc.note||''}</div></div></div>`).join('')
+    : '<div class="d-empty">No datasets tagged to this stage yet.</div>';
+  document.getElementById('flowDrawerBack').classList.add('show');
+  document.getElementById('flowDrawer').classList.add('show');
+}
+function closeFlowDrawer(){
+  document.getElementById('flowDrawerBack').classList.remove('show');
+  document.getElementById('flowDrawer').classList.remove('show');
+}
+
+/* ---------------- toast ---------------- */
+let toastTimer;
+function toast(msg){
+  const el=document.getElementById('toast');
+  document.getElementById('toastMsg').textContent=msg;
+  el.classList.add('show'); clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),2600);
+}
+
+/* ---------------- live data from the Knowledge Base API ---------------- */
+async function boot(){
+  try{
+    const [terms,sources,pubs]=await Promise.all([
+      loadTermsFromTree(dref()),
+      fetch('/api/sources').then(r=>r.json()),
+      fetch('/api/publishes').then(r=>r.json())
+    ]);
+    TERMS = terms;
+    SOURCES = sources;
+    PUBS = pubs;
+  }catch(e){ console.error('KB API load failed', e); }
+  const ct=document.getElementById('c-terms'); if(ct) ct.textContent=TERMS.length;
+  const cs=document.getElementById('c-sources'); if(cs) cs.textContent=SOURCES.length;
+  await loadReviews();
+  try{ const cur=await (await fetch('/api/kb/current')).json(); const cv=document.getElementById('concVer'); if(cv) cv.textContent = cur.published ? ('agent reading: KB v'+cur.version) : 'not published yet'; }catch(e){}
+  try{ const rr=await (await fetch('/refresh-registry.json')).json(); if(rr&&Array.isArray(rr.datasets)){ REFRESH=rr.datasets; REFRESH_META={queriedAt:(rr._meta&&rr._meta.keystoneQueriedAt)||''}; } }catch(e){}
+  const crf=document.getElementById('c-refresh'); if(crf) crf.textContent=REFRESH.length;
+  renderList(); refreshHistory(); renderSources(); renderFlow(); renderRefresh(); loadMeasures(); loadArtifacts(); loadDomains();
+}
+let MEASURES=[];
+async function loadMeasures(){
+  try{ MEASURES = await (await fetch('/api/measures')).json(); }catch(e){ MEASURES=[]; }
+  const c=document.getElementById('c-measures'); if(c) c.textContent=MEASURES.length;
+  renderMeasures();
+}
+function renderMeasures(){
+  const rows=document.getElementById('measureRows'); if(!rows) return;
+  rows.innerHTML = MEASURES.map(m=>`<tr onclick="openMeasureEdit('${m.key}')" style="cursor:pointer">
+    <td><div class="t-name">${m.qualifier}</div><div class="t-def">${m.key}${m.explanation?' \u00b7 '+m.explanation:''}</div></td>
+    <td>${m.domain}</td>
+    <td><span class="t-def">${m.rule}</span></td>
+    <td><span class="pill ${PILL[m.status]||'draft'}">${m.status}</span></td>
+  </tr>`).join('');
+}
+async function publishRegistry(){
+  const p = await (await fetch('/api/registry/publish',{method:'POST'})).json();
+  toast('Registry published \u2014 '+p.version+' ('+p.viewCount+' views). The agent now uses it for numbers.');
+  await loadMeasures();
+}
+let ARTIFACTS=[];
+const ARTLABEL={glossary:'Schema-linking glossary (measure vocabulary)', grounding:'Value grounding index (real sites, parts, codes)', 'knowledge-base':'Narrative knowledge base (markdown)'};
+async function loadArtifacts(){
+  try{ ARTIFACTS = await (await fetch('/api/artifacts')).json(); }catch(e){ ARTIFACTS=[]; }
+  const c=document.getElementById('c-artifacts'); if(c) c.textContent=ARTIFACTS.length;
+  renderArtifacts();
+}
+function renderArtifacts(){
+  const rows=document.getElementById('artifactRows'); if(!rows) return;
+  rows.innerHTML = ARTIFACTS.map(a=>`<tr onclick="openArtifact('${a.name}')" style="cursor:pointer">
+    <td><div class="t-name">${a.name}</div><div class="t-def">${ARTLABEL[a.name]||''}</div></td>
+    <td>${a.kind}</td>
+    <td>v${a.version}</td>
+    <td><span class="pill ${PILL[a.status]||'draft'}">${a.status}</span></td>
+  </tr>`).join('');
+}
+async function publishAllArtifacts(){
+  await fetch('/api/artifacts/publish-all',{method:'POST'});
+  toast('All knowledge files republished. The agent reads everything from the KB.');
+  await loadArtifacts();
+}
+async function approveAndPublish(id){
+  if(!id){ toast('Open a term first'); return; }
+  await fetch('/api/terms/'+id+'/approve',{method:'POST'});
+  const p=await (await fetch('/api/publish',{method:'POST'})).json();
+  toast('Approved & published \u2014 KB v'+p.version+' ('+p.termCount+' terms). The agent now uses it.');
+  await boot();
+  if(document.getElementById('view-review').classList.contains('active')) renderReview();
+  if(document.getElementById('view-detail').classList.contains('active') && currentTerm) openByName(currentTerm.name);
+}
+function approveByName(name){
+  const t=TERMS.find(x=>x.name===name);
+  if(t&&t.id) approveAndPublish(t.id); else toast('Term not found');
+}
+
+/* ---------------- inline editor (measures + term definitions) ---------------- */
+let modalCtx=null;
+function fld(label,id,val){ return `<div class="fld"><label>${label}</label><textarea id="${id}">${(val||'').replace(/</g,'&lt;')}</textarea></div>`; }
+function showModal(){ document.getElementById('modalBack').classList.add('show'); }
+function closeModal(){ document.getElementById('modalBack').classList.remove('show'); modalCtx=null; }
+function modalChrome(wide, showSave, showPublish, saveLabel, publishLabel){
+  document.getElementById('modalCard').classList.toggle('wide', !!wide);
+  const s=document.getElementById('modalSaveBtn'), p=document.getElementById('modalPublishBtn');
+  s.style.display = showSave ? '' : 'none';
+  p.style.display = showPublish ? '' : 'none';
+  s.textContent = saveLabel || 'Save (send to review)';
+  p.textContent = publishLabel || 'Save, approve & publish';
+}
+async function openArtifact(name){
+  const a = await (await fetch('/api/artifacts/'+name)).json();
+  modalCtx={type:'artifact', name, kind:a.kind, editable:a.editable, raw:a.content||'', truncated:a.truncated};
+  document.getElementById('modalTitle').textContent=(a.editable?'Edit ':'View ')+'knowledge file \u2014 '+name;
+  document.getElementById('modalSub').textContent=a.kind+' \u00b7 v'+a.version+' \u00b7 '+a.status+' \u00b7 '+a.length.toLocaleString()+' chars';
+  // decide the friendliest editor for this file's shape
+  if(!a.editable){ modalCtx.mode='readonly'; }
+  else if(a.kind==='markdown'){ modalCtx.mode='markdown'; mdParse(a.content||''); }
+  else {
+    const col = detectCollection(a.content||'');
+    if(col){ modalCtx.mode='table'; modalCtx.collectionKey=col.key; modalCtx.siblings=col.siblings;
+      modalCtx.rootOrder=col.rootOrder; modalCtx.columns=inferColumns(col.items);
+      modalCtx.rows=col.items.map(it=>rowToStrings(it, modalCtx.columns)); modalCtx.visible=25; modalCtx.q='';
+    } else { modalCtx.mode='raw'; }
+  }
+  renderArtifactBody();
+  modalChrome(true, a.editable && modalCtx.mode!=='readonly', a.editable && modalCtx.mode!=='readonly');
+  showModal();
+}
+function escH(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* ----- JSON collection (table) editor ----- */
+function detectCollection(text){
+  let root; try{ root=JSON.parse(text); }catch(e){ return null; }
+  if(Array.isArray(root)) return {key:null, items:root, siblings:{}, rootOrder:null};
+  if(root && typeof root==='object'){
+    const order=Object.keys(root);
+    const isColl=v=>Array.isArray(v) && v.every(x=>x && typeof x==='object' && !Array.isArray(x));
+    // prefer the richest object-array (largest); allow an empty array too
+    let best=null;
+    for(const k of order){ const v=root[k]; if(Array.isArray(v) && (v.length===0 || isColl(v))){ if(!best || v.length>root[best].length) best=k; } }
+    if(best!==null){ const {[best]:_, ...sib}=root; return {key:best, items:root[best], siblings:sib, rootOrder:order}; }
+  }
+  return null;
+}
+function inferColumns(items){
+  const keys=[]; items.forEach(it=>Object.keys(it||{}).forEach(k=>{ if(!keys.includes(k)) keys.push(k); }));
+  return keys.map(k=>{
+    const vals=items.map(it=>it?.[k]).filter(v=>v!==undefined);
+    const scalar=v=>v===null||['string','number','boolean'].includes(typeof v);
+    if(vals.length && vals.every(v=>Array.isArray(v) && v.every(scalar))) return {key:k, kind:'list'};
+    if(vals.some(v=>v!==null && typeof v==='object')) return {key:k, kind:'json'};
+    let st='string';
+    if(vals.length && vals.every(v=>v===null||typeof v==='number')) st='number';
+    else if(vals.length && vals.every(v=>v===null||typeof v==='boolean')) st='boolean';
+    return {key:k, kind:'scalar', scalarType:st};
+  });
+}
+function rowToStrings(it, cols){
+  const r={};
+  cols.forEach(c=>{ const v=it?.[c.key];
+    r[c.key] = c.kind==='list' ? (Array.isArray(v)?v.join(', '):'')
+             : c.kind==='json' ? (v==null?'':JSON.stringify(v))
+             : (v==null?'':String(v));
+  });
+  return r;
+}
+function renderArtifactBody(){
+  const host=document.getElementById('modalFields');
+  if(modalCtx.mode==='table'){
+    host.innerHTML =
+      `<div class="art-bar">
+         <input class="art-search" placeholder="Search rows\u2026" oninput="artSearch(this.value)">
+         <span class="art-count" id="artCount"></span>
+         <input id="artNewCol" class="art-newcol" placeholder="new column name" style="display:none" onkeydown="if(event.key==='Enter'){event.preventDefault();artAddColConfirm();}">
+         <button class="btn ghost mini" onclick="artColPrompt()">+ Column</button>
+       </div>
+       <div id="artGrid"></div>
+       <div class="art-add-row"><button class="btn primary mini" onclick="artAddRow()">+ Add row</button></div>`;
+    renderArtGrid();
+  } else if(modalCtx.mode==='markdown'){
+    host.innerHTML =
+      `<div class="art-bar">
+         <span class="art-count" id="artCount"></span>
+         <button class="btn ghost mini" onclick="mdToggleRaw()">${modalCtx.mdRaw?'\u2039 Back to sections':'Edit raw markdown'}</button>
+       </div>
+       <div id="artMd"></div>`;
+    renderArtMd();
+  } else {
+    const ro = modalCtx.mode==='readonly';
+    const note = ro ? `<div class="ro-note">Machine-generated from the data \u2014 view-only${modalCtx.truncated?' (showing the first part of a large file)':''}.</div>` : '';
+    host.innerHTML = note + `<div class="fld"><textarea id="a_content" class="big"${ro?' readonly':''}>${escH(modalCtx.raw)}</textarea></div>`;
+  }
+}
+function artSearch(q){ modalCtx.q=(q||'').toLowerCase(); renderArtGrid(); }
+function artCell(i,k,v){ modalCtx.rows[i][k]=v; }
+function artAddRow(){ const r={}; modalCtx.columns.forEach(c=>r[c.key]=''); modalCtx.rows.push(r); modalCtx.visible=modalCtx.rows.length; renderArtGrid(); }
+function artDelRow(i){ modalCtx.rows.splice(i,1); renderArtGrid(); }
+function artAddCol(){ artColPrompt(); }
+function artColPrompt(){ const inp=document.getElementById('artNewCol'); if(!inp) return; inp.style.display=''; inp.focus(); }
+function artAddColConfirm(){ const inp=document.getElementById('artNewCol'); if(!inp) return; const k=(inp.value||'').trim();
+  if(!k){ inp.style.display='none'; return; }
+  if(modalCtx.columns.some(c=>c.key===k)){ toast('That column already exists'); return; }
+  modalCtx.columns.push({key:k, kind:'scalar', scalarType:'string'}); modalCtx.rows.forEach(r=>{ if(r[k]==null) r[k]=''; });
+  inp.value=''; inp.style.display='none'; renderArtGrid(); }
+function renderArtGrid(){
+  const g=document.getElementById('artGrid'); if(!g) return;
+  const cols=modalCtx.columns;
+  if(cols.length===0){
+    g.innerHTML=`<div class="art-empty">This file has no columns yet.<br>Add your first column to start building the table.
+      <div class="art-add-row" style="justify-content:center"><button class="btn primary mini" onclick="artAddCol()">+ Add first column</button></div></div>`;
+    const cnt=document.getElementById('artCount'); if(cnt) cnt.textContent=`${modalCtx.rows.length} rows \u00b7 0 columns`;
+    return;
+  }
+  let idx=modalCtx.rows.map((r,i)=>i);
+  if(modalCtx.q) idx=idx.filter(i=>cols.some(c=>String(modalCtx.rows[i][c.key]||'').toLowerCase().includes(modalCtx.q)));
+  const total=idx.length; const shown=idx.slice(0, modalCtx.visible);
+  const head=`<tr><th class="rownum">#</th>${cols.map(c=>`<th>${escH(c.key)}${c.kind!=='scalar'?`<span class="col-tag">${c.kind}</span>`:''}</th>`).join('')}<th></th></tr>`;
+  const body=shown.map(i=>{
+    const r=modalCtx.rows[i];
+    const cells=cols.map(c=>{
+      const cls=c.kind==='json'?' class="json-cell"':'';
+      return `<td><textarea${cls} rows="1" oninput="artCell(${i},'${c.key}',this.value)">${escH(r[c.key])}</textarea></td>`;
+    }).join('');
+    return `<tr><td class="rownum">${i+1}</td>${cells}<td class="rowdel"><button class="cell-x" title="Delete row" onclick="artDelRow(${i})">\u00d7</button></td></tr>`;
+  }).join('');
+  g.innerHTML=`<div class="kb-grid-wrap"><table class="kb-grid"><thead>${head}</thead><tbody>${body}</tbody></table></div>`+
+    (total>shown.length?`<div class="art-add-row"><button class="btn ghost mini" onclick="artMore()">Show more (${total-shown.length} hidden)</button></div>`:'');
+  const cnt=document.getElementById('artCount'); if(cnt) cnt.textContent=`${total} row${total===1?'':'s'}${modalCtx.q?' matching':''} \u00b7 ${cols.length} columns`;
+}
+function artMore(){ modalCtx.visible+=50; renderArtGrid(); }
+
+/* ----- Markdown (section blocks) editor ----- */
+function mdParse(text){
+  const lines=(text||'').replace(/\r\n?/g,'\n').split('\n'); const secs=[]; let intro=[]; let cur=null;
+  for(const ln of lines){ const m=ln.match(/^##\s+(.*)$/);
+    if(m){ if(cur) secs.push(cur); cur={title:m[1], body:[]}; }
+    else if(cur){ cur.body.push(ln); } else { intro.push(ln); } }
+  if(cur) secs.push(cur);
+  modalCtx.md={ intro:intro.join('\n').replace(/\s+$/,''), sections:secs.map(s=>({title:s.title, body:s.body.join('\n').replace(/^\n+/,'').replace(/\s+$/,'')})) };
+}
+function mdIntro(v){ modalCtx.md.intro=v; }
+function mdTitle(i,v){ modalCtx.md.sections[i].title=v; }
+function mdBody(i,v){ modalCtx.md.sections[i].body=v; }
+function mdAdd(){ modalCtx.md.sections.push({title:'New section', body:''}); renderArtMd(); }
+function mdDel(i){ modalCtx.md.sections.splice(i,1); renderArtMd(); }
+function mdMove(i,d){ const s=modalCtx.md.sections; const j=i+d; if(j<0||j>=s.length) return; [s[i],s[j]]=[s[j],s[i]]; renderArtMd(); }
+function renderArtMd(){
+  const host=document.getElementById('artMd'); if(!host) return;
+  if(modalCtx.mdRaw){ host.innerHTML=`<div class="fld"><textarea id="a_content" class="big">${escH(mdSerialize())}</textarea></div>`;
+    const cnt=document.getElementById('artCount'); if(cnt) cnt.textContent='raw markdown'; return; }
+  const intro=`<div class="art-sec art-intro"><div class="art-sec-head"><b>Intro / top of file</b></div>
+    <textarea oninput="mdIntro(this.value)" placeholder="Text before the first heading\u2026">${escH(modalCtx.md.intro)}</textarea></div>`;
+  const secs=modalCtx.md.sections.map((s,i)=>`<div class="art-sec">
+    <div class="art-sec-head">
+      <button class="mv" title="Move up" onclick="mdMove(${i},-1)">\u2191</button>
+      <button class="mv" title="Move down" onclick="mdMove(${i},1)">\u2193</button>
+      <input value="${escH(s.title).replace(/"/g,'&quot;')}" oninput="mdTitle(${i},this.value)" placeholder="Section heading">
+      <button class="cell-x" title="Delete section" onclick="mdDel(${i})">\u00d7</button>
+    </div>
+    <textarea oninput="mdBody(${i},this.value)" placeholder="Section content (plain text or markdown)\u2026">${escH(s.body)}</textarea>
+  </div>`).join('');
+  host.innerHTML=intro+secs+`<div class="art-add-row"><button class="btn primary mini" onclick="mdAdd()">+ Add section</button></div>`;
+  const cnt=document.getElementById('artCount'); if(cnt) cnt.textContent=`${modalCtx.md.sections.length} section${modalCtx.md.sections.length===1?'':'s'}`;
+}
+function mdToggleRaw(){ if(!modalCtx.mdRaw){ /* going to raw: model already synced */ }
+  else { mdParse(document.getElementById('a_content').value); }
+  modalCtx.mdRaw=!modalCtx.mdRaw; renderArtifactBody(); }
+function mdSerialize(){
+  const parts=[]; const intro=(modalCtx.md.intro||'').replace(/\s+$/,''); if(intro) parts.push(intro);
+  modalCtx.md.sections.forEach(s=>parts.push(`## ${(s.title||'').trim()}\n${(s.body||'').replace(/\s+$/,'')}`));
+  return parts.join('\n\n')+'\n';
+}
+
+/* ----- serialize whatever editor is active back to the stored file ----- */
+function serializeArtifact(){
+  if(modalCtx.mode==='table'){
+    const arr=modalCtx.rows.map((r,ri)=>{
+      const o={};
+      modalCtx.columns.forEach(c=>{ const raw=(r[c.key]??'').toString();
+        if(c.kind==='list'){ o[c.key]=raw.split(',').map(x=>x.trim()).filter(x=>x.length); }
+        else if(c.kind==='json'){ if(raw.trim()===''){ o[c.key]=null; return; }
+          try{ o[c.key]=JSON.parse(raw); }catch(e){ throw new Error(`Row ${ri+1}, column "${c.key}": invalid JSON \u2014 fix and retry.`); } }
+        else { const t=raw.trim();
+          if(c.scalarType==='number'){ o[c.key] = t!=='' && !isNaN(Number(t)) ? Number(t) : raw; }
+          else if(c.scalarType==='boolean'){ o[c.key] = t==='true'?true : t==='false'?false : raw; }
+          else o[c.key]=raw; }
+      });
+      return o;
+    });
+    let result;
+    if(modalCtx.collectionKey===null){ result=arr; }
+    else { result={}; (modalCtx.rootOrder||[modalCtx.collectionKey]).forEach(k=>{ result[k] = k===modalCtx.collectionKey ? arr : modalCtx.siblings[k]; });
+      if(!(modalCtx.collectionKey in result)) result[modalCtx.collectionKey]=arr; }
+    return JSON.stringify(result, null, 2)+'\n';
+  }
+  if(modalCtx.mode==='markdown'){ return modalCtx.mdRaw ? document.getElementById('a_content').value : mdSerialize(); }
+  return document.getElementById('a_content').value; // raw / readonly
+}
+function openNewArtifact(){
+  modalCtx={type:'newartifact'};
+  document.getElementById('modalTitle').textContent='Add a knowledge file';
+  document.getElementById('modalSub').textContent='Creates a Draft file you can fill in as a table or sections; approve & publish to send it to the agent.';
+  document.getElementById('modalFields').innerHTML =
+    `<div class="fld"><label>File name</label><textarea id="na_name" style="min-height:38px"></textarea></div>
+     <div class="fld"><label>What kind of file</label>
+       <select id="na_kind">
+         <option value="json">Table (structured records \u2014 like the glossary)</option>
+         <option value="markdown">Sections (narrative text \u2014 like the knowledge base)</option>
+       </select></div>`;
+  modalChrome(false,true,false,'Create file'); showModal();
+}
+function openMeasureEdit(key){
+  const m=MEASURES.find(x=>x.key===key); if(!m) return;
+  modalCtx={type:'measure', key:m.key, view:m.view};
+  document.getElementById('modalTitle').textContent='Edit measure \u2014 '+m.key;
+  document.getElementById('modalSub').textContent=m.view+' \u00b7 '+m.domain;
+  document.getElementById('modalFields').innerHTML =
+    fld('Qualifier \u2014 what this number means','m_qual',m.qualifier)+
+    fld('Explanation \u2014 plain English','m_expl',m.explanation||'')+
+    fld('Business rule \u2014 the filter/aggregation applied','m_rule',m.rule||'');
+  modalChrome(false,true,true); showModal();
+}
+function openNewMeasure(){
+  const views=[...new Set(MEASURES.map(m=>m.view))].sort();
+  modalCtx={type:'newmeasure'};
+  document.getElementById('modalTitle').textContent='Add a new measure';
+  document.getElementById('modalSub').textContent='Adds the measure under an existing view and sends it to review; approve & publish to send it to the agent.';
+  const viewOpts=views.map(v=>`<option value="${v}">${v}</option>`).join('');
+  document.getElementById('modalFields').innerHTML =
+    fld('Measure key (e.g. capex.approved)','n_key','')+
+    `<div class="fld"><label>View this measure belongs to</label><select id="n_view">${viewOpts}</select></div>`+
+    fld('Column it reads','n_col','')+
+    fld('Qualifier \u2014 what this number means','n_qual','')+
+    fld('Explanation \u2014 plain English','n_expl','')+
+    fld('Business rule \u2014 the filter/aggregation applied','n_rule','');
+  modalChrome(false,true,true,'Create (send to review)','Create, approve & publish');
+  showModal();
+}
+function openTermEdit(){
+  if(!currentTerm) return;
+  const steward = role==='steward';
+  modalCtx={type:'term', id:currentTerm.id};
+  document.getElementById('modalTitle').textContent=(steward?'Edit term \u2014 ':'Suggest an edit \u2014 ')+currentTerm.name;
+  document.getElementById('modalSub').textContent=steward
+    ? ('Edits write straight to '+dref()+'/terms/index.yaml (tree-as-source).')
+    : 'Your changes will be submitted to the review queue for Data steward approval.';
+  document.getElementById('modalFields').innerHTML =
+    fld('Term name','t_name',currentTerm.name)+
+    fld('Business area','t_area',currentTerm.area)+
+    fld('Definition','t_def',currentTerm.def)+
+    fld('Also known as (comma-separated)','t_alias',currentTerm.aliases||'')+
+    `<div class="fld"><button type="button" class="btn" onclick="checkTermDupes('t_')">\u26a0 Check for duplicates</button><div id="termDupeResult" class="plane-note" style="margin-top:8px">A background eval also runs automatically when you save.</div></div>`;
+  modalChrome(false,true,false,steward?'Save to knowledge base':'Submit for review'); showModal();
+}
+async function modalSave(publish){
+  if(!modalCtx) return;
+  if(modalCtx.type==='measure'){
+    const qualifier=document.getElementById('m_qual').value, explanation=document.getElementById('m_expl').value, rule=document.getElementById('m_rule').value;
+    await fetch('/api/measures/'+encodeURIComponent(modalCtx.key)+'/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({qualifier,explanation,rule})});
+    if(publish){
+      await fetch('/api/views/'+encodeURIComponent(modalCtx.view)+'/approve',{method:'POST'});
+      const p=await (await fetch('/api/registry/publish',{method:'POST'})).json();
+      toast('Saved, approved & published \u2014 '+p.version+'. The agent now uses it for numbers.');
+    } else { toast('Saved \u2014 measure sent to review.'); }
+    await loadMeasures();
+  } else if(modalCtx.type==='newmeasure'){
+    const key=document.getElementById('n_key').value.trim();
+    const view=document.getElementById('n_view').value;
+    if(!key){ toast('Enter a measure key'); return; }
+    const body={Key:key, View:view, Column:document.getElementById('n_col').value.trim(),
+      Qualifier:document.getElementById('n_qual').value, Explanation:document.getElementById('n_expl').value,
+      Rule:document.getElementById('n_rule').value};
+    const res=await fetch('/api/measures',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!res.ok){ let m='Could not add measure'; try{ m=(await res.json()).message||m; }catch(e){} toast(m); return; }
+    if(publish){
+      await fetch('/api/views/'+encodeURIComponent(view)+'/approve',{method:'POST'});
+      const p=await (await fetch('/api/registry/publish',{method:'POST'})).json();
+      toast('Created, approved & published \u2014 '+p.version+'. The agent now uses it for numbers.');
+    } else { toast('Created \u2014 measure sent to review.'); }
+    await loadMeasures();
+  } else if(modalCtx.type==='catalog'){
+    const fields={};
+    (modalCtx.keys||[]).forEach(k=>{ const el=document.getElementById('cf_'+k); if(el) fields[k]=el.value; });
+    const body = modalCtx.hasBody ? document.getElementById('cf_body').value : null;
+    if(publish){
+      const res=await fetch('/api/catalog/'+dref()+'/'+modalCtx.cat+'/apply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ItemId:modalCtx.id,Fields:fields,Body:body})});
+      if(!res.ok){ let m='Could not save'; try{ m=((await res.json()).errors||[m]).join(' '); }catch(e){} toast(m); return; }
+      let w=[]; try{ w=(await res.json()).warnings||[]; }catch(e){}
+      toast(w.length ? ('Saved & approved \u2014 \u26a0 eval flagged '+w.length+' possible duplicate(s).') : 'Saved & approved \u2014 the tree is updated. (Agent picks it up on next restart.)');
+      closeModal(); renderCat(modalCtx.cat); await loadReviews();
+    } else {
+      const res=await fetch('/api/reviews',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({Domain:dref(),Type:modalCtx.cat,ItemId:modalCtx.id,Fields:fields,Body:body,By:roleName()})});
+      if(!res.ok){ let m='Could not submit'; try{ m=(await res.json()).message||m; }catch(e){} toast(m); return; }
+      let dup=[]; try{ dup=(await res.json()).duplicates||[]; }catch(e){}
+      toast(dup.length ? ('Sent for review \u2014 \u26a0 eval flagged '+dup.length+' possible duplicate(s) for the steward.') : 'Sent to the data steward for review.');
+      closeModal(); await loadReviews();
+    }
+    return;
+  } else if(modalCtx.type==='term'){
+    const body={Id:modalCtx.id, Term:document.getElementById('t_name').value.trim(),
+      Category:document.getElementById('t_area').value.trim(),
+      Definition:document.getElementById('t_def').value,
+      Aliases:document.getElementById('t_alias').value, SeeAlso:currentTerm.seeAlso||''};
+    if(role==='steward'){
+      const res=await fetch('/api/tree/'+dref()+'/terms/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      if(!res.ok){ let m='Could not save'; try{ m=((await res.json()).errors||[m]).join(' '); }catch(e){} toast(m); return; }
+      let tdup=[]; try{ tdup=(await res.json()).duplicates||[]; }catch(e){}
+      toast(tdup.length ? ('Saved \u2014 \u26a0 eval flagged '+tdup.length+' similar term(s): '+tdup.map(x=>x.title).join(', ')) : 'Saved to knowledge base \u2014 '+dref()+'/terms/index.yaml updated. (Agent picks it up on next restart.)');
+      const keepName=body.Term;
+      TERMS = await loadTermsFromTree(dref());
+      const ct=document.getElementById('c-terms'); if(ct) ct.textContent=TERMS.length;
+      renderList(); closeModal();
+      const nt=TERMS.find(x=>x.name===keepName); if(nt) openTerm(nt);
+      return;
+    }
+    if(!body.Term){ toast('Enter a term name'); return; }
+    const res=await fetch('/api/reviews',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      Domain:dref(), Type:'terms', ItemId:modalCtx.id||'', Title:body.Term,
+      Fields:body, Body:null, By:roleName()
+    })});
+    if(!res.ok){ let m='Could not submit'; try{ m=(await res.json()).message||m; }catch(e){} toast(m); return; }
+    let dup=[]; try{ dup=(await res.json()).duplicates||[]; }catch(e){}
+    toast(dup.length ? ('Submitted for review \u2014 \u26a0 eval flagged '+dup.length+' possible duplicate(s) for the steward.') : 'Submitted to the data steward for review.');
+    closeModal();
+    await loadReviews();
+    return;
+  } else if(modalCtx.type==='artifact'){
+    let content; try{ content=serializeArtifact(); }catch(e){ toast(e.message||'Could not save'); return; }
+    const res=await fetch('/api/artifacts/'+modalCtx.name+'/content',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content})});
+    if(!res.ok){ let m='Save failed'; try{ m=(await res.json()).message||m; }catch(e){} toast(m); return; }
+    if(publish){ const p=await (await fetch('/api/artifacts/'+modalCtx.name+'/publish',{method:'POST'})).json(); toast('Saved & published \u2014 '+modalCtx.name+' v'+p.version+'. The agent now uses it.'); }
+    else toast('Saved \u2014 '+modalCtx.name+' sent to review.');
+    await loadArtifacts();
+  } else if(modalCtx.type==='newartifact'){
+    const name=document.getElementById('na_name').value.trim();
+    const kind=document.getElementById('na_kind').value;
+    if(!name){ toast('Enter a file name'); return; }
+    const res=await fetch('/api/artifacts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({Name:name,Kind:kind})});
+    if(!res.ok){ let m='Could not create the file'; try{ m=(await res.json()).message||m; }catch(e){} toast(m); return; }
+    const j=await res.json();
+    await loadArtifacts();
+    closeModal();
+    toast('Created "'+j.name+'" \u2014 now add your content, then approve & publish.');
+    openArtifact(j.name);
+    return;
+  } else if(modalCtx.type==='newterm'){
+    const name=document.getElementById('n_name').value.trim();
+    if(!name){ toast('Enter a term name'); return; }
+    const body={Term:name, Category:document.getElementById('n_area').value.trim()||'General',
+      Definition:document.getElementById('n_def').value,
+      Aliases:(document.getElementById('n_alias')?document.getElementById('n_alias').value:''), SeeAlso:''};
+    if(role==='steward'){
+      const res=await fetch('/api/tree/'+dref()+'/terms/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      if(!res.ok){ let m='Could not add term'; try{ m=((await res.json()).errors||[m]).join(' '); }catch(e){} toast(m); return; }
+      let ndup=[]; try{ ndup=(await res.json()).duplicates||[]; }catch(e){}
+      toast(ndup.length ? ('Added \u2014 \u26a0 eval flagged '+ndup.length+' similar term(s): '+ndup.map(x=>x.title).join(', ')) : 'Added to knowledge base \u2014 \u201c'+name+'\u201d written to '+dref()+'/terms/index.yaml.');
+      TERMS = await loadTermsFromTree(dref());
+      const ct=document.getElementById('c-terms'); if(ct) ct.textContent=TERMS.length;
+      renderList();
+    } else {
+      const res=await fetch('/api/reviews',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+        Domain:dref(), Type:'terms', ItemId:'', Title:name,
+        Fields:body, Body:null, By:roleName()
+      })});
+      if(!res.ok){ let m='Could not submit term'; try{ m=(await res.json()).message||m; }catch(e){} toast(m); return; }
+      let dup=[]; try{ dup=(await res.json()).duplicates||[]; }catch(e){}
+      toast(dup.length ? ('Submitted for review \u2014 \u26a0 eval flagged '+dup.length+' possible duplicate(s) for the steward.') : 'Submitted to the data steward for review.');
+      await loadReviews();
+    }
+  }
+  closeModal();
+}
+
+async function publishConcepts(){
+  const p = await (await fetch('/api/publish',{method:'POST'})).json();
+  toast('Published \u2014 KB v'+p.version+' ('+p.termCount+' approved terms). The agent now uses it.');
+  await boot();
+}
+async function deleteTerm(){
+  if(!currentTerm) return;
+  if(!confirm('Delete \u201c'+currentTerm.name+'\u201d from '+dref()+'/terms/index.yaml? The agent drops it on next restart.')) return;
+  const name=currentTerm.name, id=currentTerm.id;
+  const res=await fetch('/api/tree/'+dref()+'/terms/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({Id:id})});
+  if(!res.ok){ let m='Could not delete'; try{ m=((await res.json()).errors||[m]).join(' '); }catch(e){} toast(m); return; }
+  currentTerm=null;
+  toast('Deleted \u2014 \u201c'+name+'\u201d removed from the knowledge base.');
+  TERMS = await loadTermsFromTree(dref());
+  const ct=document.getElementById('c-terms'); if(ct) ct.textContent=TERMS.length;
+  go('list'); renderList();
+}
+function openProposeTerm(){
+  const steward = role==='steward';
+  modalCtx={type:'newterm'};
+  document.getElementById('modalTitle').textContent=steward?'Add a term':'Propose a term';
+  document.getElementById('modalSub').textContent=steward
+    ? ('Writes a new term straight into '+dref()+'/terms/index.yaml (tree-as-source).')
+    : 'Your proposal will go to the review queue for Data steward approval.';
+  document.getElementById('modalFields').innerHTML =
+    fld('Term name','n_name','')+
+    fld('Business area','n_area','')+
+    fld('Definition','n_def','')+
+    fld('Also known as (comma-separated)','n_alias','')+
+    `<div class="fld"><button type="button" class="btn" onclick="checkTermDupes('n_')">\u26a0 Check for duplicates</button><div id="termDupeResult" class="plane-note" style="margin-top:8px">A background eval also runs automatically when you add.</div></div>`;
+  modalChrome(false,true,false,steward?'Add to knowledge base':'Submit for review');
+  showModal();
+}
+// live dedup check for the glossary term editors (same eval that runs automatically on save)
+async function checkTermDupes(pfx){
+  const g=id=>{ const el=document.getElementById(id); return el?el.value:''; };
+  const body={Id:(modalCtx&&modalCtx.id)||'', Term:g(pfx+'name'), Category:g(pfx+'area'), Definition:g(pfx+'def'), Aliases:g(pfx+'alias'), SeeAlso:''};
+  const el=document.getElementById('termDupeResult'); if(el) el.textContent='Checking the knowledge base\u2026';
+  try{
+    const r=await fetch('/api/tree/'+dref()+'/terms/dupecheck',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const m=((await r.json()).matches)||[];
+    if(el) el.innerHTML = m.length
+      ? '\u26a0 '+m.length+' possible duplicate(s): '+m.map(x=>esc(x.title||x.id)+' ('+Math.round((x.score||0)*100)+'%)').join(', ')
+      : '\u2713 No overlapping terms found in the knowledge base.';
+  }catch(e){ if(el) el.textContent='Could not run the check.'; }
+}
+
+/* ---------------- init ---------------- */
+boot();
+</script>
+</body>
+</html>

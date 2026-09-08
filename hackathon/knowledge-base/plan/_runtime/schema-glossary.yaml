@@ -1,0 +1,10 @@
+type: SchemaGlossary
+id: plan/schema-glossary
+domain: plan
+items:
+  - business_name: Product family
+    source_field: product_family
+  - business_name: Planning period
+    source_field: period
+  - business_name: Planned quantity
+    source_field: quantity
