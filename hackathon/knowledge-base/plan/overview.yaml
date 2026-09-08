@@ -1,5 +1,5 @@
 type: DomainOverview
 id: demo
-name: Demo Planning
-title: Demo Planning
-description: Synthetic planning knowledge used to demonstrate governed authoring, review, and publication.
+name: Supply Chain
+title: Supply Chain
+description: Synthetic supply-chain knowledge used to demonstrate governed ontology, process, evidence, review, and publication.

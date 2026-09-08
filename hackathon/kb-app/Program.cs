@@ -27,7 +27,7 @@ static string TreeKbComposite(string solutionRoot)
     if (Directory.Exists(conceptsDir))
     {
         var sb = new System.Text.StringBuilder();
-        sb.AppendLine("# Demo Planning Knowledge Base").AppendLine();
+        sb.AppendLine("# SCOPE Knowledge Base").AppendLine();
         sb.AppendLine("Compiled from the structured public demo tree (knowledge-base/plan/concepts).").AppendLine();
         foreach (var f in Directory.EnumerateFiles(conceptsDir, "*.md").OrderBy(x => x, StringComparer.Ordinal))
         {

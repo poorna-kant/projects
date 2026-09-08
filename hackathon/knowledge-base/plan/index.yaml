@@ -1,8 +1,8 @@
 type: DomainIndex
 id: plan
-title: Demo Planning
+title: Supply Chain
 domain: plan
-description: Synthetic planning domain for the public hackathon demonstration.
+description: Synthetic supply-chain domain for the public SCOPE demonstration.
 overview: plan/overview
 catalogs:
   - id: plan/concepts
