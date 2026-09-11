@@ -1,0 +1,15 @@
+**
+!NuGet.Config
+!kb-app/
+!kb-app/**
+!knowledge-base/
+!knowledge-base/**
+**/bin/
+**/obj/
+**/data/
+**/_reviews/
+**/*.db
+**/*.db-shm
+**/*.db-wal
+**/*.tmp
+**/.env*

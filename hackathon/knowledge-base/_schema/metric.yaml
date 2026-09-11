@@ -1,0 +1,26 @@
+type: SchemaGuide
+id: schema/metric
+description: Public demo authoring guide, not an executable schema validator.
+storage: plan/metrics/{slug}.yaml
+required:
+  type: Metric
+  id: A stable domain/metrics/slug identifier matching the file path.
+  name: A human-readable metric name.
+  metric_code: A synthetic DEMO identifier, not an official production code.
+  measure_ref: A key declared by the synthetic runtime registry.
+  unit: The measurement unit, explicitly specified.
+  description: What is measured.
+  interpretation: How to read the measure, including undefined or exceptional cases.
+optional:
+  owner_role: A fictional role responsible for the demo definition.
+  context: Scope, dimensions, exclusions and snapshot assumptions.
+  related_objects: Existing synthetic object identifiers.
+  related_systems: Existing synthetic source-system identifiers.
+  evidence: Documented reference and whether it is illustrative or verified.
+  notes: Unconfirmed information and limitations.
+boundaries:
+  - The metric index is generated; keep authored context in separate per-metric files.
+  - A source reference demonstrates traceability, not automatic correctness.
+  - Do not invent a production hierarchy, approved thresholds, targets or improvement percentages.
+  - Demo formulas describe calculation contracts; this app does not query live data or execute a numeric query engine.
+  - Only synthetic public content belongs in this repository.

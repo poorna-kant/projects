@@ -1,0 +1,17 @@
+type: Metric
+id: plan/metrics/planning-demand
+name: Planned Demand
+domain: plan
+metric_code: DEMO-001
+measure_ref: planning.demand
+unit: units
+owner_role: Demo demand steward
+description: Total synthetic demand quantity for a selected product family, period and snapshot.
+interpretation: Higher means more requested units. It is a quantity, not an indication of delivery performance.
+context:
+  - Do not combine snapshots or duplicate the same demand identifier.
+  - The source mapping and values are fictional.
+related_objects: [plan/objects/demo-demand]
+related_systems: [plan/systems/demo-platform]
+evidence: examples/planning-metrics.json, illustrative expected results only.
+notes: No production data, targets or measured business benefit is represented.

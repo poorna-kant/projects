@@ -4,7 +4,7 @@ using YamlDotNet.Serialization.NamingConventions;
 namespace KbApp;
 
 // V2 tree-as-source: reads and WRITES the domain glossary (knowledge-base/{domain}/terms/index.yaml).
-// Edits go straight to the YAML the agent reads. A validation gate runs before every write.
+// Approved authoring edits update the tree; downstream consumers read explicit publications.
 public sealed class TreeStore
 {
     private readonly string _kbRoot;
@@ -17,15 +17,15 @@ public sealed class TreeStore
 
     public TreeStore(string kbRoot) => _kbRoot = kbRoot;
 
-    private string TermsPath(string domain) => Path.Combine(_kbRoot, domain, "terms", "index.yaml");
+    private string TermsPath(string domain) => Path.Combine(KnowledgePath.Catalog(_kbRoot, domain, "terms"), "index.yaml");
 
     public GlossaryDoc Read(string domain)
     {
         var p = TermsPath(domain);
         if (!File.Exists(p))
             return new GlossaryDoc { Type = "Glossary", Id = $"{domain}/terms", Domain = domain, Terms = new() };
-        try { return _de.Deserialize<GlossaryDoc>(File.ReadAllText(p)) ?? Empty(domain); }
-        catch { return Empty(domain); }
+        return _de.Deserialize<GlossaryDoc>(File.ReadAllText(p))
+            ?? throw new InvalidDataException("The glossary is empty or malformed.");
     }
 
     private static GlossaryDoc Empty(string d) => new() { Type = "Glossary", Id = $"{d}/terms", Domain = d, Terms = new() };
@@ -75,8 +75,8 @@ public sealed class TreeStore
         new(StringComparer.OrdinalIgnoreCase)
         {
             ["objects"] = new[] { ("title", "Title", false), ("description", "Description", true),
-                                  ("keystone_primary_table", "Keystone view / table", false),
-                                  ("keystone_key_fields", "Key fields (comma-separated)", false) },
+                                  ("source_primary_table", "Source view / table", false),
+                                  ("source_key_fields", "Key fields (comma-separated)", false) },
             ["concepts"] = new[] { ("name", "Name", false), ("summary", "Summary", true) },
             ["policies"] = new[] { ("name", "Name", false), ("category", "Category", false), ("description", "Description", true) },
             ["systems"] = new[] { ("name", "Name", false), ("display_name", "Display name", false), ("role", "Role", true) },
@@ -105,10 +105,10 @@ public sealed class TreeStore
         foreach (var s in schema)
         {
             string val;
-            if (s.key.StartsWith("keystone_", StringComparison.Ordinal))
+            if (s.key.StartsWith("source_", StringComparison.Ordinal))
             {
-                var km = MapOf(map!, "keystone_mapping");
-                var sub = s.key["keystone_".Length..];
+                var km = MapOf(map!, "source_mapping");
+                var sub = s.key["source_".Length..];
                 val = km is null ? "" : (sub == "key_fields" ? JoinL(km, "key_fields") : DStr(km, sub));
             }
             else val = DStr(map!, s.key);
@@ -123,6 +123,9 @@ public sealed class TreeStore
         if (!CatSchema.ContainsKey(type)) return (false, new() { "This catalog is not editable." }, "");
         if (string.IsNullOrWhiteSpace(id)) return (false, new() { "Missing item id." }, "");
         fields ??= new();
+        var allowed = CatSchema[type].Select(field => field.key).ToHashSet(StringComparer.Ordinal);
+        if (fields.Keys.Any(key => !allowed.Contains(key)))
+            return (false, new() { "The request contains an unsupported editable field." }, "");
 
         if (type == "concepts")
         {
@@ -134,7 +137,7 @@ public sealed class TreeStore
                 fm!["name"] = Clean(nm.Trim());
             }
             if (fields.TryGetValue("summary", out var sm)) fm!["summary"] = Clean((sm ?? "").Trim());
-            File.WriteAllText(path, "---\n" + _ser.Serialize(fm) + "---\n\n" + (body ?? "").Trim() + "\n");
+            KnowledgePath.WriteText(path, "---\n" + _ser.Serialize(fm) + "---\n\n" + (body ?? "").Trim() + "\n");
             return (true, new(), RelPath(path));
         }
 
@@ -148,23 +151,23 @@ public sealed class TreeStore
         foreach (var kv in fields)
         {
             var v = kv.Value ?? "";
-            if (kv.Key.StartsWith("keystone_", StringComparison.Ordinal))
+            if (kv.Key.StartsWith("source_", StringComparison.Ordinal))
             {
-                var km = MapOf(mp!, "keystone_mapping");
-                if (km is null) { km = new Dictionary<object, object>(); mp!["keystone_mapping"] = km; }
-                var sub = kv.Key["keystone_".Length..];
+                var km = MapOf(mp!, "source_mapping");
+                if (km is null) { km = new Dictionary<object, object>(); mp!["source_mapping"] = km; }
+                var sub = kv.Key["source_".Length..];
                 if (sub == "key_fields") km[sub] = (SplitList(v) ?? new()).Cast<object>().ToList();
                 else km[sub] = Clean(v.Trim());
             }
             else mp![kv.Key] = Clean(v.Trim());
         }
-        File.WriteAllText(fpath, LeadComment(fpath) + _ser.Serialize(mp));
+        KnowledgePath.WriteText(fpath, LeadComment(fpath) + _ser.Serialize(mp));
         return (true, new(), RelPath(fpath));
     }
 
     private (string? path, Dictionary<object, object>? fm, string body) FindConcept(string domain, string id)
     {
-        var dir = Path.Combine(_kbRoot, domain, "concepts");
+        var dir = KnowledgePath.Catalog(_kbRoot, domain, "concepts");
         if (Directory.Exists(dir))
             foreach (var f in Directory.EnumerateFiles(dir, "*.md"))
             {
@@ -177,12 +180,12 @@ public sealed class TreeStore
 
     private (string? path, Dictionary<object, object>? map) FindYaml(string domain, string type, string id)
     {
-        var dir = Path.Combine(_kbRoot, domain, type);
+        var dir = KnowledgePath.Catalog(_kbRoot, domain, type);
         if (Directory.Exists(dir))
             foreach (var f in Directory.EnumerateFiles(dir, "*.yaml").Where(x => Path.GetFileName(x) != "index.yaml"))
             {
-                Dictionary<object, object> m;
-                try { m = _dict.Deserialize<Dictionary<object, object>>(File.ReadAllText(f)) ?? new(); } catch { continue; }
+                var m = _dict.Deserialize<Dictionary<object, object>>(File.ReadAllText(f))
+                    ?? throw new InvalidDataException("A catalog record is empty.");
                 if (string.Equals(DStr(m, "id"), id, StringComparison.OrdinalIgnoreCase)) return (f, m);
             }
         return (null, null);
@@ -221,14 +224,17 @@ public sealed class TreeStore
     private static string JoinL(Dictionary<object, object> m, string key)
         => m.TryGetValue(key, out var v) && v is List<object> l ? string.Join(", ", l.Select(x => x?.ToString())) : "";
 
-    // ---- validation gate (same spirit as scripts/validate-kb.py, run before every write) ----
-    private static List<string> Validate(GlossaryDoc doc)
+    // Validate authored glossary records before writing or publishing.
+    public static List<string> Validate(GlossaryDoc doc)
     {
         var errors = new List<string>();
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (doc.Terms is null) return new() { "The glossary must contain a terms list." };
         foreach (var t in doc.Terms)
         {
             if (string.IsNullOrWhiteSpace(t.Term)) { errors.Add("A term is missing its name."); continue; }
+            if (!names.Add(t.Term.Trim())) errors.Add($"Duplicate term name '{t.Term}'.");
             if (string.IsNullOrWhiteSpace(t.Definition)) errors.Add($"\"{t.Term}\" is missing a definition.");
             if (!string.IsNullOrWhiteSpace(t.Id) && !seen.Add(t.Id!)) errors.Add($"Duplicate term id '{t.Id}'.");
         }
@@ -240,7 +246,7 @@ public sealed class TreeStore
         var path = TermsPath(domain);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var body = _ser.Serialize(doc);
-        File.WriteAllText(path, "# Plan-domain glossary. Authored via the Knowledge Base app (tree-as-source).\n" + body);
+        KnowledgePath.WriteText(path, "# Synthetic glossary. Approved authoring content; publish explicitly for consumers.\n" + body);
     }
 
     // V2: scaffold a new domain so it is instantly discovered by the app and the agent (no code change).
@@ -249,7 +255,7 @@ public sealed class TreeStore
         var name = (rawName ?? "").Trim().ToLowerInvariant();
         name = new string(name.Where(c => char.IsLetterOrDigit(c) || c == '-').ToArray());
         if (name.Length == 0) return (false, "Enter a valid domain name (letters, numbers, dashes).");
-        var dir = Path.Combine(_kbRoot, name);
+        var dir = KnowledgePath.Domain(_kbRoot, name);
         if (File.Exists(Path.Combine(dir, "overview.yaml"))) return (false, $"Domain '{name}' already exists.");
         Directory.CreateDirectory(dir);
         File.WriteAllText(Path.Combine(dir, "overview.yaml"),
@@ -274,10 +280,10 @@ public sealed class TreeStore
 
     // V2: the Metrics "feed" — machine-generate the metrics catalog from the governed semantic layer
     // (_runtime/registry.yaml measures), mirroring how _generated/grounding-index.json is produced.
-    // Each metric back-links to its measure; replace with the Keystone Metrics-Tree feed when connected.
+    // Each metric back-links to its measure; public demo identifiers are not production metric codes.
     public (bool ok, int count, string msg) GenerateMetrics(string domain)
     {
-        var regPath = Path.Combine(_kbRoot, domain, "_runtime", "registry.yaml");
+        var regPath = Path.Combine(KnowledgePath.Domain(_kbRoot, domain), "_runtime", "registry.yaml");
         if (!File.Exists(regPath)) return (false, 0, $"No _runtime/registry.yaml for '{domain}' — nothing to derive metrics from.");
         Dictionary<object, object> reg;
         try { reg = _dict.Deserialize<Dictionary<object, object>>(File.ReadAllText(regPath)) ?? new(); }
@@ -300,9 +306,11 @@ public sealed class TreeStore
                     {
                         Id = $"{domain}/metrics/{key.Replace('.', '-')}",
                         Name = MetricName(qualifier, key),
-                        MetricCode = "PLAN-" + key.ToUpperInvariant().Replace('.', '-'),
+                        MetricCode = DStr(md, "metric_code") is { Length: > 0 } code
+                            ? code : "PLAN-" + key.ToUpperInvariant().Replace('.', '-'),
                         Category = Cap(vdomain.Length > 0 ? vdomain : domain),
-                        Unit = MetricUnit(key, qualifier),
+                        Unit = DStr(md, "unit") is { Length: > 0 } unit
+                            ? unit : MetricUnit(key, qualifier),
                         Description = Clean(DStr(md, "explanation")),
                         MeasureRef = key,
                         Source = "derived from the governed semantic layer (_runtime/registry.yaml)"
@@ -317,11 +325,11 @@ public sealed class TreeStore
             Domain = domain,
             Metrics = metrics,
             Note = "Machine-generated from the governed semantic layer (_runtime/registry.yaml), read-only. " +
-                   "Each metric back-links to its measure via measure_ref. Replace with the Keystone Metrics-Tree feed (real metric_code) when connected."
+                   "Each metric back-links to its measure via measure_ref. Public demo codes and values are synthetic; no live metrics feed is connected."
         };
         var path = Path.Combine(_kbRoot, domain, "metrics", "index.yaml");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        File.WriteAllText(path, "# Metrics catalog — machine-generated from the semantic layer (tree-as-source generator).\n" + _ser.Serialize(doc));
+        KnowledgePath.WriteText(path, "# Synthetic metrics catalog generated from the demo registry.\n" + _ser.Serialize(doc));
         return (true, metrics.Count, $"Generated {metrics.Count} metric{(metrics.Count == 1 ? "" : "s")} for '{domain}' from the semantic layer.");
     }
 

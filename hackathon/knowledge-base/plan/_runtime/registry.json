@@ -30,6 +30,8 @@
       "measures": [
         {
           "key": "planning.demand",
+          "metric_code": "DEMO-001",
+          "unit": "units",
           "column": "quantity",
           "qualifier": "Approved synthetic demand quantity",
           "explanation": "Adds the quantity in synthetic demand records for the selected period.",
@@ -40,9 +42,12 @@
         },
         {
           "key": "planning.coverage",
+          "metric_code": "DEMO-002",
+          "unit": "percent",
           "column": "coverage_percent",
           "qualifier": "Synthetic supply coverage percentage",
-          "explanation": "Divides synthetic supportable quantity by synthetic demand quantity.",
+          "explanation": "For the same product family, period and snapshot, divide total synthetic supportable_quantity by total quantity and multiply by 100. Zero demand is undefined, not zero percent.",
+          "businessRule": "100 * SUM(supportable_quantity) / SUM(quantity); undefined when SUM(quantity) = 0. Do not average row percentages.",
           "horizon": "for the selected period",
           "analysisDimensions": ["product_family", "period"],
           "aggregate": "ratio"
