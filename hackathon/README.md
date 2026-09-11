@@ -1,6 +1,6 @@
 # Supply Chain Ontology, Process & Evidence (SCOPE)
 
-> A governed knowledge control plane that lets people decide what enterprise agents know, calculate, and trust.
+> Shared meaning. Traceable evidence. Approved knowledge.
 
 [![.NET 10](https://img.shields.io/badge/.NET-10-512BD4)](https://dotnet.microsoft.com/)
 ![Hackathon](https://img.shields.io/badge/Microsoft-Hackathon%202026-0078D4)
@@ -8,7 +8,8 @@
 
 SCOPE organizes domain knowledge into an inspectable, tree-backed product. Business meaning, source mappings, calculation rules, evidence, freshness, ownership, and approvals live together instead of being fragmented across prompts, reports, code, documents, and individual experts.
 
-This repository contains a sanitized public demonstration created for Microsoft Hackathon 2026.
+This folder contains an independent, synthetic-data demonstration created for Microsoft Hackathon 2026.
+It is not a production application or a connection to an employer's systems.
 
 ## The Problem
 
@@ -29,12 +30,15 @@ SCOPE provides reusable catalogs for:
 | Operations | Dataset freshness, status, ownership, and answerability |
 | Governance | Proposals, duplicate checks, steward review, approval, and publication |
 
-Only approved knowledge is released into immutable, versioned snapshots. An agent reads the published version rather than draft authoring content, so an unapproved edit cannot silently change what the agent interprets.
+In the local demonstration, proposals stay outside the approved authoring tree until a steward approves them.
+Approval updates that tree; explicit publication creates a numbered glossary and typed-record snapshot.
+The published-answer endpoint reads the published glossary, not pending proposals. Approval is a workflow
+status, not proof of data quality. This application does not run live numeric queries or an LLM.
 
 ## Personas
 
 - **Business users** browse approved knowledge, inspect traceability, and propose changes.
-- **Data stewards** compare proposed and current content, review duplicate warnings, approve or reject changes, publish versions, and verify freshness.
+- **Data stewards** compare proposed and current content, review duplicate warnings, approve or reject changes, and publish versions.
 - **Data architects** maintain source mappings, fields, and technical validation while preserving business ownership.
 
 ## What Makes It Different
@@ -52,15 +56,19 @@ flowchart LR
 	R -->|Approve or reject| DS[Data steward]
 	DS -->|Approved change| K
 	K -->|Publish| V[Immutable versioned artifacts]
-	V --> A[Enterprise agent]
-	A --> O[Grounded answer, signpost, or refusal]
+	V --> A[Published glossary lookup]
+	A --> O[Definition and version reference]
 ```
 
 ## Demo Flow
 
-1. **Explore the ontology:** open **How Data Connects**, then inspect an object, concept, policy, glossary term, measure, and grounding value.
-2. **Govern a change:** switch to **Business user**, propose an edit, then switch to **Data steward** to review the field-level difference and duplicate warning.
-3. **Publish trusted knowledge:** approve the change and publish a new immutable version for downstream agent consumption.
+1. **Explore:** browse the fictional process map, objects, definitions, measures, metrics, and supported values.
+2. **Explain:** open the synthetic Planned Demand or Supply Coverage context and its documented source mapping.
+3. **Govern locally:** in local interactive mode, propose a glossary correction as Business user, then review it as Data steward.
+4. **Publish:** confirm that proposal and approval leave the previously published answer unchanged, explicitly publish,
+   then read the updated definition and version. Old snapshots remain available on disk.
+
+The hosted default is read-only: visitors can inspect the demo, but cannot alter shared content.
 
 ## Run Locally
 
@@ -70,15 +78,77 @@ flowchart LR
 
 ### Start SCOPE
 
+Clone the public repository and start the read-only demo:
+
+```powershell
+git clone https://github.com/poorna-kant/projects.git
+Set-Location projects
+dotnet restore hackathon\kb-app\KbApp.csproj --configfile hackathon\NuGet.Config
+Set-Location hackathon\kb-app
+dotnet run --no-restore --urls http://127.0.0.1:8080
+```
+
+Open <http://127.0.0.1:8080>. Startup copies the synthetic seed into an isolated local state directory.
+All runtime changes are kept out of the checked-in seed files.
+
+To try interactive authoring on your own machine:
+
+```powershell
+$env:SCOPE_READ_ONLY = "false"
+dotnet run --no-restore --urls http://127.0.0.1:8080
+```
+
+Write requests also require a loopback client, a loopback Host, a same-origin Origin when present,
+and `X-SCOPE-Local: 1` (the UI sends it). Do not expose this local mode through tunnels or reverse
+proxies. Persona switching is not authentication. Set `SCOPE_READ_ONLY=true` for any hosted demo.
+
+NuGet uses Microsoft's public `dotnet-public` feed through the folder-scoped `NuGet.Config`, not
+NuGet.org. This feed does not advertise vulnerability-audit data; a successful restore is not a
+clean vulnerability audit. Review advisories separately before broader deployment.
+
+### Container deployment
+
 From the repository root:
 
 ```powershell
-cd hackathon/kb-app
-dotnet restore
-dotnet run --urls http://localhost:8080
+docker build -t scope-demo -f hackathon\Dockerfile hackathon
+docker compose -f hackathon\compose.yaml up --build -d
 ```
 
-Open <http://localhost:8080>.
+The supplied Compose file exposes the read-only demo on `127.0.0.1:8080`. To host it, use the same
+image with a managed HTTPS ingress targeting container port 8080 and `/healthz` as the health probe.
+Keep `SCOPE_READ_ONLY=true`. Run **one replica** and attach a writable persistent volume at `/app/state`
+with permissions for the image's non-root `app` user. Do not publish this state directory as static content.
+No cloud resources, credentials, or live source connectors are required or provisioned by this repository.
+
+SQLite, the approved authoring tree, proposals and snapshots live in that volume. Ephemeral storage loses
+changes at replacement; sharing one state directory among multiple replicas is unsupported and startup
+uses an exclusive instance lock. Back up the stopped instance's state directory when needed.
+To reset the fictional data, stop the demo and deliberately remove its state directory or named volume;
+this permanently deletes local proposals and snapshots.
+
+| Setting | Default | Purpose |
+| --- | --- | --- |
+| `SCOPE_READ_ONLY` | `true` | Deny all write requests unless explicitly enabled for local use. |
+| `SCOPE_STATE_PATH` | `kb-app/data/scope` locally; `/app/state` in the image | Mutable SQLite, authoring records, reviews and snapshots. |
+| `SCOPE_SEED_PATH` | Sibling `knowledge-base` locally; `/app/seed/knowledge-base` in the image | Synthetic seed, copied only when a state tree does not exist. |
+| `ASPNETCORE_HTTP_PORTS` | `8080` in the image | Container listening port. |
+
+### Contributor validation
+
+From the repository root, with PowerShell 7:
+
+```powershell
+dotnet restore hackathon\kb-app\KbApp.csproj --configfile hackathon\NuGet.Config
+dotnet build hackathon\kb-app\KbApp.csproj -c Release --no-restore
+pwsh -File hackathon\scripts\check-public-content.ps1
+pwsh -File hackathon\scripts\smoke.ps1
+```
+
+The smoke runner uses an isolated temporary state directory and an ephemeral loopback port; it checks
+read-only enforcement, local proposal/approval/publication, metric generation and persistence, then
+stops its processes and removes its temporary data. The GitHub workflow runs these checks and builds
+the container. It does not deploy or publish artifacts.
 
 ## Repository Layout
 
@@ -94,7 +164,8 @@ hackathon/
 |   |-- KbEval.cs           Duplicate evaluation
 |   `-- wwwroot/            User interface
 `-- knowledge-base/         Synthetic domain tree
-	|-- _eval/              Governance checks
+	|-- _schema/            Public metric-context authoring guide
+	|-- _eval/              Illustrative lookup scenarios
 	`-- plan/               Demo supply-chain domain
 ```
 
@@ -106,8 +177,45 @@ hackathon/
 - HTML, CSS, and JavaScript browser interface
 - Local-first, configuration-driven file paths
 
-## Public Demo Notice
+## Metric-context contributor starting point
 
-All knowledge, names, source mappings, grounding values, dates, and report links in this repository are synthetic examples. The public freshness adapter does not connect to a live enterprise data source.
+Use a feature branch in this repository, for example `feature/demo-metric-context`.
+The public examples are `planning.demand` (Planned Demand, `DEMO-001`) and
+`planning.coverage` (Supply Coverage, `DEMO-002`). They are fictional, not official metric identifiers.
 
-This is a proof of concept. Role switching demonstrates the intended operating model; a production deployment must enforce authentication and authorization on the server.
+| Starting file | Purpose |
+| --- | --- |
+| [`knowledge-base/_schema/metric.yaml`](knowledge-base/_schema/metric.yaml) | Public authoring guide, not a runtime schema validator. |
+| [`knowledge-base/plan/_runtime/registry.json`](knowledge-base/plan/_runtime/registry.json) and [`registry.yaml`](knowledge-base/plan/_runtime/registry.yaml) | Matching synthetic runtime seed and metric-generator input. Keep them aligned. |
+| [`knowledge-base/plan/metrics/planning-demand.yaml`](knowledge-base/plan/metrics/planning-demand.yaml) | Authored demand context. |
+| [`knowledge-base/plan/metrics/planning-coverage.yaml`](knowledge-base/plan/metrics/planning-coverage.yaml) | Coverage interpretation, numerator, denominator and zero-demand rule. |
+| [`examples/planning-metrics.json`](examples/planning-metrics.json) | Invented inputs and expected calculations, not measured business results. |
+| [`kb-app/TreeReader.cs`](kb-app/TreeReader.cs), [`TreeStore.cs`](kb-app/TreeStore.cs) | Catalog/detail and authoring/generation code. |
+| [`kb-app/ReviewStore.cs`](kb-app/ReviewStore.cs), [`Program.cs`](kb-app/Program.cs), [`Store.cs`](kb-app/Store.cs) | Local proposal and publication workflow. |
+| [`kb-app/wwwroot/index.html`](kb-app/wwwroot/index.html) | Public demo UI and local authoring actions. |
+
+First review the two context records and fictional worked examples, then propose refinements.
+Keep authored context in separate per-metric files: the generator replaces `metrics/index.yaml`.
+The app presents metric context read-only; metric-specific editing and review remain a contributor
+extension. Existing local review examples cover glossary, objects, concepts, policies and systems.
+Do not mistake presentation of a formula for a numeric execution engine.
+
+Proposed pilot evaluation could compare definition lookup time, mapping-verification time and approval
+lead time before and after adoption. **Baseline and results remain pending.** No savings, causal relationships,
+production readiness, or accuracy percentage is claimed.
+
+## Public Demo Notice and Limits
+
+Use only fictional knowledge, role names, schemas, dates, identifiers, reports and data in contributions.
+Do not upload employer materials, internal URLs, source exports, private code, screenshots, recordings,
+credentials or operational examples. The demo adapter never connects to a live source; fixed sample
+dates must not be read as current data freshness.
+
+The content-policy script is a heuristic guard, not proof of provenance or permission to publish.
+Removing content from the current tree does not remove it from Git history or existing clones.
+Repository owners must separately confirm release rights and handle any earlier disclosures.
+No new license grant is implied by this update.
+
+This is a single-instance hackathon demonstration, not a production authorization or durable distributed
+transaction system. Multi-user authoring, server-enforced business roles, managed storage, retention policies,
+and independent source-quality validation require further engineering.

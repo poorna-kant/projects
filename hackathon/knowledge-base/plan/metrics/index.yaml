@@ -1,11 +1,21 @@
 type: MetricIndex
 id: plan/metrics
 domain: plan
-note: Synthetic metric catalog generated from the governed demo measure.
+note: Synthetic metric catalog derived from the demo registry; no live metrics feed is connected.
 metrics:
-  - id: plan/metrics/planned-demand
-    name: Planned Demand
+  - id: plan/metrics/planning-demand
+    name: Approved synthetic demand quantity
     metric_code: DEMO-001
     category: Planning
     unit: units
-    description: Total approved demo demand for the selected period.
+    description: Adds the quantity in synthetic demand records for the selected period.
+    measure_ref: planning.demand
+    source: derived from the synthetic registry
+  - id: plan/metrics/planning-coverage
+    name: Synthetic supply coverage percentage
+    metric_code: DEMO-002
+    category: Planning
+    unit: percent
+    description: Ratio of total synthetic supportable quantity to demand quantity for the same scope. Undefined at zero demand.
+    measure_ref: planning.coverage
+    source: derived from the synthetic registry

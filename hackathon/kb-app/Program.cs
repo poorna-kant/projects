@@ -1,29 +1,34 @@
 using KbApp;
 
+if (args.Contains("--healthcheck", StringComparer.Ordinal))
+{
+    using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(4) };
+    try
+    {
+        var response = await client.GetAsync("http://127.0.0.1:8080/healthz");
+        Environment.ExitCode = response.IsSuccessStatusCode ? 0 : 1;
+    }
+    catch (Exception error) when (error is HttpRequestException or TaskCanceledException)
+    {
+        Console.Error.WriteLine("SCOPE health check failed: " + error.Message);
+        Environment.ExitCode = 1;
+    }
+    return;
+}
+
 var builder = WebApplication.CreateBuilder(args);
 var cfg = builder.Configuration;
 
-// Resolve the Knowledge Base repository root so import paths work regardless of CWD.
-static string ProjectRoot()
-{
-    var dir = new DirectoryInfo(Directory.GetCurrentDirectory());
-    while (dir is not null &&
-           (!Directory.Exists(Path.Combine(dir.FullName, "kb-app")) ||
-            !Directory.Exists(Path.Combine(dir.FullName, "knowledge-base"))))
-        dir = dir.Parent;
-    return dir?.FullName ?? Directory.GetCurrentDirectory();
-}
-var root = ProjectRoot();
-// V2: KB artifacts live in the tree. Plan(rel) targets the plan domain; the KB root enables multi-domain seeding.
-string Plan(string rel) => Path.Combine(root, "knowledge-base", "plan", rel);
-string KbRoot() => Path.Combine(root, "knowledge-base");
+using var demo = new DemoRuntime(cfg, builder.Environment.ContentRootPath);
+builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = 262144);
+string Plan(string rel) => Path.Combine(demo.TreeRoot, "plan", rel);
+string KbRoot() => demo.TreeRoot;
 
 // V2 is fully tree-based: compile the narrative KB markdown artifact from the structured tree's concepts.
-static string TreeKbComposite(string solutionRoot)
+static string TreeKbComposite(string treeRoot, string stateRoot)
 {
-    var conceptsDir = Path.Combine(solutionRoot, "knowledge-base", "plan", "concepts");
-    Directory.CreateDirectory("data");
-    var outPath = Path.Combine("data", "knowledge-base.generated.md");
+    var conceptsDir = Path.Combine(treeRoot, "plan", "concepts");
+    var outPath = Path.Combine(stateRoot, "knowledge-base.generated.md");
     if (Directory.Exists(conceptsDir))
     {
         var sb = new System.Text.StringBuilder();
@@ -46,48 +51,85 @@ static string TreeKbComposite(string solutionRoot)
 
 // Config precedence: env-var over appsettings (mirrors the agent PoC drill).
 // Local defaults today; the SAME keys point at Azure paths later (no code change).
-string dbPath            = cfg["KB_DB_PATH"]            ?? "data/kb.db";
-string snapshotRoot      = cfg["KB_SNAPSHOT_ROOT"]      ?? "data/snapshots";
-string publishedConcepts = cfg["KB_PUBLISHED_CONCEPTS"] ?? "data/published/concepts.json";
+string dbPath            = Path.Combine(demo.StateRoot, "kb.db");
+string snapshotRoot      = demo.SnapshotRoot;
+string publishedConcepts = Path.Combine(demo.PublishedRoot, "concepts.json");
 // V2: seed the glossary from EVERY domain in the KB tree (pass the kb root; the store discovers domains).
-string conceptsSeed      = cfg["KB_CONCEPTS_SEED"]      ?? KbRoot();
-// V2: root of the CSCP-structured tree the typed-catalog browsers read (kb root; /kb in the container).
-string treeRoot          = cfg["KB_TREE_ROOT"]          ?? (Directory.Exists(conceptsSeed) ? conceptsSeed : KbRoot());
-string reportsSeed       = cfg["KB_REPORTS_SEED"]       ?? Plan("_runtime/reports.json");
-string publishedRegistry = cfg["KB_PUBLISHED_REGISTRY"] ?? "data/published/view-registry.json";
+string conceptsSeed      = KbRoot();
+string treeRoot          = KbRoot();
+string reportsSeed       = Plan("_runtime/reports.json");
+string publishedRegistry = Path.Combine(demo.PublishedRoot, "view-registry.json");
 // V2: JSON mirror of the canonical registry.yaml, for the JSON-based authoring store.
-string registrySeed      = cfg["KB_REGISTRY_SEED"]      ?? Plan("_runtime/registry.json");
+string registrySeed      = Plan("_runtime/registry.json");
 
 var store = new KbStore(dbPath, snapshotRoot, publishedConcepts, conceptsSeed, reportsSeed);
 var registry = new RegistryStore(dbPath, snapshotRoot, publishedRegistry, registrySeed);
 
-string publishedGlossary  = cfg["KB_PUBLISHED_GLOSSARY"]  ?? "data/published/glossary.json";
-string publishedGrounding = cfg["KB_PUBLISHED_GROUNDING"] ?? "data/published/grounding-index.json";
-string publishedKb        = cfg["KB_PUBLISHED_KB"]        ?? "data/published/supply-planning-kb.md";
+string publishedGlossary  = Path.Combine(demo.PublishedRoot, "glossary.json");
+string publishedGrounding = Path.Combine(demo.PublishedRoot, "grounding-index.json");
+string publishedKb        = Path.Combine(demo.PublishedRoot, "planning-knowledge.md");
 string glossarySeed  = cfg["KB_GLOSSARY_SEED"]  ?? Plan("_runtime/schema-glossary.yaml");
 string groundingSeed = cfg["KB_GROUNDING_SEED"] ?? Plan("_generated/grounding-index.json");
 // V2: the narrative KB artifact is compiled from the tree's concepts (no flat supply-planning-kb.md).
-string kbSeed        = cfg["KB_KB_SEED"]        ?? TreeKbComposite(root);
+string kbSeed        = TreeKbComposite(treeRoot, demo.StateRoot);
 var artifacts = new ArtifactStore(dbPath, snapshotRoot);
 artifacts.Register("glossary", "json", glossarySeed, publishedGlossary);
 artifacts.Register("grounding", "json", groundingSeed, publishedGrounding);
 artifacts.Register("knowledge-base", "markdown", kbSeed, publishedKb);
 
 // Per-dataset synthetic refresh status used by the public demonstration.
-string publishedRefresh = cfg["KB_PUBLISHED_REFRESH"] ?? "data/published/refresh-registry.json";
+string publishedRefresh = Path.Combine(demo.PublishedRoot, "refresh-registry.json");
 string refreshSeed      = cfg["KB_REFRESH_SEED"]      ?? Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "refresh-registry.json");
 artifacts.Register("refresh-registry", "json", refreshSeed, publishedRefresh);
 
 // Steward "Check now" preserves the workflow but does not connect to a live source in this public edition.
-var freshness = new FreshnessService(cfg, root, refreshSeed, json =>
+var freshness = new FreshnessService(cfg, demo.StateRoot, refreshSeed, json =>
 {
     artifacts.SetContent("refresh-registry", json);
     artifacts.Publish("refresh-registry");
 });
 
 var app = builder.Build();
+app.Logger.LogInformation("SCOPE synthetic demo: {Mode}", demo.ReadOnly ? "read-only" : "local authoring only");
+app.UseExceptionHandler(handler => handler.Run(async context =>
+{
+    context.Response.StatusCode = 500;
+    await context.Response.WriteAsJsonAsync(new { message = "The demo could not complete the operation. Check the server log." });
+}));
+app.UseRouting();
+using var authoringGate = new SemaphoreSlim(1, 1);
+app.Use(async (context, next) =>
+{
+    var write = context.Request.Method is not ("GET" or "HEAD" or "OPTIONS");
+    if (write && !demo.AllowsWrite(context.Request))
+    {
+        context.Response.StatusCode = 403;
+        await context.Response.WriteAsJsonAsync(new { message = "This demo is read-only. Run locally with SCOPE_READ_ONLY=false to author synthetic content." });
+        return;
+    }
+    if (write) await authoringGate.WaitAsync(context.RequestAborted);
+    try
+    {
+        if (context.Request.RouteValues["domain"] is string domain) KnowledgePath.Domain(treeRoot, domain);
+        if (context.Request.RouteValues["type"] is string type) KnowledgePath.Catalog(treeRoot, "plan", type);
+        await next(context);
+    }
+    catch (Exception error) when (error is InvalidDataException or System.Text.Json.JsonException or YamlDotNet.Core.YamlException)
+    {
+        app.Logger.LogWarning(error, "Invalid knowledge content or request.");
+        if (context.Response.HasStarted) throw;
+        context.Response.StatusCode = 400;
+        await context.Response.WriteAsJsonAsync(new { message = "Invalid knowledge content or identifier. No publication was completed." });
+    }
+    finally
+    {
+        if (write) authoringGate.Release();
+    }
+});
 app.UseDefaultFiles();
 app.UseStaticFiles();
+app.MapGet("/healthz", () => Results.Ok(new { status = "ok" }));
+app.MapGet("/api/demo/config", () => Results.Json(new { readOnly = demo.ReadOnly, syntheticData = true }));
 
 // ---- authoring plane (the app) ---------------------------------------------
 app.MapGet("/api/terms", () => Results.Json(store.AllTerms().Select(ToDto)));
@@ -95,16 +137,9 @@ app.MapGet("/api/terms/{id}", (string id) =>
     store.GetTerm(id) is { } t ? Results.Json(ToDto(t)) : Results.NotFound());
 app.MapGet("/api/sources", () => Results.Json(store.AllSources()));
 
-app.MapPost("/api/terms", (ProposeDto d) =>
-    Results.Json(ToDto(store.Propose(d.Name, d.Area, d.Owner, d.Def, d.Why, d.Derived))));
-app.MapPost("/api/terms/{id}/approve", (string id) =>
-    store.SetStatus(id, "Approved") is { } t ? Results.Json(ToDto(t)) : Results.NotFound());
-app.MapPost("/api/terms/{id}/status", (string id, StatusDto d) =>
-    store.SetStatus(id, d.Status) is { } t ? Results.Json(ToDto(t)) : Results.NotFound());
-app.MapPost("/api/terms/{id}/definition", (string id, EditDto d) =>
-    store.UpdateDefinition(id, d.Def, d.Why, d.Derived) is { } t ? Results.Json(ToDto(t)) : Results.NotFound());
-app.MapDelete("/api/terms/{id}", (string id) =>
-    store.DeleteTerm(id) ? Results.Ok() : Results.NotFound());
+// Avoid a second, disconnected authoring store. Glossary edits use the tree/review endpoints.
+app.MapMethods("/api/terms/{**legacy}", new[] { "POST", "PUT", "DELETE", "PATCH" }, () =>
+    Results.Json(new { message = "Use the glossary tree and review endpoints to change approved knowledge." }, statusCode: 410));
 
 // ---- publish (approved only -> the agent's exact glossary schema) ----------
 app.MapPost("/api/publish", () => Results.Json(store.Publish()));
@@ -116,6 +151,12 @@ app.MapGet("/api/published/concepts", () =>
     File.Exists(publishedConcepts)
         ? Results.Content(File.ReadAllText(publishedConcepts), "application/json")
         : Results.NotFound(new { message = "No version published yet." }));
+app.MapGet("/api/published/tree", () =>
+{
+    var path = Path.Combine(demo.PublishedRoot, "tree.json");
+    return File.Exists(path) ? Results.Content(File.ReadAllText(path), "application/json")
+        : Results.NotFound(new { message = "No tree version published yet." });
+});
 
 // ---- semantic layer: measures + business rules (view-registry) -------------
 app.MapGet("/api/measures", () => Results.Json(registry.AllMeasures()));
@@ -190,7 +231,7 @@ app.MapGet("/api/refresh/jobs/{id}", (string id) =>
 // ---- demo: answer from the SAME published file the real agent consumes -----
 app.MapGet("/api/agent/answer", (string q) => Results.Json(store.AnswerFromPublished(q ?? "")));
 
-// ---- V2: typed-catalog browsers read straight from the CSCP-structured tree (domain-scoped) ----
+// Typed-catalog browsers read the synthetic authoring tree.
 var tree = new TreeReader(treeRoot);
 var kbEval = new KbEval(tree);
 app.MapGet("/api/domains", () => Results.Json(tree.Domains()));

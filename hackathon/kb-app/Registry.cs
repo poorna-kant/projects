@@ -361,6 +361,8 @@ public sealed class RegistryStore
     // ---- helpers ------------------------------------------------------------
     private static string BuildRule(JsonElement m)
     {
+        var declared = Str(m, "businessRule");
+        if (!string.IsNullOrWhiteSpace(declared)) return declared;
         var parts = new List<string>();
         var rfc = Str(m, "requiredFilterColumn");
         if (rfc.Length > 0)

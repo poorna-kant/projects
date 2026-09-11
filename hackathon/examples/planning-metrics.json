@@ -1,0 +1,22 @@
+{
+  "syntheticData": true,
+  "notice": "Invented values and expected results for explaining a contract, not production results or measured benefits.",
+  "rule": "For one snapshot, product family and period: demand=sum(quantity); coverage=100*sum(supportable_quantity)/sum(quantity), undefined if demand is zero.",
+  "cases": [
+    {
+      "name": "partial-coverage",
+      "rows": [
+        {"demand_id": "DEMO-A", "product_family": "DEMO-STANDARD", "period": "2026-Q1", "snapshot_date": "2026-01-15", "quantity": 80, "supportable_quantity": 60},
+        {"demand_id": "DEMO-B", "product_family": "DEMO-STANDARD", "period": "2026-Q1", "snapshot_date": "2026-01-15", "quantity": 20, "supportable_quantity": 15}
+      ],
+      "expected": {"planning.demand": 100, "planning.coverage": 75}
+    },
+    {
+      "name": "zero-demand",
+      "rows": [
+        {"demand_id": "DEMO-ZERO", "product_family": "DEMO-EDGE", "period": "2026-Q1", "snapshot_date": "2026-01-15", "quantity": 0, "supportable_quantity": 0}
+      ],
+      "expected": {"planning.demand": 0, "planning.coverage": null, "reason": "undefined: zero denominator"}
+    }
+  ]
+}

@@ -96,6 +96,8 @@
   .btn.ok{background:var(--green);color:#fff}
   .btn.warn{background:#fff;border:1px solid #e2b7ab;color:var(--red)}
   .btn.danger{background:var(--red);color:#fff}
+  button:disabled, input:disabled, textarea:disabled, select:disabled{opacity:.55;cursor:not-allowed}
+  #availabilityBanner{display:none}
 
   /* ---------- table ---------- */
   .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
@@ -358,7 +360,7 @@
   .fp-fresh{background:#e6f4ec;color:#2e8b57}.fp-due{background:#fbf1dd;color:#a9791a}.fp-stale{background:#fdeee6;color:#c0492f}.fp-reference{background:#eceef2;color:#6a7385}
   .ref-cad{font-size:11.5px;color:var(--grey2)}
   .ref-runs{font-size:11px;color:var(--grey2);margin-top:3px}
-  /* Client-side wall-clock hint: the scheduled next refresh has passed and Keystone has not been re-checked since the read date. Does NOT claim the data is stale in Keystone — only that the schedule elapsed. */
+  /* A wall-clock hint for synthetic metadata, not evidence of live source freshness. */
   .ref-overdue{display:inline-flex;align-items:center;gap:4px;margin-top:4px;font-size:10.5px;font-weight:700;color:#a9791a;background:#fbf1dd;border:1px solid #ecd9ad;border-radius:20px;padding:2px 8px;white-space:nowrap}
   .fd-refresh{border:1px solid var(--line2);border-radius:9px;padding:9px 11px;margin-bottom:6px}
   .fd-refresh .fr-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -391,7 +393,7 @@
     </div>
     <div class="domainswitch" title="Knowledge base domain">
       <span class="ds-ic">▦</span>
-      <select id="domainSel" onchange="setDomain(this.value)"><option value="plan">Plan</option></select>
+      <select id="domainSel" onchange="setDomain(this.value)"><option value="plan">Loading domains…</option></select>
       <button class="ds-add" onclick="addDomain()">+ Add domain</button>
     </div>
     <div class="roleswitch">
@@ -399,7 +401,7 @@
       <button id="rb-stew" onclick="setRole('steward')">Data steward</button>
       <button id="rb-eng" onclick="setRole('engineer')">Data Architect</button>
     </div>
-    <div class="avatar" id="avatar">PK</div>
+    <div class="avatar" id="avatar">DU</div>
   </div>
 
   <!-- SIDEBAR -->
@@ -420,7 +422,7 @@
       <svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6z"/></svg> Policies <span class="count" id="c-policies">–</span>
     </div>
     <div class="navitem" data-view="list" onclick="go('list')">
-      <svg viewBox="0 0 24 24"><path d="M3 5h18M3 12h18M3 19h18"/></svg> Glossary <span class="count" id="c-terms">15</span>
+      <svg viewBox="0 0 24 24"><path d="M3 5h18M3 12h18M3 19h18"/></svg> Glossary <span class="count" id="c-terms">–</span>
     </div>
     <div class="navitem" data-view="systems" onclick="go('systems')">
       <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg> Systems <span class="count" id="c-systems">–</span>
@@ -428,10 +430,13 @@
 
     <div class="grouplabel">Semantic layer</div>
     <div class="navitem" data-view="measures" onclick="go('measures')">
-      <svg viewBox="0 0 24 24"><path d="M4 19V5m0 14h16M8 17V10m4 7V6m4 11v-4"/></svg> Measures <span class="count" id="c-measures">0</span>
+      <svg viewBox="0 0 24 24"><path d="M4 19V5m0 14h16M8 17V10m4 7V6m4 11v-4"/></svg> Measures <span class="count" id="c-measures">–</span>
+    </div>
+    <div class="navitem" data-view="metrics" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();go('metrics');}" onclick="go('metrics')">
+      <svg viewBox="0 0 24 24"><path d="M4 19V5m0 14h16M8 15l4-6 5 3"/></svg> Metrics <span class="count" id="c-metrics">–</span>
     </div>
     <div class="navitem" data-view="sources" onclick="go('sources')">
-      <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg> Report signposts <span class="count" id="c-sources">6</span>
+      <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg> Report signposts <span class="count" id="c-sources">–</span>
     </div>
     <div class="navitem" data-view="grounding" onclick="go('grounding')">
       <svg viewBox="0 0 24 24"><path d="M12 21s-7-5-7-11a7 7 0 0 1 14 0c0 6-7 11-7 11z"/><circle cx="12" cy="10" r="2.4"/></svg> Grounding values <span class="count" id="c-grounding">–</span>
@@ -439,12 +444,12 @@
 
     <div class="grouplabel">Operations</div>
     <div class="navitem" data-view="refresh" onclick="go('refresh')">
-      <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg> Data refresh <span class="count" id="c-refresh">0</span>
+      <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg> Data refresh <span class="count" id="c-refresh">–</span>
     </div>
 
     <div class="grouplabel">Governance</div>
     <div class="navitem" data-view="review" onclick="go('review')">
-      <svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg> Review &amp; approve <span class="count" id="c-review">3</span>
+      <svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg> Review &amp; approve <span class="count" id="c-review">–</span>
     </div>
     <div class="navitem" data-view="history" onclick="go('history')">
       <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 8v4l3 2"/></svg> Versions &amp; changes
@@ -462,8 +467,9 @@
   <main class="main">
     <div class="banner">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8a6417" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
-      Live app — connected to the Knowledge Base store. Switch to <b>Data steward</b> to approve &amp; publish; the agent answers from the published version.
+      <span id="demoMode" role="status">Synthetic demo · read-only hosted · no live data. Loading configuration…</span>
     </div>
+    <div class="banner" id="availabilityBanner" role="alert"></div>
 
     <!-- ============ VIEW: TERM LIST ============ -->
     <section id="view-list" class="view">
@@ -476,7 +482,7 @@
         <button class="filterbtn" data-f="Draft" onclick="setFilter('Draft')">Draft</button>
         <button class="filterbtn" data-f="Needs update" onclick="setFilter('Needs update')">Needs update</button>
         <div class="right">
-          <span class="verchip" id="concVer">not published</span>
+          <span class="verchip" id="concVer">Publication status loading…</span>
           <button class="btn primary" onclick="openProposeTerm()">+ Propose a term</button>
           <button class="btn ok steward-only" onclick="publishConcepts()">⤴ Publish to agent</button>
         </div>
@@ -527,8 +533,8 @@
             </div>
             <div class="steward-only" style="flex-direction:column;gap:8px;width:100%">
               <button class="btn ghost" style="width:100%;justify-content:center" onclick="openTermEdit()">✎ Edit definition</button>
-              <button class="btn ok" style="width:100%;justify-content:center" onclick="approveAndPublish(currentTerm&&currentTerm.id)">✓ Approve &amp; publish</button>
-              <button class="btn warn" style="width:100%;justify-content:center" onclick="toast('Sent back with your comment')">↩ Send back</button>
+              <button class="btn ok" style="width:100%;justify-content:center" onclick="publishConcepts()">⤴ Publish approved knowledge</button>
+              <button class="btn warn" style="width:100%;justify-content:center" disabled title="Reject proposals from Review &amp; approve">↩ Use review queue to send back</button>
               <button class="btn danger" style="width:100%;justify-content:center" onclick="deleteTerm()">🗑 Delete term</button>
             </div>
           </div>
@@ -539,8 +545,8 @@
           <div class="side-card">
             <h4>Discussion</h4>
             <div id="d-comments"></div>
-            <textarea class="commentbox" placeholder="Add a comment for the owner…"></textarea>
-            <button class="btn primary" style="margin-top:10px;width:100%;justify-content:center" onclick="toast('Comment posted')">Post comment</button>
+            <textarea class="commentbox" disabled placeholder="Discussion posting is not implemented in this demo."></textarea>
+            <button class="btn primary" style="margin-top:10px;width:100%;justify-content:center" disabled>Comments unavailable</button>
           </div>
         </div>
       </div>
@@ -548,17 +554,16 @@
 
     <!-- ============ VIEW: ONTOLOGY (DATA FLOW) ============ -->
     <section id="view-onto" class="view active">
-      <div class="page-h"><h1>How our planning data connects</h1></div>
-      <p class="page-sub">A plain-language map of how the planning concepts relate. The demand plan receives CAPEX approval, then Supply and Network Planning run in parallel. Click a box to open its definition.</p>
+      <div class="page-h"><h1>How synthetic demo data connects</h1></div>
+      <p class="page-sub">A fictional input → transform → review → output map. Click a stage to browse explicitly tagged demo records. This illustration is not a live pipeline or an operational business rule.</p>
       <div class="onto-wrap">
         <div class="flow" id="flowStages"></div>
-        <div class="flow-feedback"><span class="fb-arrow">↩</span> Execution sends <b>actuals &amp; variance</b> back to Demand each cycle — the plan re-forecasts against what actually shipped.</div>
+        <div class="flow-feedback"><span class="fb-arrow">↩</span> Fictional records illustrate a cycle. Source references and mapping labels are <b>not data-quality assurance</b>.</div>
         <div class="legend">
-          <span><i style="background:#2e75b6"></i> Demand</span>
-          <span><i style="background:#2c9a8f"></i> Supply</span>
-          <span><i style="background:#7a5bd0"></i> Network</span>
-          <span><i style="background:#e08a1e"></i> Buffer</span>
-          <span><i style="background:#c0492f"></i> Execution</span>
+          <span><i style="background:#2e75b6"></i> Input</span>
+          <span><i style="background:#2c9a8f"></i> Transform</span>
+          <span><i style="background:#e08a1e"></i> Review</span>
+          <span><i style="background:#c0492f"></i> Output</span>
         </div>
       </div>
     </section>
@@ -574,7 +579,7 @@
       </div>
       <div class="drawer-body">
         <div class="d-sec"><h5>Governed terms in the knowledge base</h5><div id="fdTerms"></div></div>
-        <div class="d-sec"><h5>Keystone data refresh</h5><div id="fdRefresh"></div></div>
+        <div class="d-sec"><h5>Synthetic source refresh</h5><div id="fdRefresh"></div></div>
         <div class="d-sec"><h5>Datasets &amp; reports that feed this</h5><div id="fdDatasets"></div></div>
       </div>
     </aside>
@@ -582,10 +587,10 @@
     <!-- ============ VIEW: SOURCES & REPORTS ============ -->
     <section id="view-sources" class="view">
       <div class="page-h"><h1>Report signposts</h1></div>
-      <p class="page-sub">The governed datasets and Power BI reports the agent is allowed to read — each validated by the business, with a retirement trail so answers never drift to a dead report.</p>
+      <p class="page-sub">Fictional report and source references from the demo catalog. A source mapping or business approval does not demonstrate data quality.</p>
       <div class="card">
         <table>
-          <thead><tr><th>Name</th><th>Type</th><th>Owner</th><th>Business-validated</th><th>Lifecycle</th></tr></thead>
+          <thead><tr><th>Name</th><th>Type</th><th>Owner</th><th>Evidence scope</th><th>Lifecycle</th></tr></thead>
           <tbody id="sourceRows"></tbody>
         </table>
       </div>
@@ -606,7 +611,7 @@
     <!-- ============ VIEW: MEASURES & RULES ============ -->
     <section id="view-measures" class="view">
       <div class="page-h"><h1>Measures</h1></div>
-      <p class="page-sub">The governed calculations behind every <b>number</b> the agent gives — what each measure means and the rules applied. The agent reads these from the published registry. Steward: click a measure to edit its meaning and business rule, or add a new one, then approve &amp; publish.</p>
+      <p class="page-sub">Synthetic calculations and their demo definitions. Local interactive mode supports measure authoring; business approval is not data-quality assurance.</p>
       <div class="toolbar">
         <div class="right">
           <button class="btn primary steward-only" onclick="openNewMeasure()">+ Add measure</button>
@@ -624,7 +629,7 @@
     <!-- ============ VIEW: KNOWLEDGE FILES ============ -->
     <section id="view-artifacts" class="view">
       <div class="page-h"><h1>Knowledge files</h1></div>
-      <p class="page-sub">The remaining governed files the agent reads — schema-linking glossary, value grounding, and the narrative KB. Everything the agent knows lives in this app; only the data itself sits on the replica. Click a file to edit it as a table or sections — no JSON or markdown needed.</p>
+      <p class="page-sub">Synthetic knowledge files and generated projections. Hosted access is read-only; local authoring is available only when enabled by the server.</p>
       <div class="toolbar"><div class="right">
         <button class="btn primary steward-only" onclick="openNewArtifact()">+ Add file</button>
         <button class="btn ok" onclick="publishAllArtifacts()">⤴ Publish all</button>
@@ -639,7 +644,8 @@
     <section id="view-review" class="view">
       <div class="page-h"><h1>Review &amp; approve</h1></div>
       <p class="page-sub business-only">Switch to the <b>Data steward</b> role (top right) to approve items.</p>
-      <p class="page-sub steward-only" style="display:none">Items waiting on your sign-off. Compare the proposed change against what's live.</p>
+      <p class="page-sub steward-only" style="display:none">Compare proposals with approved authoring. Approval updates the tree; publishing is a separate action.</p>
+      <button class="btn ok steward-only" style="margin-bottom:16px" onclick="publishConcepts()">⤴ Publish approved knowledge</button>
       <div class="review-grid">
         <div class="queue" id="reviewQueue"></div>
         <div>
@@ -668,7 +674,7 @@
     <!-- ============ VIEW: VERSIONS & CHANGES ============ -->
     <section id="view-history" class="view">
       <div class="page-h"><h1>Versions &amp; changes</h1></div>
-      <p class="page-sub">A full audit trail — who changed what, when, and why. In the tree model each publish is a validated commit / PR into the knowledge-base repo.</p>
+      <p class="page-sub">Demo rejection and publication records returned by the API. Tree approval and publication are separate; neither certifies data quality.</p>
       <div class="card" style="padding:26px 30px">
         <div class="timeline" id="timeline"></div>
       </div>
@@ -677,21 +683,21 @@
     <!-- ============ V2: OBJECTS ============ -->
     <section id="view-objects" class="view">
       <div class="page-h"><h1>Objects</h1></div>
-      <p class="page-sub">The governed entities behind the plan — each maps to a demo source with a validated table and field mapping.<span class="engineer-only" style="color:#a5670f"> Data Architect view: source mapping, columns, snapshot, and key fields are editable here.</span></p>
+      <p class="page-sub">Fictional entities with illustrative source mappings, not validated operational data.<span class="engineer-only" style="color:#a5670f"> Data Architect view: local source-mapping edits can be proposed for review.</span></p>
       <div class="card"><table><thead><tr><th>Object</th><th>Source view</th><th>Key fields</th><th>Status</th></tr></thead><tbody id="objectRows"></tbody></table></div>
     </section>
 
     <!-- ============ V2: CONCEPTS ============ -->
     <section id="view-concepts" class="view">
       <div class="page-h"><h1>Concepts</h1></div>
-      <p class="page-sub">Analytical read-models and the mental models the agent explains — governed measures, gating, supportability, CAPEX, buffers, plus enterprise context adopted from the CSCP KB.</p>
+      <p class="page-sub">Invented concepts explaining product_family, period, quantity and supportable_quantity in this synthetic example.</p>
       <div class="card"><table><thead><tr><th>Concept</th><th>Summary</th></tr></thead><tbody id="conceptRows"></tbody></table></div>
     </section>
 
     <!-- ============ V2: POLICIES ============ -->
     <section id="view-policies" class="view">
       <div class="page-h"><h1>Policies</h1></div>
-      <p class="page-sub">The rules that keep answers honest — snapshot resolution, measure governance, freshness and answerability, plus the Keystone source &amp; load scope.</p>
+      <p class="page-sub">Fictional demo policies for reviewing knowledge and identifying synthetic source_mapping references. Not production business rules.</p>
       <div class="card"><table><thead><tr><th>Policy</th><th>Category</th><th>Governs</th></tr></thead><tbody id="policyRows"></tbody></table></div>
     </section>
 
@@ -705,14 +711,14 @@
     <!-- ============ V2: GROUNDING VALUES ============ -->
     <section id="view-grounding" class="view">
       <div class="page-h"><h1>Grounding values</h1></div>
-      <p class="page-sub">Real dimension values (sites, parts, codes) the agent snaps fuzzy filters to.</p>
+      <p class="page-sub">Invented product_family and period values read from synthetic JSON. No live data is queried.</p>
       <div id="groundingBody"></div>
     </section>
 
-    <!-- ============ V2: METRICS (reserved — reads the tree; fills when the Metrics-Tree feed lands) ============ -->
+    <!-- ============ METRICS: read-only synthetic catalog ============ -->
     <section id="view-metrics" class="view">
       <div class="page-h"><h1>Metrics</h1></div>
-      <p class="page-sub">KPIs from the Keystone Metrics-Tree.</p>
+      <p class="page-sub">Read-only synthetic metrics from the demo catalog, with their demo codes and units. Metrics are not editable in this schema.</p>
       <div id="metricsBody"><div class="empty">Loading…</div></div>
     </section>
   </main>
@@ -725,147 +731,107 @@
     <div id="modalFields"></div>
     <div class="modal-actions">
       <button class="btn ghost" onclick="closeModal()">Cancel</button>
-      <button class="btn primary" id="modalSaveBtn" onclick="modalSave(false)">Save (send to review)</button>
-      <button class="btn ok steward-only" id="modalPublishBtn" onclick="modalSave(true)">Save, approve &amp; publish</button>
+      <button class="btn primary" id="modalSaveBtn" onclick="modalSave(false)">Submit for review</button>
+      <button class="btn ok steward-only" id="modalPublishBtn" onclick="modalSave(true)">Save approved authoring (not publish)</button>
     </div>
   </div>
 </div>
 
-<div class="toast" id="toast"><span class="ic">✓</span><span id="toastMsg"></span></div>
+<div class="toast" id="toast" role="status"><span class="ic">i</span><span id="toastMsg"></span></div>
 
 <script>
-/* ---------------- data (loaded live from the Knowledge Base API; literal is fallback only) ---------------- */
-let TERMS = [
-  {name:"Server Demand", area:"Demand", owner:"R. Mehta", oi:"RM", status:"Approved",
-   def:"Forecasted server demand, counted as distinct demand IDs at the product-family (PFAM) level.",
-   aliases:"Finished-goods demand, publisheddemands", sensitivity:"Internal", hierarchy:"Demand › Server",
-   sources:"Published demands feed", reports:"Build Plan Review", changed:"R. Mehta · 3 days ago",
-   why:"We count DISTINCT demand IDs, not raw quantity, because one order can span many lines and would otherwise be double-counted. PFAM is the level supply commitments are made, so it lines up with how we build.",
-   related:["PFAM (Platform Family)","T1 Rack Forecast","Supportability"]},
-
-  {name:"Network Demand", area:"Demand", owner:"A. Silva", oi:"AS", status:"In review",
-   def:"Demand for network components, planned by master site (MSF) and split into Tier 1 / Tier 2.",
-   aliases:"Component demand, MSF demand, networkplanningbompoline", sensitivity:"Internal", hierarchy:"Demand › Network",
-   sources:"Network BOM pipeline", reports:"Component coverage", changed:"A. Silva · yesterday",
-   why:"Network parts have different suppliers and lead times than servers, so they're planned on their own site grain (MSF, e.g. MKE04), not merged with server demand — merging would hide real coverage gaps.",
-   related:["Master Site (MSF)","Supportability"]},
-
-  {name:"PFAM (Platform Family)", area:"Reference", owner:"R. Mehta", oi:"RM", status:"Approved",
-  def:"The planning grain for demand — a related family of products (for example DEMO-STANDARD).",
-   aliases:"Platform family, product family", sensitivity:"Internal", hierarchy:"Reference › Grain",
-   sources:"Platform master", reports:"All server reports", changed:"R. Mehta · 2 weeks ago",
-   why:"Planning at PFAM (not individual SKU) matches how supply is committed and how the business reviews the plan each week. It's the join key that connects demand, build plan and supportability.",
-   related:["Server Demand","T1 Rack Forecast"]},
-
-  {name:"Master Site (MSF)", area:"Reference", owner:"A. Silva", oi:"AS", status:"Approved",
-   def:"The site code a network component is planned against (e.g. MKE04 = Milwaukee, ATL20).",
-   aliases:"MSF, MasterSiteCode, master site", sensitivity:"Internal", hierarchy:"Reference › Grain",
-   sources:"Site master", reports:"Network reports", changed:"A. Silva · 1 week ago",
-   why:"Nobody plans network demand at country or region level — the actionable grain is the master site. 'Which MSF is blocking my demand?' is a real planner question.",
-   related:["Network Demand"]},
-
-  {name:"T1 Rack Forecast", area:"Supply Planning", owner:"R. Mehta", oi:"RM", status:"Approved",
-   def:"The rack-level plan of record — how many racks are planned to dock, by dock date.",
-   aliases:"Tier-1 forecast, rack POR, RackQty", sensitivity:"Internal", hierarchy:"Plan › Rack (T1)",
-   sources:"T1 POR forecast", reports:"MPS Review – Tier 1", changed:"R. Mehta · 4 days ago",
-   why:"This is the committed rack quantity the whole build plan rolls up to. Splitting it CAPEX-approved vs not-approved shows what supply is actually cleared to build.",
-   related:["T2 Component Forecast","CAPEX Approved","Supportability"]},
-
-  {name:"T2 Component Forecast", area:"Supply Planning", owner:"R. Mehta", oi:"RM", status:"In review",
-   def:"Component demand exploded from the rack plan, shown net (post-netting) or gross (pre-netting).",
-   aliases:"Tier-2 forecast, component demand, BOM unwind", sensitivity:"Internal", hierarchy:"Plan › Component (T2)",
-   sources:"T2 POR forecast", reports:"ISP T2 Forecast – MDM Unwind", changed:"R. Mehta · yesterday",
-   why:"Net removes what inventory already covers; gross is the raw need. The MDM-unwind report is NET, so unless someone says 'gross' the agent should answer net to match what the business sees.",
-   related:["T1 Rack Forecast","Planned Dock Date (PDD)"]},
-
-  {name:"Supportability", area:"Supply Planning", owner:"J. Park", oi:"JP", status:"Needs update",
-   def:"How many racks can actually be built once part-supply limits are applied (constrained vs unconstrained).",
-   aliases:"Coverage, constrained supportable", sensitivity:"Internal", hierarchy:"Constraints › Supportability",
-   sources:"Gating optimizer", reports:"ISP Rack Supportability", changed:"J. Park · 2 weeks ago",
-   why:"Unconstrained is what's wanted; constrained is what parts allow. Flagged for update because the Tier-2 gating rule changed last quarter and the definition must be re-agreed before re-approval.",
-   related:["Gating Gap","Server Demand","Network Demand"]},
-
-  {name:"Gating Gap", area:"Supply Planning", owner:"J. Park", oi:"JP", status:"Approved",
-   def:"Unconstrained demand minus constrained supportable — racks that can't be built yet because a part is short.",
-   aliases:"Supply-demand gap, shortfall", sensitivity:"Internal", hierarchy:"Constraints › Gap",
-   sources:"Gating optimizer", reports:"ISP Rack Supportability", changed:"J. Park · 5 days ago",
-   why:"It names the shortfall (e.g. a 9,224-rack gap) and points at the largest constraining part; the gap clears as those parts arrive. This is the 'why' behind a build that can't be met.",
-   related:["Supportability"]},
-
-  {name:"CAPEX Approved", area:"Supply Planning", owner:"D. Okafor", oi:"DO", status:"Approved",
-   def:"The approved-capital portion of demand: gross demand minus the not-yet-approved forecast.",
-   aliases:"Approved forecast, capex-approved", sensitivity:"Internal", hierarchy:"Plan › CAPEX",
-   sources:"SOP CAPEX demand", reports:"CAPEX approval review", changed:"D. Okafor · 1 week ago",
-   why:"CAPEX approval is a rolling ~9–12-month runway, refreshed each cycle. Near-term demand is ~fully approved and tapers further out. Supply planning works only on the approved side, so this line decides what's real to build.",
-   related:["T1 Rack Forecast"]},
-
-  {name:"LRF Demand", area:"Demand", owner:"R. Mehta", oi:"RM", status:"Approved",
-   def:"Long Range Forecast — the long-range rack demand of record the business plans against.",
-   aliases:"Long range forecast, Conv Rack, open demand", sensitivity:"Internal", hierarchy:"Demand › Long Range",
-   sources:"LRF automation", reports:"LRF plan", changed:"R. Mehta · 1 week ago",
-   why:"LRF is the demand denominator for supportability. The honest number is 'open demand' (still-unfulfilled), which excludes racks already docked — those no longer need supply.",
-   related:["Supportability"]},
-
-  {name:"Planned Dock Date (PDD)", area:"Supply", owner:"J. Park", oi:"JP", status:"Approved",
-   def:"The date a build is planned to dock; a build is 'late' when PDD slips past the need-by date.",
-   aliases:"Plan dock date, plandockdate", sensitivity:"Internal", hierarchy:"Supply › Dates",
-   sources:"Published demands", reports:"Coverage / blocker report", changed:"J. Park · 3 weeks ago",
-   why:"PDD slip is how we measure whether demand is at risk. Agreeing one need-by reference avoids planners using order-to-dock while others use dock-to-build.",
-   related:["T2 Component Forecast","Gating Gap"]},
-
-  {name:"E-commerce Split Rule", area:"Demand", owner:"A. Silva", oi:"AS", status:"In review",
-   def:"A fixed business rule that allocates 10% of a family's weekly demand to the e-commerce channel.",
-   aliases:"10% e-comm rule, channel split", sensitivity:"Internal", hierarchy:"Demand › Rules",
-   sources:"Business rule", reports:"Weekly plan", changed:"A. Silva · yesterday",
-   why:"E-commerce orders behave differently from large enterprise deals — historically a stable ~10% of family demand. Encoding it explicitly lets the agent explain the split instead of it being a hidden assumption in the phasing.",
-   related:["Server Demand"]},
-
-  {name:"Lead Time", area:"Supply", owner:"J. Park", oi:"JP", status:"Approved",
-   def:"Time from placing a component order to it being available to build — the normal assumption vs the current quote.",
-   aliases:"Replenishment lead time, current LT", sensitivity:"Internal", hierarchy:"Supply › Lead Time",
-   sources:"Supplier commits", reports:"Coverage / blocker report", changed:"J. Park · 6 days ago",
-   why:"Normal lead time is a planning assumption (e.g. 12 weeks); the current lead time is what suppliers are actually quoting now. Answering 'what is the lead time now?' needs the live figure, not the assumption.",
-   related:["Blocker (Part Shortage)","T2 Component Forecast"]},
-
-  {name:"Blocker (Part Shortage)", area:"Supply", owner:"J. Park", oi:"JP", status:"In review",
-   def:"A constraining part that delays racks — which part, how many demand IDs it hits, and the resulting dock-date slip.",
-   aliases:"Part shortage, constraint, gating part", sensitivity:"Internal", hierarchy:"Constraints › Blocker",
-   sources:"Supportability + published demands", reports:"Coverage / blocker report", changed:"J. Park · yesterday",
-   why:"An executive asks 'what's stopping my demand?' — the answer names the part (e.g. a component short until December), the count of demand IDs impacted, and how far their planned dock dates slip (e.g. Nov–Dec → Feb).",
-   related:["Gating Gap","Lead Time","Planned Dock Date (PDD)"]},
-
-  {name:"Capacity Translation", area:"Supply Planning", owner:"R. Mehta", oi:"RM", status:"Draft",
-   def:"Converts a rack build plan into the capacity language sales cares about (vCores, and storage in PB).",
-   aliases:"Rack-to-vCore, capacity conversion", sensitivity:"Internal", hierarchy:"Plan › Capacity",
-   sources:"Rack plan + platform specs", reports:"Capacity enablement", changed:"R. Mehta · today",
-   why:"Leadership speaks in capacity, not racks: '100 racks of this platform = so many vCores / so many PB.' This lets planning tell sales how much they can enable — and commit to deliver it.",
-   related:["T1 Rack Forecast"]},
-];
+/* ---------------- synthetic data, loaded only from the demo API ---------------- */
+let TERMS = [];
+let DEMO_CONFIG={readOnly:true, syntheticData:true};
+let configPromise;
+const LOAD_ERRORS=new Map();
+const WRITE_ACTIONS=/\b(?:addDomain|openProposeTerm|openTermEdit|openCatEdit|openNewMeasure|openNewArtifact|publishConcepts|publishRegistry|publishAllArtifacts|publishArtifact|approveCatProposal|rejectCatProposal|showRejectForm|deleteTerm|modalSave|checkDupes|checkTermDupes|verifyDataset|artAddRow|artDelRow|artAddCol|artColPrompt|artAddColConfirm|mdAdd|mdDel|mdMove|mdToggleRaw)\s*\(/;
+const IS_LOOPBACK=location.hostname==='localhost'||location.hostname==='[::1]'||/^127(?:\.\d{1,3}){3}$/.test(location.hostname);
+function canWrite(){
+  if(!DEMO_CONFIG.readOnly&&IS_LOOPBACK) return true;
+  toast('Read-only hosted demo. Run locally with server authoring explicitly enabled to make changes.');
+  return false;
+}
+function applyWriteMode(){
+  document.querySelectorAll('button[onclick]').forEach(el=>{
+    if(!WRITE_ACTIONS.test(el.getAttribute('onclick')||'')) return;
+    if(DEMO_CONFIG.readOnly){
+      if(!el.disabled){el.disabled=true;el.dataset.modeDisabled='true';el.title='Read-only demo: local authoring must be enabled by the server.';}
+    }else if(el.dataset.modeDisabled){ el.disabled=false; delete el.dataset.modeDisabled; el.removeAttribute('title'); }
+  });
+  if(DEMO_CONFIG.readOnly) document.querySelectorAll('#modalFields textarea:not([readonly]), #modalFields input:not(.art-search), #modalFields select, #rejectReason').forEach(el=>el.disabled=true);
+}
+function availability(path,message){
+  if(message) LOAD_ERRORS.set(path,message); else LOAD_ERRORS.delete(path);
+  const el=document.getElementById('availabilityBanner');
+  el.style.display=LOAD_ERRORS.size?'flex':'none';
+  el.textContent=LOAD_ERRORS.size?'Unavailable: '+Array.from(LOAD_ERRORS,([path,reason])=>path+' — '+reason).join('; ')+'. No fallback data is shown. Reload to retry.':'';
+}
+// This is a UI convenience guard, not authorization. The backend must enforce read-only mode.
+const fetch=async (input,init={})=>{
+  const url=new URL(input instanceof Request?input.url:input,location.href);
+  const method=String(init.method||(input instanceof Request?input.method:'GET')).toUpperCase();
+  if(url.origin!==location.origin) throw new Error('Only same-origin demo requests are supported.');
+  const write=!['GET','HEAD','OPTIONS'].includes(method);
+  try{
+    if(write&&!canWrite()) throw new Error('Read-only demo: changes are disabled.');
+    if(write){
+      const headers=new Headers(init.headers||(input instanceof Request?input.headers:undefined));
+      headers.set('X-SCOPE-Local','1');
+      init={...init,headers};
+    }
+    const response=await window.fetch(input,init);
+    if(!response.ok){
+      let detail='Request failed ('+response.status+').';
+      if((response.headers.get('content-type')||'').includes('application/json')){
+        try{ const body=await response.clone().json(); detail=body.message||(Array.isArray(body.errors)?body.errors.join(' '):detail); }
+        catch(e){ if(!(e instanceof SyntaxError)) throw e; }
+      }
+      throw new Error(detail);
+    };
+    if(!write) availability(url.pathname,null);
+    return response;
+  }catch(e){
+    if(write) toast('Change not completed: '+e.message);
+    else availability(url.pathname,e.message);
+    throw e;
+  }
+}
+async function loadDemoConfig(){
+  try{
+    const cfg=await (await fetch('/api/demo/config',{cache:'no-store'})).json();
+    if(typeof cfg.readOnly!=='boolean'||cfg.syntheticData!==true) throw new Error('Invalid demo configuration');
+    DEMO_CONFIG={readOnly:cfg.readOnly||!IS_LOOPBACK,syntheticData:true};
+    document.getElementById('demoMode').textContent='Synthetic demo · '+(DEMO_CONFIG.readOnly?'read-only':'local interactive')+' · no live data. Business approval and source mappings are not data-quality assurance.';
+  }catch(e){
+    DEMO_CONFIG={readOnly:true,syntheticData:true};
+    availability('/api/demo/config',e.message);
+    document.getElementById('demoMode').textContent='Synthetic demo · read-only hosted (configuration unavailable) · no live data. Authoring is disabled.';
+  }
+  applyWriteMode();
+}
+async function readJson(path,validate){
+  try{
+    const value=await (await fetch(path)).json();
+    if(validate&&!validate(value)) throw new Error('Invalid demo response');
+    return value;
+  }catch(e){ availability(new URL(path,location.href).pathname,e.message); throw e; }
+}
+function uiAction(action){
+  return async (...args)=>{
+    try{ return await action(...args); }
+    catch(e){ toast('Action incomplete: '+e.message); availability('Last action',e.message); }
+  };
+}
 
 const PILL = {"Approved":"approved","In review":"review","Draft":"draft","Needs update":"update"};
 let currentTerm=null;
 
-/* trust/DQ signal per term — answers Deepak's 'why should I trust this number?' */
+/* Business workflow status is not evidence of data quality. */
 function trustFor(status){
-  if(status==='Approved')    return {cls:'hi',  score:'96%', lbl:'Trusted', checks:'Passes all business rules · DQ-verified'};
-  if(status==='In review')   return {cls:'mid', score:'—',   lbl:'In review', checks:'Business rules pending sign-off'};
-  if(status==='Needs update')return {cls:'mid', score:'72%', lbl:'Re-check needed', checks:'A business rule changed · re-verification pending'};
-  return {cls:'lo', score:'—', lbl:'Draft', checks:'Not yet verified'};
+  return {cls:'lo', lbl:status||'Status unavailable', checks:'Business workflow only · data quality not assessed'};
 }
 
-/* functional derivation — the 'double-click' Deepak wanted (how a number is reached, in business terms) */
-const DERIVED = {
-  "Supportability":"Take unconstrained demand → apply part-supply limits from the T1 rack and T2 component forecasts → what remains is the constrained supportable. Whatever doesn't fit is the gating gap.",
-  "Server Demand":"Read published demands → count DISTINCT demand IDs (so multi-line orders aren't double-counted) → roll up to product family (PFAM).",
-  "Network Demand":"Take network BOM lines → group by master site (MSF) → split Tier-1 / Tier-2 → align to the rack build plan's dock dates.",
-  "T2 Component Forecast":"Explode the T1 rack plan through the bill of materials → net off inventory already on hand → the remainder is net T2 demand (gross skips the netting).",
-  "Gating Gap":"Unconstrained demand − constrained supportable = the gap, attributed to the largest constraining part.",
-  "CAPEX Approved":"Gross demand − not-yet-approved forecast = the approved-capital portion the plan can actually build.",
-  "E-commerce Split Rule":"For each family's weekly demand → allocate a fixed 10% to the e-commerce channel, the rest to enterprise.",
-  "Blocker (Part Shortage)":"For a delayed demand → find the constraining part → count DISTINCT demand IDs it blocks → compare planned dock date vs need-by to get the slip.",
-  "Lead Time":"Compare the standard lead-time assumption against suppliers' current quoted lead time → flag wherever current > normal.",
-  "Capacity Translation":"Multiply planned racks by the platform's per-rack capacity spec → express the result as vCores and storage (PB)."
-};
 let curFilter="all", curSearch="", role="business";
 
 /* ---------------- navigation ---------------- */
@@ -893,7 +859,7 @@ function setRole(r){
   document.getElementById('rb-biz').classList.toggle('active', r==='business');
   document.getElementById('rb-stew').classList.toggle('active', r==='steward');
   var eb=document.getElementById('rb-eng'); if(eb) eb.classList.toggle('active', r==='engineer');
-  document.getElementById('avatar').textContent = r==='steward' ? 'JP' : r==='engineer' ? 'DA' : 'PK';
+  document.getElementById('avatar').textContent = r==='steward' ? 'DS' : r==='engineer' ? 'DA' : 'DU';
   // toggle the review page hint paragraphs
   document.querySelectorAll('#view-review .business-only').forEach(e=>e.style.display = r==='business'?'block':'none');
   document.querySelectorAll('#view-review .steward-only').forEach(e=>e.style.display = r==='steward'?'block':'none');
@@ -907,7 +873,9 @@ async function setDomain(d){
   SEARCH_CACHE={};
   var fd=document.getElementById('footDomain'); if(fd) fd.textContent = d==='all'?'All domains':d.charAt(0).toUpperCase()+d.slice(1);
   // terms are read per-domain straight from the tree
-  try{ TERMS = await loadTermsFromTree(dref()); const ct=document.getElementById('c-terms'); if(ct) ct.textContent=TERMS.length; }catch(_){}
+  TERMS=[];
+  try{ TERMS = await loadTermsFromTree(dref()); document.getElementById('c-terms').textContent=TERMS.length; }
+  catch(e){ document.getElementById('c-terms').textContent='Unavailable'; }
   const a=document.querySelector('.view.active'); const v=a? a.id.replace('view-','') : '';
   if(['objects','concepts','policies','systems'].includes(v)) renderCat(v);
   else if(v==='grounding') renderGrounding();
@@ -923,11 +891,12 @@ async function setDomain(d){
 function _slugName(id){ return String(id||'').split('/').pop().replace(/-/g,' '); }
 async function loadTermsFromTree(domain){
   const doc = await (await fetch('/api/tree/'+domain+'/terms')).json();
-  const raw = (doc && doc.terms) ? doc.terms : [];
+  if(!doc||!Array.isArray(doc.terms)){ availability('/api/tree/'+domain+'/terms','Invalid glossary response'); throw new Error('Glossary unavailable'); }
+  const raw = doc.terms;
   const byId={}; raw.forEach(t=>{ byId[t.id]=t.term; });
   return raw.map(t=>({
     id:t.id, name:t.term, def:t.definition||t.expansion||'', area:t.category||'General',
-    owner:'Knowledge base', oi:'KB', status:'Approved', changed:'in tree',
+    owner:t.owner||'Not recorded', oi:'KB', status:t.status||'Approved authoring', changed:t.changed||'Not recorded',
     why:t.expansion?('Expands to “'+t.expansion+'”.'):'', derived:'',
     aliases:((t.aliases||t.synonyms||[])).join(', '),
     seeAlso:(t.seeAlso||[]).join(', '),
@@ -938,7 +907,8 @@ async function loadTermsFromTree(domain){
 
 // V2: scaffold a new domain (folders + empty catalogs) so it is instantly discoverable — no code change.
 async function addDomain(){
-  const name=(prompt('New domain name (e.g. make, fulfill, plm):','')||'').trim();
+  if(!canWrite()) return;
+  const name=(prompt('New fictional domain name (e.g. demo):','')||'').trim();
   if(!name) return;
   const res=await fetch('/api/domains/scaffold',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({Name:name})});
   if(!res.ok){ let m='Could not create domain'; try{ m=(await res.json()).message||m; }catch(e){} toast(m); return; }
@@ -950,11 +920,11 @@ async function addDomain(){
 }
 
 /* ---------------- v2: typed catalog browsers (read straight from the tree) ---------------- */
-function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function dref(){ return curDomain==='all' ? 'plan' : curDomain; }
 const CAT={
   objects:{rows:'objectRows',n:4,url:d=>`/api/catalog/${d}/objects`,
-    row:o=>`<td><div class="t-name">${esc(o.title||o.id)}</div><div class="t-def">${esc(o.description)}</div></td><td>${esc(o.table)}</td><td>${esc(o.keyFields)}</td><td><span class="pill ${o.dqGated?'update':'approved'}">${o.dqGated?'DQ-gated':'Validated'}</span></td>`},
+    row:o=>`<td><div class="t-name">${esc(o.title||o.id)}</div><div class="t-def">${esc(o.description)}</div></td><td>${esc(o.source_mapping||o.table||'Not recorded')}</td><td>${esc(o.keyFields||'Not recorded')}</td><td><span class="pill draft">Synthetic mapping · DQ not assessed</span></td>`},
   concepts:{rows:'conceptRows',n:2,url:d=>`/api/catalog/${d}/concepts`,
     row:c=>`<td><div class="t-name">${esc(c.title||c.id)}</div></td><td class="t-def">${esc(c.summary)}</td>`},
   policies:{rows:'policyRows',n:3,url:d=>`/api/catalog/${d}/policies`,
@@ -966,11 +936,13 @@ async function renderCat(cat){
   const c=CAT[cat]; const tb=document.getElementById(c.rows); if(!tb) return;
   tb.innerHTML=`<tr><td colspan="${c.n}" class="empty">Loading\u2026</td></tr>`;
   try{ const items=await (await fetch(c.url(dref()))).json();
+    if(!Array.isArray(items)) throw new Error('Invalid catalog response');
+    const count=document.getElementById('c-'+cat); if(count) count.textContent=items.length;
     tb.innerHTML = (items&&items.length) ? items.map(x=>`<tr onclick="openCatItem('${cat}','${jsq(x.id)}')" title="Open details">${c.row(x)}</tr>`).join('') : `<tr><td colspan="${c.n}" class="empty">Nothing in this catalog yet.</td></tr>`;
-  }catch(e){ tb.innerHTML=`<tr><td colspan="${c.n}" class="empty">Could not load ${cat}.</td></tr>`; }
+  }catch(e){ availability(c.url(dref()),e.message); const count=document.getElementById('c-'+cat); if(count) count.textContent='Unavailable'; tb.innerHTML=`<tr><td colspan="${c.n}" class="empty">${esc(cat)} unavailable. Reload to retry.</td></tr>`; }
 }
 // safe single-quoted JS string for inline onclick (ids are tree slugs like plan/objects/xxx)
-function jsq(s){ return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+function jsq(s){ return esc(String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n').replace(/\u2028/g,'\\u2028').replace(/\u2029/g,'\\u2029')); }
 // read-only drill-in: full untruncated record for one catalog item
 async function openCatItem(cat,id){
   const kind={objects:'Object',concepts:'Concept',policies:'Policy',systems:'System'}[cat]||cat;
@@ -990,6 +962,7 @@ async function openCatItem(cat,id){
 const CATKIND={objects:'Object',concepts:'Concept',policies:'Policy',systems:'System'};
 // governed edit form: business/engineer submit for review, steward can save & approve directly
 async function openCatEdit(cat,id){
+  if(!canWrite()) return;
   let d; try{ const r=await fetch(`/api/catalog/${dref()}/${cat}/edit?id=${encodeURIComponent(id)}`); if(!r.ok) throw 0; d=await r.json(); }
   catch(e){ toast('Could not open the editor'); return; }
   const steward = role==='steward';
@@ -1022,7 +995,7 @@ async function renderGrounding(){
   try{ const g=await (await fetch(`/api/catalog/${dref()}/grounding`)).json();
     const cg=document.getElementById('c-grounding'); if(cg) cg.textContent=(g.dimensions&&g.dimensions.length)||0;
     const rows=(g.dimensions||[]).map(d=>`<tr><td>${esc(d.view)}</td><td>${esc(d.dimension)}</td><td class="t-def">${d.cardinality} \u2014 ${esc((d.sample||[]).join(', '))}</td></tr>`).join('');
-    el.innerHTML=`<div class="ro-note" style="max-width:660px">Machine-generated projection (${dref()}/_generated/grounding-index.json) \u2014 read-only. Objects declare which dimensions are groundable; values come from the active data source and regenerate on every refresh.</div>`+
+    el.innerHTML=`<div class="ro-note" style="max-width:660px">Synthetic supported values (${dref()}/_generated/grounding-index.json). These are fictional examples, not live source values or proof of data quality.</div>`+
       `<div class="card"><table><thead><tr><th>View</th><th>Dimension</th><th>Distinct values</th></tr></thead><tbody>${rows||'<tr><td colspan="3" class="empty">No grounding index generated yet.</td></tr>'}</tbody></table></div>`+
       `<p class="plane-note">${g.views||0} views indexed${g.generatedUtc?' \u00b7 generated '+esc((g.generatedUtc||'').slice(0,10)):''}.</p>`;
   }catch(e){ el.innerHTML='<div class="empty">Could not load grounding.</div>'; }
@@ -1030,37 +1003,26 @@ async function renderGrounding(){
 async function renderMetrics(){
   const el=document.getElementById('metricsBody'); if(!el) return; el.innerHTML='<div class="empty">Loading\u2026</div>';
   const eng=document.body.classList.contains('role-engineer');
-  const genBtn=eng?`<div style="margin-top:14px"><button class="btn primary" onclick="generateMetrics()">\u21bb Generate from the semantic layer</button><span class="plane-note" style="margin-left:10px">Derives the catalog from the governed measures (registry.yaml) \u2014 read-only, replace with the Keystone Metrics-Tree feed when connected.</span></div>`:'';
-  const reserved='<div class="reserved-card" style="max-width:740px"><b>Reserved \u2014 populated from the Keystone Metrics-Tree.</b><br/>Nothing is hand-authored here: a metric needs a <code>metric_code</code> from Keystone. This catalog fills automatically once the Metrics-Tree feed is connected.<br/><br/><span style="color:#8a6417">Flows, Process and Workflows are reserved the same way \u2014 shown so the structure stays honest, read-only until their source populates them.</span></div>'+genBtn;
   try{ const m=await (await fetch(`/api/catalog/${dref()}/metrics`)).json();
-    if(!m.count){ el.innerHTML=reserved; return; }
-    const cm=document.getElementById('c-metrics'); if(cm) cm.textContent=m.count;
-    const rows=(m.metrics||[]).map(x=>`<tr><td><div class="t-name">${esc(x.name||x.id)}</div><div class="t-def">${esc(x.description)}</div></td><td><code>${esc(x.code)}</code></td><td>${esc(x.category)}</td><td>${esc(x.unit)}</td></tr>`).join('');
-    el.innerHTML=`<div class="ro-note" style="max-width:660px">${dref()}/metrics/index.json \u2014 read-only. Each metric is keyed by its <code>metric_code</code>.</div>`+
+    if(!m||!Array.isArray(m.metrics)) throw new Error('Invalid metrics response');
+    const cm=document.getElementById('c-metrics'); if(cm) cm.textContent=m.metrics.length;
+    const rows=m.metrics.map(x=>`<tr><td><button class="btn" onclick="openCatItem('metrics','${jsq(x.id)}')">${esc(x.name||x.id)}</button><div class="t-def">${esc(x.description)}</div></td><td><code>${esc(x.code??x.metric_code??'Not recorded')}</code></td><td>${esc(x.category||'Not recorded')}</td><td>${esc(x.unit||'Not recorded')}</td></tr>`).join('')||'<tr><td colspan="4" class="empty">No synthetic metrics in this catalog.</td></tr>';
+    el.innerHTML=`<div class="ro-note" style="max-width:660px">${esc(dref())}/metrics/index.yaml \u2014 read-only synthetic catalog. Codes and units describe this demo only.</div>`+
       `<div class="card"><table><thead><tr><th>Metric</th><th>Code</th><th>Category</th><th>Unit</th></tr></thead><tbody>${rows}</tbody></table></div>`+
-      `<p class="plane-note">${m.count} metric${m.count===1?'':'s'} ingested.</p>`+genBtn;
-  }catch(e){ el.innerHTML=reserved; }
-}
-async function generateMetrics(){
-  const d=dref();
-  const res=await fetch('/api/domains/'+d+'/metrics/generate',{method:'POST'});
-  if(!res.ok){ let m='Could not generate metrics'; try{ m=(await res.json()).message||m; }catch(e){} toast(m); return; }
-  const j=await res.json();
-  toast(j.msg||('Generated '+j.count+' metrics.'));
-  const e=document.getElementById('c-metrics'); if(e) e.textContent=j.count;
-  renderMetrics();
+      `<p class="plane-note">${m.metrics.length} synthetic metric${m.metrics.length===1?'':'s'}. No data-quality assurance is implied.</p>`;
+  }catch(e){ availability(`/api/catalog/${dref()}/metrics`,e.message); document.getElementById('c-metrics').textContent='Unavailable'; el.innerHTML='<div class="empty" role="alert">Metrics unavailable. Reload to retry; no fallback metrics are shown.</div>'; }
 }
 async function loadDomains(){
   try{ const doms=await (await fetch('/api/domains')).json();
     if(Array.isArray(doms)&&doms.length){
       const sel=document.getElementById('domainSel');
-      if(sel){ sel.innerHTML=doms.map(d=>`<option value="${d.id}">${esc(d.title||d.id)}</option>`).join('')+(doms.length>1?'<option value="all">All domains</option>':''); sel.value=curDomain; }
+      if(sel){ sel.innerHTML=doms.map(d=>`<option value="${esc(d.id)}">${esc(d.title||d.id)}</option>`).join('')+(doms.length>1?'<option value="all">All domains</option>':''); sel.value=curDomain; }
       const cur=doms.find(d=>d.id===curDomain)||doms[0];
       if(cur&&cur.counts){ const set=(id,n)=>{const e=document.getElementById(id); if(e) e.textContent=n;};
         set('c-objects',cur.counts.objects); set('c-concepts',cur.counts.concepts); set('c-policies',cur.counts.policies); set('c-systems',cur.counts.systems); }
       try{ const g=await (await fetch(`/api/catalog/${dref()}/grounding`)).json(); const e=document.getElementById('c-grounding'); if(e) e.textContent=(g.dimensions&&g.dimensions.length)||0; }catch(_){}
     }
-  }catch(e){ /* standalone: keep defaults */ }
+  }catch(e){ document.getElementById('domainSel').innerHTML='<option>Domains unavailable</option>'; availability('/api/domains',e.message); }
 }
 
 /* ---------------- term list ---------------- */
@@ -1097,9 +1059,9 @@ async function loadCatalogForSearch(d){
 }
 function clip(s,n){ s=String(s==null?'':s); return s.length>n? s.slice(0,n-1)+'\u2026':s; }
 function hl(text,q){
-  const t=esc(text);
-  if(!q) return t;
-  try{ return t.replace(new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','ig'),'<mark>$1</mark>'); }catch(e){ return t; }
+  const t=String(text??'');
+  if(!q) return esc(t);
+  try{ return t.split(new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','ig')).map((part,i)=>i%2?'<mark>'+esc(part)+'</mark>':esc(part)).join(''); }catch(e){ return esc(t); }
 }
 function buildSearchEntries(cat){
   const E=[];
@@ -1162,54 +1124,53 @@ function searchOpen(i){ const e=SEARCH_HITS[i]; if(e&&e.open) e.open(); }
 
 function renderList(){
   const rows=document.getElementById('termRows'); rows.innerHTML='';
+  if(LOAD_ERRORS.has('/api/tree/'+dref()+'/terms')){ rows.innerHTML='<tr><td colspan="4" class="empty">Glossary unavailable. Reload to retry.</td></tr>'; return; }
   const items=TERMS.filter(t=>(curFilter==='all'||t.status===curFilter) &&
     (t.name.toLowerCase().includes(curSearch)||t.def.toLowerCase().includes(curSearch)||t.owner.toLowerCase().includes(curSearch)));
   if(!items.length){ rows.innerHTML='<tr><td colspan="4" class="empty">No terms match.</td></tr>'; return; }
   items.forEach(t=>{
     const tr=document.createElement('tr'); tr.onclick=()=>openTerm(t);
-    tr.innerHTML=`<td><div class="t-name">${t.name}</div><div class="t-def">${t.def}</div></td>
-      <td>${t.area}</td>
-      <td><div class="owner"><span class="mini">${t.oi}</span>${t.owner}</div></td>
-      <td><span class="pill ${PILL[t.status]}">${t.status}</span></td>`;
+    tr.innerHTML=`<td><div class="t-name">${esc(t.name)}</div><div class="t-def">${esc(t.def)}</div></td>
+      <td>${esc(t.area)}</td>
+      <td><div class="owner"><span class="mini">${esc(t.oi)}</span>${esc(t.owner)}</div></td>
+      <td><span class="pill ${PILL[t.status]||'draft'}">${esc(t.status)}</span></td>`;
     rows.appendChild(tr);
   });
 }
 
 /* ---------------- term detail ---------------- */
 function openByName(n){ const t=TERMS.find(x=>x.name===n); if(t) openTerm(t); }
-function kv(k,v){ return `<div class="kv"><div class="k">${k}</div><div class="v">${v}</div></div>`; }
+function kv(k,v){ return `<div class="kv"><div class="k">${esc(k)}</div><div class="v">${esc(v||'Not recorded')}</div></div>`; }
 function openTerm(t){
   currentTerm=t;
   go('detail');
   document.getElementById('d-crumb').textContent=t.name;
   document.getElementById('d-name').textContent=t.name;
   document.getElementById('d-area').textContent=t.area+' · owned by '+t.owner;
-  const pill=`<span class="pill ${PILL[t.status]}">${t.status}</span>`;
+  const pill=`<span class="pill ${PILL[t.status]||'draft'}">${esc(t.status)}</span>`;
   document.getElementById('d-pill').innerHTML=pill;
   document.getElementById('d-status-pill').innerHTML=pill;
   document.getElementById('d-why').textContent=t.why;
   const tf=trustFor(t.status);
   document.getElementById('d-trust').innerHTML=
-    `<div class="trust ${tf.cls}"><span class="score">${tf.score}</span><span class="lbl">${tf.lbl}</span><span class="checks">${tf.checks}</span></div>`;
+    `<div class="trust ${tf.cls}"><span class="lbl">${esc(tf.lbl)}</span><span class="checks">${esc(tf.checks)}</span></div>`;
   const dv=t.derived;
   document.getElementById('d-derived').innerHTML = dv
-    ? `<div class="derived"><h4>How it's derived</h4><p>${dv}</p></div>` : '';
+    ? `<div class="derived"><h4>How it's derived</h4><p>${esc(dv)}</p></div>` : '';
   document.getElementById('d-basics').innerHTML=kv('Definition',t.def)+kv('Also known as',t.aliases);
   document.getElementById('d-owner').innerHTML=kv('Owner',t.owner)+kv('Signs off',t.owner)+kv('Business area',t.area);
   document.getElementById('d-context').innerHTML=kv('Sensitivity',t.sensitivity)+kv('Sits under',t.hierarchy);
   document.getElementById('d-trace').innerHTML=kv('Comes from',t.sources)+kv('Used in',t.reports)+kv('Last changed',t.changed);
-  document.getElementById('d-related').innerHTML=t.related.map(r=>`<span class="tag" onclick="openByName('${r}')">${r}</span>`).join('');
-  document.getElementById('d-comments').innerHTML=
-    `<div class="comment"><span class="mini">JP</span><div class="c-body">Can we confirm this matches the S&amp;OP definition?<div class="c-meta">J. Park · 2 days ago</div></div></div>
-     <div class="comment"><span class="mini">RM</span><div class="c-body">Yes — aligned with the weekly review.<div class="c-meta">R. Mehta · 1 day ago</div></div></div>`;
+  document.getElementById('d-related').innerHTML=t.related.map(r=>`<span class="tag" onclick="openByName('${jsq(r)}')">${esc(r)}</span>`).join('');
+  document.getElementById('d-comments').textContent='No discussion data is provided by this demo.';
 }
 
 /* ---------------- review & approve ---------------- */
 let REVIEW=[], CAT_PROPOSALS=[];
 const CATLABEL={objects:'Object',concepts:'Concept',policies:'Policy',systems:'System',terms:'Glossary term'};
 function roleName(){ return role==='steward'?'Data steward':role==='engineer'?'Data Architect':'Business user'; }
-function humanizeKey(k){ return String(k||'').replace(/^keystone_/,'Keystone ').replace(/_/g,' ').replace(/^./,c=>c.toUpperCase()); }
-// combine live catalog proposals (from the store) with the term-review demo items into one queue
+function humanizeKey(k){ return String(k||'').replace(/^source_/,'Source ').replace(/_/g,' ').replace(/^./,c=>c.toUpperCase()); }
+// Combine API catalog and glossary proposals into one queue.
 function rebuildReview(){
   const cats=(CAT_PROPOSALS||[]).filter(p=>p.type!=='terms').map(p=>({
     kind:'catalog', id:p.id, domain:p.domain, cat:p.type, itemId:p.itemId, name:p.title||p.itemId,
@@ -1229,14 +1190,16 @@ function rebuildReview(){
   if(document.getElementById('view-review')&&document.getElementById('view-review').classList.contains('active')) renderReview();
 }
 async function loadReviews(){
-  try{ CAT_PROPOSALS=await (await fetch('/api/reviews')).json(); }catch(e){ CAT_PROPOSALS=[]; }
+  try{ CAT_PROPOSALS=await (await fetch('/api/reviews')).json(); if(!Array.isArray(CAT_PROPOSALS)) throw new Error('Invalid reviews response'); }
+  catch(e){ CAT_PROPOSALS=[]; availability('/api/reviews',e.message); }
   rebuildReview();
+  if(LOAD_ERRORS.has('/api/reviews')) document.getElementById('c-review').textContent='Unavailable';
 }
 async function approveCatProposal(id){
   const proposal=REVIEW.find(r=>r.id===id);
   const res=await fetch('/api/reviews/'+encodeURIComponent(id)+'/approve',{method:'POST'});
   if(!res.ok){ let m='Could not approve'; try{ m=((await res.json()).errors||[m]).join(' '); }catch(e){} toast(m); return; }
-  toast('Approved \u2014 the tree is updated. (Agent picks it up on next restart.)');
+  toast('Approved authoring saved. Publish approved knowledge separately to update the published snapshot.');
   SEARCH_CACHE={};
   if(proposal&&proposal.kind==='term-proposal'&&proposal.domain===dref()){
     TERMS=await loadTermsFromTree(dref());
@@ -1262,6 +1225,7 @@ function hideRejectForm(){ const a=document.getElementById('revActions'); const 
 let curReview=0;
 function renderReview(){
   const q=document.getElementById('reviewQueue'); q.innerHTML='';
+  if(LOAD_ERRORS.has('/api/reviews')){ document.getElementById('reviewDetail').innerHTML='<p class="page-sub">Review queue unavailable. Reload to retry.</p>'; return; }
   REVIEW.forEach((r,i)=>{
     const d=document.createElement('div'); d.className='q-item'+(i===curReview?' active':'');
     d.onclick=()=>{curReview=i;renderReview();};
@@ -1308,7 +1272,7 @@ function renderTermProposalReview(r){
     <p class="page-sub" style="margin:4px 0 16px">${esc(r.area)} · proposed by ${esc(r.who)}${r.when?' · '+esc(r.when):''}${r.itemId?' · '+esc(r.itemId):''}</p>
     ${evalPanel(r.duplicates, 'terms')}
     <div class="diff">
-      <div class="col old"><h5>● Current (live)</h5>${oldCol}</div>
+      <div class="col old"><h5>● Current authoring</h5>${oldCol}</div>
       <div class="col new"><h5>● Proposed</h5>${newCol}</div>
     </div>
     ${actions}`;
@@ -1339,7 +1303,7 @@ function renderCatReview(r){
     <p class="page-sub" style="margin:4px 0 16px">${esc(r.area)} · proposed by ${esc(r.who)}${r.when?' · '+esc(r.when):''} · ${esc(r.itemId)}</p>
     ${evalPanel(r.duplicates, r.cat)}
     <div class="diff">
-      <div class="col old"><h5>● Current (live)</h5>${oldCol}</div>
+      <div class="col old"><h5>● Current authoring</h5>${oldCol}</div>
       <div class="col new"><h5>● Proposed</h5>${newCol}</div>
     </div>
     ${actions}`;
@@ -1348,10 +1312,10 @@ function renderCatReview(r){
 function evalPanel(dupes, cat){
   dupes = dupes||[];
   if(!dupes.length)
-    return `<div style="margin:0 0 14px;padding:10px 12px;border-radius:8px;background:#e6f4ec;color:#256b45;font-size:13px">✓ <b>Duplicate &amp; quality eval passed</b> — no overlapping items found in the knowledge base.</div>`;
+    return `<div class="ro-note">No duplicate matches were reported. This does not confirm a check ran and is not a data-quality assessment.</div>`;
   const items=dupes.map(m=>{ const open=cat==='terms'?`openTermDuplicate('${jsq(m.id)}')`:`openCatItem('${cat}','${jsq(m.id)}')`; return `<li style="margin:3px 0"><a href="#" onclick="${open};return false" style="color:#8a4b00;font-weight:600">${esc(m.title||m.id)}</a> <span style="opacity:.8">(${Math.round((m.score||0)*100)}% match)</span> — ${esc(m.verdict||'')}</li>`; }).join('');
   return `<div style="margin:0 0 14px;padding:10px 12px;border-radius:8px;background:#fdf0e3;color:#8a4b00;font-size:13px">
-    ⚠ <b>Duplicate &amp; quality eval — ${dupes.length} possible match${dupes.length>1?'es':''}.</b>
+    ⚠ <b>Duplicate similarity check — ${dupes.length} possible match${dupes.length>1?'es':''}.</b> Similarity is not a data-quality score.
     Approving may create a duplicate of an existing item. Review these first:
     <ul style="margin:6px 0 0;padding-left:18px">${items}</ul></div>`;
 }
@@ -1392,13 +1356,7 @@ function renderDash(){
 function dashClick(list,i){ if(list===1) window._dl1[i].click(); }
 
 /* ---------------- history ---------------- */
-let HISTORY=[
-  {type:"approve",t:"“Product Family Build Plan” approved & published",m:"R. Mehta · 3 days ago",b:"Signed off after weekly review alignment. Now available to the agent."},
-  {type:"edit",t:"“Supportability” flagged: Needs update",m:"J. Park · 2 weeks ago",b:"Tier-2 rule changed last quarter — definition must be revised before re-approval."},
-  {type:"",t:"“E-commerce Split Rule” proposed",m:"A. Silva · yesterday",b:"New rule drafted to make the 10% split explicit rather than a hidden assumption."},
-  {type:"approve",t:"“Weekly Demand Split” approved",m:"A. Silva · 4 days ago",b:"Confirmed weekly phasing including channel rules."},
-  {type:"edit",t:"“Server Demand” definition updated",m:"R. Mehta · 1 week ago",b:"Clarified that grain is product-family level."},
-];
+let HISTORY=[];
 function renderHistory(){
   document.getElementById('timeline').innerHTML=HISTORY.map(h=>
     `<div class="tl ${h.type}"><div class="dot"><i></i></div>
@@ -1422,44 +1380,24 @@ async function refreshHistory(){
 }
 
 /* ---------------- sources & reports (governed catalog + retirement) ---------------- */
-let SOURCES=[
-  {name:"Published Demands (Keystone gold)", type:"Dataset", owner:"R. Mehta", validated:true,  status:"Active",   note:"Source of server demand &amp; planned dock dates"},
-  {name:"Network BOM Pipeline",              type:"Dataset", owner:"A. Silva", validated:true,  status:"Active",   note:"Network demand by master site (MSF)"},
-  {name:"ISP Rack Supportability",           type:"Report",  owner:"J. Park", validated:true,  status:"Active",   note:"Constrained vs unconstrained supportable"},
-  {name:"T2 Forecast – MDM Unwind",           type:"Report",  owner:"R. Mehta", validated:true,  status:"Active",   note:"Net component demand (post-netting)"},
-  {name:"Legacy Supportability (iHub)",       type:"Report",  owner:"—",        validated:false, status:"Retiring", replacedBy:"ISP Rack Supportability", note:"Being retired — do not cite in answers"},
-  {name:"Ad-hoc Demand Extract v3",           type:"Dataset", owner:"—",        validated:false, status:"Retired",  replacedBy:"Published Demands (Keystone gold)", note:"Removed — superseded by the gold view"},
-];
+let SOURCES=[];
 function renderSources(){
   document.getElementById('sourceRows').innerHTML=SOURCES.map(sc=>{
-    const v = sc.validated ? '<span class="pill approved">✓ Validated</span>' : '<span class="pill draft">Not validated</span>';
+    const v = '<span class="pill draft">Synthetic reference; quality not verified</span>';
     let life;
     if(sc.status==='Active')        life='<span class="pill review">Active</span>';
-    else if(sc.status==='Retiring') life=`<span class="pill update">Retiring</span> <span class="t-def">→ replaced by ${sc.replacedBy}</span>`;
-    else                            life='<span class="pill draft">Retired</span>'+(sc.replacedBy?` <span class="t-def">→ use ${sc.replacedBy}</span>`:'');
-    const open = sc.url ? `onclick="openReport('${sc.url}')" style="cursor:pointer"` : '';
-    const nameCell = sc.url ? `${sc.name} <span style="color:var(--blue);font-size:11px;font-weight:600">↗ open report</span>` : sc.name;
-    return `<tr ${open}><td><div class="t-name">${nameCell}</div><div class="t-def">${sc.note}</div></td><td>${sc.type}</td><td>${sc.owner}</td><td>${v}</td><td>${life}</td></tr>`;
+    else if(sc.status==='Retiring') life=`<span class="pill update">Retiring</span> <span class="t-def">→ replaced by ${esc(sc.replacedBy||'')}</span>`;
+    else life='<span class="pill draft">Retired</span>';
+    const open = sc.url ? `onclick="openReport('${jsq(sc.url)}')" style="cursor:pointer"` : '';
+    const nameCell = esc(sc.name)+(sc.url?' <span>↗ open reference</span>':'');
+    return `<tr ${open}><td><div class="t-name">${nameCell}</div><div class="t-def">${esc(sc.note||'')}</div></td><td>${esc(sc.type)}</td><td>${esc(sc.owner)}</td><td>${v}</td><td>${life}</td></tr>`;
   }).join('');
 }
-function openReport(url){ if(url) window.open(url,'_blank','noopener'); }
+function openReport(url){ if(!url)return; const parsed=new URL(url,location.href); if(!['http:','https:'].includes(parsed.protocol)){toast('Unsupported reference URL');return;} window.open(parsed.href,'_blank','noopener'); }
 
-/* ---------------- data refresh (real Keystone last/next refresh per dataset) ---------------- */
-// Overwritten in boot() from /refresh-registry.json; this seed is the file:// fallback for the standalone wireframe.
-let REFRESH=[
-  {stage:'demand', label:'Published demands (Keystone gold)', view:'publisheddemands', cadenceLabel:'Daily', lastRefresh:'2026-09-01', nextRefresh:'2026-09-02', freshness:'fresh', recentRuns:['2026-09-01','2026-08-24','2026-08-19','2026-08-18','2026-08-17'], note:'Refreshed every day \u2014 the last five runs are consecutive days.'},
-  {stage:'demand', label:'Rack milestone / ETA dates', view:'SapDemandPlanETADates', cadenceLabel:'2\u20133\u00d7 per week', lastRefresh:'2026-08-28', nextRefresh:'2026-08-31', freshness:'fresh', recentRuns:['2026-08-28','2026-08-21','2026-08-18','2026-08-13','2026-08-11'], note:'Re-runs 2\u20133 times a week (2\u20134 day gaps), not strictly daily \u2014 last run 28 Aug.'},
-  {stage:'demand', label:'LRF long-range forecast', view:'lrfautomation', cadenceLabel:'Monthly', lastRefresh:'2026-08-25', nextRefresh:'2026-09-25', freshness:'fresh', recentRuns:['2026-08-25','2026-08-01','2026-07-07','2026-06-26','2026-06-24'], note:'Monthly LRF label branch \u2014 September cycle published 25 Aug; next cycle late September.'},
-  {stage:'network', label:'Network BOM pipeline', view:'networkplanningbompoline', cadenceLabel:'Daily', lastRefresh:'2026-09-01', nextRefresh:'2026-09-02', freshness:'fresh', recentRuns:['2026-09-01','2026-08-24','2026-08-19','2026-08-18','2026-08-17'], note:'Refreshed every day \u2014 the last five runs are consecutive days.'},
-  {stage:'supply', label:'Rack forecast T1 (POR)', view:'T1PORForecast', cadenceLabel:'Weekly', lastRefresh:'2026-08-26', nextRefresh:'2026-09-02', freshness:'fresh', recentRuns:['2026-08-26','2026-08-21','2026-08-12','2026-08-05','2026-07-29'], note:'Fresh POR version lands weekly (every Tuesday) \u2014 landed 26 Aug.'},
-  {stage:'supply', label:'Component forecast T2 (POR)', view:'T2PORForecast', cadenceLabel:'Weekly', lastRefresh:'2026-08-26', nextRefresh:'2026-09-02', freshness:'fresh', recentRuns:['2026-08-26','2026-08-21','2026-08-20','2026-08-12','2026-08-05'], note:'Fresh POR version lands weekly (every Tuesday) \u2014 landed 26 Aug.'},
-  {stage:'supply', label:'Gating optimizer', view:'sapibptdsgatingoptimizer', cadenceLabel:'2\u20133\u00d7 per week', lastRefresh:'2026-08-28', nextRefresh:'2026-08-31', freshness:'fresh', recentRuns:['2026-08-28','2026-08-21','2026-08-18','2026-08-13','2026-08-10'], note:'Re-runs 2\u20133 times a week (2\u20134 day gaps) \u2014 last run 28 Aug.'},
-  {stage:'supply', label:'SOP CAPEX demand (server CAPEX)', view:'sapibpsopcapexdemandlatest', cadenceLabel:'Weekly', lastRefresh:'2026-08-31', nextRefresh:'2026-09-07', freshness:'fresh', recentRuns:['2026-08-31','2026-08-19','2026-08-14','2026-08-12'], note:'Latest twin exposes the newest weekly snapshot (31 Aug) \u2014 next weekly run due 7 Sep.'},
-  {stage:'supply', label:'Lead time', view:'sapibpsidcleadtime', cadenceLabel:'Weekly', lastRefresh:'2026-08-27', nextRefresh:'2026-09-03', freshness:'fresh', recentRuns:['2026-08-27','2026-08-13','2026-08-06','2026-07-31','2026-07-23'], note:'Build + ship lead-time offsets, refreshed about weekly \u2014 last run 27 Aug.'},
-  {stage:'supply', label:'T3N sub-component master', view:'sapibpreferencetdst3nresourcedesign', cadenceLabel:'Reference (on change)', lastRefresh:null, lastRefreshText:'Reference master', nextRefresh:null, nextRefreshText:'On design change', freshness:'reference', recentRuns:[], note:'Reference master data \u2014 changes only when the sub-component design changes.'},
-  {stage:'buffer', label:'Component buffer (safety stock)', view:'sapibpbuffersquareset', cadenceLabel:'Stalled', lastRefresh:'2026-05-15', nextRefresh:null, nextRefreshText:'Overdue \u2014 no run since May', freshness:'stale', recentRuns:['2026-05-15','2026-05-10','2026-05-03','2026-04-27','2026-04-20'], note:'Refreshed weekly until 15 May 2026, then stopped \u2014 ~3 months stale in Keystone. Do not cite buffer figures until it resumes.'}
-];
-let REFRESH_META={queriedAt:'2026-08-12'};
+/* Synthetic sample refresh metadata only; no live source queries. */
+let REFRESH=[];
+let REFRESH_META={queriedAt:''};
 const FRESH={fresh:{pill:'fp-fresh',dot:'fr-fresh',label:'Fresh'},due:{pill:'fp-due',dot:'fr-due',label:'Due now'},stale:{pill:'fp-stale',dot:'fr-stale',label:'Stale'},reference:{pill:'fp-reference',dot:'fr-reference',label:'Reference'}};
 function fmtRef(d){ if(!d) return null; const dt=new Date(d+'T00:00:00'); return isNaN(dt)?d:dt.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); }
 function refLast(r){ return r.lastRefresh?fmtRef(r.lastRefresh):(r.lastRefreshText||'\u2014'); }
@@ -1474,11 +1412,11 @@ function isOverdue(r){
 function overdueTag(r){
   if(!isOverdue(r)) return '';
   const since=REFRESH_META.queriedAt?fmtRef(REFRESH_META.queriedAt):'the last read';
-  return `<div class="ref-overdue" title="Scheduled refresh was due ${fmtRef(r.nextRefresh)}; Keystone has not been re-checked since ${since}.">\u23f1 overdue since ${fmtRef(r.nextRefresh)}</div>`;
+  return '<div class="ref-overdue">Synthetic schedule example; not a live freshness assertion.</div>';
 }
 function renderRefresh(){
   const el=document.getElementById('refreshRows'); if(!el) return;
-  const asOf=document.getElementById('refreshAsOf'); if(asOf) asOf.textContent = REFRESH_META.queriedAt ? ('Read from Keystone on '+fmtRef(REFRESH_META.queriedAt)+'.') : '';
+  const asOf=document.getElementById('refreshAsOf'); if(asOf) asOf.textContent = 'Fictional dates and status. No live freshness verification.';
   el.innerHTML=REFRESH.map(r=>{
     const f=FRESH[r.freshness]||FRESH.reference;
     const runs=(r.recentRuns&&r.recentRuns.length)?`<div class="ref-runs">recent runs: ${r.recentRuns.slice(0,5).map(fmtRef).join(' \u00b7 ')}</div>`:'';
@@ -1500,7 +1438,7 @@ function setChkState(view,cls,msg){ const st=document.getElementById('chks-'+vie
 async function verifyDataset(view){
   const btn=document.getElementById('chk-'+view); if(btn) btn.disabled=true;
   setChkState(view,'checking','Freshness check in progress\u2026');
-  toast('Checking Keystone freshness for '+labelOf(view)+'\u2026');
+  toast('Inspecting synthetic refresh metadata for '+labelOf(view)+'\u2026');
   try{
     const j=await (await fetch('/api/refresh/'+encodeURIComponent(view)+'/verify',{method:'POST'})).json();
     pollJob(view, j.id);
@@ -1520,18 +1458,18 @@ async function finishJob(view,j){
   setChkState(view,cls,shortOutcome(j));
   toast(j.message||'Done.');
   if(j.synced){
-    try{ const rr=await (await fetch('/refresh-registry.json?_='+Date.now())).json(); if(rr&&Array.isArray(rr.datasets)){ REFRESH=rr.datasets; REFRESH_META={queriedAt:(rr._meta&&rr._meta.keystoneQueriedAt)||''}; } }catch(e){}
+    try{ const rr=await (await fetch('/refresh-registry.json?_='+Date.now())).json(); if(rr&&Array.isArray(rr.datasets)){ REFRESH=rr.datasets; REFRESH_META={queriedAt:(rr._meta&&rr._meta.queriedAt)||''}; } }catch(e){availability('refresh',e.message);}
     renderRefresh();
   }
 }
 function shortOutcome(j){
   switch(j.outcome){
-    case 'landed': return '\u2713 Landed \u00b7 replica synced'+(j.keystoneLatest?(' ('+j.keystoneLatest+')'):'');
-    case 'landed-not-synced': return '\u25cf New at Keystone'+(j.keystoneLatest?(' ('+j.keystoneLatest+')'):'')+' \u00b7 sync needed';
-    case 'not-yet': return '\u25cb Not refreshed yet at Keystone';
+    case 'landed': return 'Synthetic refresh example';
+    case 'landed-not-synced': return 'Synthetic refresh pending';
+    case 'not-yet': return 'Not refreshed';
     case 'current': return '\u2713 Up to date';
-    case 'reference': return '\u2014 Reference master';
-    case 'unavailable': return '\u00d7 Keystone unreadable';
+    case 'reference': return 'Synthetic metadata only';
+    case 'unavailable': return 'Source unavailable';
     default: return '\u00d7 '+(j.message||'error');
   }
 }
@@ -1539,29 +1477,29 @@ function shortOutcome(j){
 /* ---------------- data-flow lineage map ---------------- */
 const FLOW=[
   {id:'demand', label:'Demand', cls:'s-demand', icon:'\uD83D\uDCC8', color:'#2e75b6',
-   who:'<b>Demand planners</b> agree how much the business wants, then lock it as the plan of record.',
-   nodes:[{name:'Server demand', sub:'by product family (PFAM)'},
-      {name:'Network demand', sub:'by master site (MSF)'},
-          {name:'Consensus & POR', sub:'unconstrained \u2192 final plan'}]},
+   who:'<b>Demo demand planners</b> describe requested quantities.',
+   nodes:[{name:'Demand Plan', sub:'synthetic product family'},
+      {name:'Planning period', sub:'fictional quarterly horizon'},
+          {name:'Plan Version', sub:'explicit publication'}]},
     {id:'supply', label:'Supply Planning', cls:'s-supply', icon:'\uD83C\uDFED', color:'#2c9a8f',
-     who:'<b>Supply planners</b> explode approved demand into components and check what parts can be supported.',
-     nodes:[{name:'Component explosion', sub:'BOM \u2192 parts, net / gross'},
-          {name:'Supportability', sub:'constrained vs unconstrained'},
-          {name:'Gating & lead time', sub:'what\u2019s short, when it lands'}]},
-  {id:'network', label:'Network Planning', cls:'s-network', icon:'\uD83C\uDF10', color:'#7a5bd0',
-    who:'<b>Network planners</b> take demand quantity, prepare MSF-level quantity, and manage Network CAPEX with T1 / T2.',
-   nodes:[{name:'MSF quantity preparation', sub:'demand quantity \u2192 master site need'},
-     {name:'Network CAPEX approval', sub:'network tiers T1 / T2'},
-     {name:'Network supply plan', sub:'DCEP, colo & rows'}]},
+     who:'<b>Demo supply planners</b> document available quantities and coverage rules.',
+     nodes:[{name:'Supply Plan', sub:'fictional available supply'},
+          {name:'Coverage', sub:'documented ratio contract'},
+          {name:'Source mapping', sub:'inspect evidence and limitations'}]},
+  {id:'network', label:'Logistics', cls:'s-network', icon:'\uD83C\uDF10', color:'#7a5bd0',
+    who:'<b>Demo logistics planners</b> describe illustrative delivery steps.',
+   nodes:[{name:'Preparation', sub:'example process context'},
+     {name:'Shipment', sub:'example milestone'},
+     {name:'Receipt', sub:'no live tracking'}]},
   {id:'buffer', label:'Buffer', cls:'s-buffer', icon:'\uD83D\uDEE1\uFE0F', color:'#e08a1e',
-   who:'<b>Safety stock</b> absorbs demand & supply variability so short parts don\u2019t stall the build.',
+   who:'<b>Demo inventory planners</b> document an illustrative inventory process.',
    nodes:[{name:'Component buffer', sub:'safety stock held ahead'},
           {name:'Days of supply', sub:'how long the buffer lasts', emerging:true}]},
   {id:'exec', label:'Execution', cls:'s-exec', icon:'\uD83D\uDD27', color:'#c0492f',
-   who:'<b>Fulfillment</b> builds & installs; <b>system integrators</b> raise POs and ship the gear.',
-   nodes:[{name:'Build & install', sub:'build order POR, install base'},
-          {name:'SI fulfillment', sub:'POs / APOs, ship & receive'},
-          {name:'E&O / lag', sub:'excess & obsolete, plan vs actual'}]}
+   who:'<b>Demo fulfillment</b> links fictional activities to approved knowledge.',
+   nodes:[{name:'Prepare', sub:'example work step'},
+         {name:'Deliver', sub:'example handoff'},
+         {name:'Review', sub:'human stewardship'}]}
 ];
 
 // assign each term to exactly one stage (priority: buffer > network > execution > supply > demand)
@@ -1569,10 +1507,10 @@ function stageOf(t){
   const hay=((t.name||'')+' '+(t.area||'')+' '+(t.aliases||'')).toLowerCase();
   const has=arr=>arr.some(k=>hay.includes(k));
   if(has(['buffer','safety stock','days of supply'])) return 'buffer';
-  if(has(['network','msf','master site','dcep','colo','network bom'])) return 'network';
-  if(has(['build order','install base','fulfil','fulfill','excess','e&o','lag analysis','minimum commit','system integrator','apo'])) return 'exec';
+  if(has(['logistics','shipment','receipt'])) return 'network';
+  if(has(['fulfil','fulfill','delivery'])) return 'exec';
   if((t.area||'').toLowerCase().startsWith('supply') ||
-     has(['component','support','gating','bom','netting','explosion','lead time','dock','ex-factory','atp','attach','tier','blocker','shortage','capacity','capex','snapshot','offset'])) return 'supply';
+     has(['supply','coverage','component'])) return 'supply';
   return 'demand';
 }
 function termsForStage(id){ return TERMS.filter(t=>stageOf(t)===id); }
@@ -1607,7 +1545,7 @@ function renderFlow(){
   el.innerHTML=
     stageBox(byId.demand) +
     conn() +
-    '<div class="flow-gate"><b>Demand Plan CAPEX Approval</b><span>approved plan released for planning</span></div>' +
+    '<div class="flow-gate"><b>Demo plan review</b><span>illustrative business milestone</span></div>' +
     `<div class="flow-lanes"><div class="lanes-cap">Parallel planning tracks</div>` +
       `<div class="parallel-row">${conn()}${stageBox(byId.supply)}${conn()}</div>` +
       `<div class="parallel-row">${conn()}${stageBox(byId.network)}${conn()}</div>` +
@@ -1621,7 +1559,7 @@ function stageBox(s){
   const nodes=s.nodes.map(n=>`<span class="node ${n.emerging?'emerging':''}">${n.name}<span class="n-sub">${n.sub}</span></span>`).join('');
   const foot=count? `${count} governed term${count===1?'':'s'} \u203a` : 'Terms coming soon \u203a';
   const rf=stageRefresh(s.id);
-  const rfChip = rf ? `<div class="stage-refresh" title="${rf.count} Keystone dataset${rf.count===1?'':'s'} feed this stage \u2014 click for refresh detail"><span class="fresh-dot ${rf.dot}"></span>Refresh: ${rf.label}${rf.newest?' \u00b7 '+fmtRef(rf.newest):''}</div>` : '';
+  const rfChip = rf ? `<div class="stage-refresh" title="Synthetic sample metadata only"><span class="fresh-dot ${rf.dot}"></span>Demo refresh: ${rf.label}</div>` : '';
   return `<div class="stage ${s.cls}" onclick="openFlowDrawer('${s.id}')" title="Click to see all datasets & terms behind ${s.label}">
         <div class="stage-head"><span class="ic">${s.icon}</span>${s.label}</div>
         <div class="stage-who">${s.who}</div>
@@ -1646,7 +1584,7 @@ function openFlowDrawer(id){
   const rf=REFRESH.filter(r=>r.stage===id);
   document.getElementById('fdRefresh').innerHTML = rf.length
     ? rf.map(r=>{const f=FRESH[r.freshness]||FRESH.reference; return `<div class="fd-refresh"><div class="fr-top"><span class="fr-name"><span class="fresh-dot ${f.dot}"></span>${r.label}</span><span class="fresh-pill ${f.pill}">${f.label}</span></div><div class="fr-when">${r.cadenceLabel} \u00b7 last <b>${refLast(r)}</b> \u00b7 next <b>${refNext(r)}</b></div>${overdueTag(r)}</div>`;}).join('')
-    : '<div class="d-empty">No Keystone dataset with a refresh cadence is tagged to this stage.</div>';
+    : '<div class="d-empty">No synthetic refresh metadata is tagged to this stage.</div>';
   const ds=datasetsForStage(id);
   document.getElementById('fdDatasets').innerHTML = ds.length
     ? ds.map(sc=>`<div class="d-dataset"><span class="dd-ic">${sc.type==='Report'?'\uD83D\uDCCA':'\uD83D\uDDC3\uFE0F'}</span>
@@ -1671,6 +1609,7 @@ function toast(msg){
 
 /* ---------------- live data from the Knowledge Base API ---------------- */
 async function boot(){
+  await loadDemoConfig();
   try{
     const [terms,sources,pubs]=await Promise.all([
       loadTermsFromTree(dref()),
@@ -1680,14 +1619,14 @@ async function boot(){
     TERMS = terms;
     SOURCES = sources;
     PUBS = pubs;
-  }catch(e){ console.error('KB API load failed', e); }
+  }catch(e){ TERMS=[];SOURCES=[];PUBS=[];availability('demo data',e.message); }
   const ct=document.getElementById('c-terms'); if(ct) ct.textContent=TERMS.length;
   const cs=document.getElementById('c-sources'); if(cs) cs.textContent=SOURCES.length;
   await loadReviews();
   try{ const cur=await (await fetch('/api/kb/current')).json(); const cv=document.getElementById('concVer'); if(cv) cv.textContent = cur.published ? ('agent reading: KB v'+cur.version) : 'not published yet'; }catch(e){}
-  try{ const rr=await (await fetch('/refresh-registry.json')).json(); if(rr&&Array.isArray(rr.datasets)){ REFRESH=rr.datasets; REFRESH_META={queriedAt:(rr._meta&&rr._meta.keystoneQueriedAt)||''}; } }catch(e){}
+  try{ const rr=await (await fetch('/refresh-registry.json')).json(); if(rr&&Array.isArray(rr.datasets)){ REFRESH=rr.datasets; REFRESH_META={queriedAt:(rr._meta&&rr._meta.queriedAt)||''}; } }catch(e){availability('refresh',e.message);}
   const crf=document.getElementById('c-refresh'); if(crf) crf.textContent=REFRESH.length;
-  renderList(); refreshHistory(); renderSources(); renderFlow(); renderRefresh(); loadMeasures(); loadArtifacts(); loadDomains();
+  renderList(); await refreshHistory(); renderSources(); renderFlow(); renderRefresh(); await loadMeasures(); await loadArtifacts(); await loadDomains(); applyWriteMode();
 }
 let MEASURES=[];
 async function loadMeasures(){
@@ -1697,20 +1636,20 @@ async function loadMeasures(){
 }
 function renderMeasures(){
   const rows=document.getElementById('measureRows'); if(!rows) return;
-  rows.innerHTML = MEASURES.map(m=>`<tr onclick="openMeasureEdit('${m.key}')" style="cursor:pointer">
-    <td><div class="t-name">${m.qualifier}</div><div class="t-def">${m.key}${m.explanation?' \u00b7 '+m.explanation:''}</div></td>
-    <td>${m.domain}</td>
-    <td><span class="t-def">${m.rule}</span></td>
-    <td><span class="pill ${PILL[m.status]||'draft'}">${m.status}</span></td>
+  rows.innerHTML = MEASURES.map(m=>`<tr onclick="openMeasureEdit('${jsq(m.key)}')" style="cursor:pointer">
+    <td><div class="t-name">${esc(m.qualifier)}</div><div class="t-def">${esc(m.key)}${m.explanation?' \u00b7 '+esc(m.explanation):''}</div></td>
+    <td>${esc(m.domain)}</td>
+    <td><span class="t-def">${esc(m.rule)}</span></td>
+    <td><span class="pill ${PILL[m.status]||'draft'}">${esc(m.status)}</span></td>
   </tr>`).join('');
 }
 async function publishRegistry(){
   const p = await (await fetch('/api/registry/publish',{method:'POST'})).json();
-  toast('Registry published \u2014 '+p.version+' ('+p.viewCount+' views). The agent now uses it for numbers.');
+  toast('Registry metadata published \u2014 '+p.version+' ('+p.viewCount+' views). No live numeric engine is connected.');
   await loadMeasures();
 }
 let ARTIFACTS=[];
-const ARTLABEL={glossary:'Schema-linking glossary (measure vocabulary)', grounding:'Value grounding index (real sites, parts, codes)', 'knowledge-base':'Narrative knowledge base (markdown)'};
+const ARTLABEL={glossary:'Schema-linking glossary (demo vocabulary)', grounding:'Synthetic supported values', 'knowledge-base':'Narrative knowledge base (markdown)'};
 async function loadArtifacts(){
   try{ ARTIFACTS = await (await fetch('/api/artifacts')).json(); }catch(e){ ARTIFACTS=[]; }
   const c=document.getElementById('c-artifacts'); if(c) c.textContent=ARTIFACTS.length;
@@ -1732,7 +1671,6 @@ async function publishAllArtifacts(){
 }
 async function approveAndPublish(id){
   if(!id){ toast('Open a term first'); return; }
-  await fetch('/api/terms/'+id+'/approve',{method:'POST'});
   const p=await (await fetch('/api/publish',{method:'POST'})).json();
   toast('Approved & published \u2014 KB v'+p.version+' ('+p.termCount+' terms). The agent now uses it.');
   await boot();
@@ -2169,7 +2107,12 @@ async function checkTermDupes(pfx){
 }
 
 /* ---------------- init ---------------- */
-boot();
+const writeObserver=new MutationObserver(()=>applyWriteMode());
+writeObserver.observe(document.body,{childList:true,subtree:true});
+for(const name of ['modalSave','publishConcepts','publishRegistry','publishAllArtifacts','approveCatProposal','rejectCatProposal','approveAndPublish','deleteTerm','generateMetrics']){
+  if(typeof window[name]==='function') window[name]=uiAction(window[name]);
+}
+boot().catch(error=>availability('startup',error.message));
 </script>
 </body>
 </html>

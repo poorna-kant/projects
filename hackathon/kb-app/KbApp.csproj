@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.12" />
     <!-- Seed the glossary from the structured tree's terms/index.yaml. -->
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
   </ItemGroup>

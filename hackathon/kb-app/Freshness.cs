@@ -10,7 +10,7 @@ public sealed class FreshnessJob
     public required string Label { get; init; }
     public string State { get; set; } = "checking";
     public string? Outcome { get; set; }
-    public string? KeystoneLatest { get; set; }
+    public string? SourceLatest { get; set; }
     public string? Ours { get; set; }
     public string? Message { get; set; }
     public bool Synced { get; set; }
@@ -23,7 +23,7 @@ public sealed class FreshnessJob
         label = Label,
         state = State,
         outcome = Outcome,
-        keystoneLatest = KeystoneLatest,
+        sourceLatest = SourceLatest,
         ours = Ours,
         message = Message,
         synced = Synced,

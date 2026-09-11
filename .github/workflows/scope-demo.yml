@@ -1,0 +1,28 @@
+name: SCOPE public demo
+on:
+  push:
+    paths: ['hackathon/**', '.github/workflows/scope-demo.yml']
+  pull_request:
+    paths: ['hackathon/**', '.github/workflows/scope-demo.yml']
+permissions:
+  contents: read
+jobs:
+  build-and-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Restore from Microsoft public feed
+        run: dotnet restore hackathon/kb-app/KbApp.csproj --configfile hackathon/NuGet.Config
+      - name: Build
+        run: dotnet build hackathon/kb-app/KbApp.csproj -c Release --no-restore
+      - name: Public content policy
+        shell: pwsh
+        run: ./hackathon/scripts/check-public-content.ps1
+      - name: Smoke
+        shell: pwsh
+        run: ./hackathon/scripts/smoke.ps1
+      - name: Container build
+        run: docker build -t scope-demo:ci hackathon

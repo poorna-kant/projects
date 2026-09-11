@@ -3,7 +3,7 @@ using YamlDotNet.Serialization;
 
 namespace KbApp;
 
-// V2: reads the CSCP-structured KB tree (knowledge-base/{domain}/...) for the app's typed-catalog browsers.
+// Reads the synthetic knowledge tree for the app's typed-catalog browsers.
 // Domains are auto-discovered (a folder with overview.yaml), so a new domain appears with no code change.
 public sealed class TreeReader
 {
@@ -47,7 +47,7 @@ public sealed class TreeReader
         var list = new List<object>();
         foreach (var (m, _) in YamlFiles(domain, "objects"))
         {
-            var km = Map(m, "keystone_mapping");
+            var km = Map(m, "source_mapping");
             list.Add(new
             {
                 id = Str(m, "id"),
@@ -84,7 +84,7 @@ public sealed class TreeReader
     {
         var items = new List<object>();
         var note = "";
-        var f = Path.Combine(_kbRoot, domain, "metrics", "index.yaml");
+        var f = Path.Combine(KnowledgePath.Catalog(_kbRoot, domain, "metrics"), "index.yaml");
         if (File.Exists(f))
         {
             var m = Y(f);
@@ -103,7 +103,7 @@ public sealed class TreeReader
     public List<object> Concepts(string domain)
     {
         var list = new List<object>();
-        var dir = Path.Combine(_kbRoot, domain, "concepts");
+        var dir = KnowledgePath.Catalog(_kbRoot, domain, "concepts");
         if (!Directory.Exists(dir)) return list;
         foreach (var f in Directory.EnumerateFiles(dir, "*.md").OrderBy(x => x, StringComparer.Ordinal))
         {
@@ -121,7 +121,7 @@ public sealed class TreeReader
         if (string.IsNullOrWhiteSpace(id)) return null;
         if (type == "concepts")
         {
-            var dir = Path.Combine(_kbRoot, domain, "concepts");
+            var dir = KnowledgePath.Catalog(_kbRoot, domain, "concepts");
             if (!Directory.Exists(dir)) return null;
             foreach (var f in Directory.EnumerateFiles(dir, "*.md"))
             {
@@ -146,7 +146,7 @@ public sealed class TreeReader
     {
         if (type == "terms")
         {
-            var f = Path.Combine(_kbRoot, domain, "terms", "index.yaml");
+            var f = Path.Combine(KnowledgePath.Catalog(_kbRoot, domain, "terms"), "index.yaml");
             if (File.Exists(f))
             {
                 var doc = Y(f);
@@ -163,7 +163,7 @@ public sealed class TreeReader
         }
         if (type == "concepts")
         {
-            var dir = Path.Combine(_kbRoot, domain, "concepts");
+            var dir = KnowledgePath.Catalog(_kbRoot, domain, "concepts");
             if (Directory.Exists(dir))
                 foreach (var f in Directory.EnumerateFiles(dir, "*.md"))
                 {
@@ -185,7 +185,7 @@ public sealed class TreeReader
 
     public object Grounding(string domain)
     {
-        var f = Path.Combine(_kbRoot, domain, "_generated", "grounding-index.json");
+        var f = Path.Combine(KnowledgePath.Domain(_kbRoot, domain), "_generated", "grounding-index.json");
         if (!File.Exists(f)) return new { generatedUtc = (string?)null, dimensions = new List<object>() };
         try
         {
@@ -211,27 +211,40 @@ public sealed class TreeReader
 
     public object Validation(string domain)
     {
-        var d = Path.Combine(_kbRoot, domain);
+        var d = KnowledgePath.Domain(_kbRoot, domain);
         var objects = CountFiles(d, "objects");
         var terms = TermCount(d);
         var measures = MeasureCount(d);
-        // Lightweight in-app conformance summary (the full CI gate is scripts/validate-kb.py).
-        var checks = new[]
+        var checks = new List<object>();
+        var errors = new List<string>();
+        if (!Directory.Exists(d)) errors.Add("Domain is not present.");
+        else
         {
-            new { check = "Every YAML parses", pass = true },
-            new { check = "Object id == file path", pass = true },
-            new { check = "Term ids unique", pass = true },
-            new { check = $"Measure keys unique ({measures})", pass = true },
-            new { check = "Groundable dims in view columns", pass = true },
-            new { check = "objectRef resolves to an object", pass = true },
-        };
-        return new { domain, status = "pass", objects, terms, measures, checks };
+            foreach (var file in Directory.EnumerateFiles(d, "*.yaml", SearchOption.AllDirectories))
+            {
+                try
+                {
+                    if (_yaml.Deserialize<object>(File.ReadAllText(file)) is null)
+                        errors.Add("Empty YAML: " + Rel(file));
+                }
+                catch (YamlDotNet.Core.YamlException) { errors.Add("Invalid YAML: " + Rel(file)); }
+            }
+            try
+            {
+                var glossary = new TreeStore(_kbRoot).Read(domain);
+                errors.AddRange(TreeStore.Validate(glossary));
+            }
+            catch (YamlDotNet.Core.YamlException) { errors.Add("Glossary could not be parsed."); }
+        }
+        checks.Add(new { check = "YAML parsing and glossary name/definition/duplicate validation", pass = errors.Count == 0 });
+        return new { domain, status = errors.Count == 0 ? "pass" : "fail", objects, terms, measures, checks,
+            errors, note = "Structural checks only. Source data quality, freshness, and business correctness are not independently verified." };
     }
 
     // ---- helpers ----
     private IEnumerable<(Dictionary<object, object> map, string file)> YamlFiles(string domain, string catalog)
     {
-        var dir = Path.Combine(_kbRoot, domain, catalog);
+        var dir = KnowledgePath.Catalog(_kbRoot, domain, catalog);
         if (!Directory.Exists(dir)) yield break;
         foreach (var f in Directory.EnumerateFiles(dir, "*.yaml").Where(f => Path.GetFileName(f) != "index.yaml").OrderBy(x => x, StringComparer.Ordinal))
         {

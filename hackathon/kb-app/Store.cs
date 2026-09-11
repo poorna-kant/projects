@@ -23,7 +23,7 @@ public record PublishInfo(int Version, string PublishedAt, int TermCount, string
 // The Knowledge Base is the SOURCE OF TRUTH. Nothing is hardcoded: the store is seeded by IMPORTING
 // the agent's own governed files (concepts.json + reports.json). On publish, it emits the agent's exact
 // glossary schema so the agent answers definitional questions from what the business approved here.
-// Local-first (SQLite + files); the same code scales to Azure by swapping paths (Postgres + ADLS).
+// Local-first demonstration; run one instance with persistent storage.
 public sealed class KbStore
 {
     private readonly string _cs;
@@ -84,18 +84,19 @@ public sealed class KbStore
         try { Exec(c, "ALTER TABLE sources ADD COLUMN url TEXT"); } catch { /* column already present */ }
     }
 
-    // ---- trust / DQ signal (computed, not hand-typed) -----------------------
+    // Approval is a workflow state, not a measured data-quality score.
     public static Trust TrustFor(string status) => status switch
     {
-        "Approved"     => new("96%", "Trusted",         "Passes all business rules \u00b7 DQ-verified"),
-        "In review"    => new("\u2014", "In review",    "Business rules pending sign-off"),
-        "Needs update" => new("72%", "Re-check needed", "A business rule changed \u00b7 re-verification pending"),
-        _              => new("\u2014", "Draft",         "Not yet verified")
+        "Approved"     => new("", "Approved", "Approved demo knowledge; data quality is not independently verified"),
+        "In review"    => new("", "In review", "Awaiting review"),
+        "Needs update" => new("", "Re-check needed", "Approval requires review"),
+        _              => new("", "Draft", "Not approved")
     };
 
     // ---- reads --------------------------------------------------------------
     public List<Term> AllTerms()
     {
+        if (Directory.Exists(_conceptsSeed)) return ApprovedTreeTerms();
         using var c = Open();
         using var cmd = c.CreateCommand();
         cmd.CommandText = "SELECT * FROM terms ORDER BY name";
@@ -107,6 +108,9 @@ public sealed class KbStore
 
     public Term? GetTerm(string id)
     {
+        if (Directory.Exists(_conceptsSeed))
+            return ApprovedTreeTerms().FirstOrDefault(term =>
+                term.Id.Equals(id, StringComparison.OrdinalIgnoreCase) || Slug(term.Name) == id);
         using var c = Open();
         using var cmd = c.CreateCommand();
         cmd.CommandText = "SELECT * FROM terms WHERE id = $id";
@@ -210,6 +214,7 @@ public sealed class KbStore
     {
         var version = NextVersion();
         var approved = AllTerms().Where(t => t.Status == "Approved").ToList();
+        var treeJson = Directory.Exists(_conceptsSeed) ? ApprovedTreeSnapshot(version) : null;
         var publishedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ");
         var stamp = $"concepts-app-v{version}";
 
@@ -229,8 +234,7 @@ public sealed class KbStore
             })
         };
         var conceptsJson = JsonSerializer.Serialize(conceptsDoc, J);
-        File.WriteAllText(_publishedConcepts, conceptsJson);                                   // fixed path the agent reads
-        File.WriteAllText(Path.Combine(_snapshotRoot, $"kb-concepts-v{version}.json"), conceptsJson); // versioned copy
+        File.WriteAllText(Path.Combine(_snapshotRoot, $"kb-concepts-v{version}.json"), conceptsJson);
 
         // 2) rich internal snapshot (for the app's own inspection / demo endpoint)
         var snapshot = new
@@ -245,6 +249,12 @@ public sealed class KbStore
         };
         File.WriteAllText(Path.Combine(_snapshotRoot, $"kb-snapshot-v{version}.json"),
                           JsonSerializer.Serialize(snapshot, J));
+        if (treeJson is not null)
+        {
+            File.WriteAllText(Path.Combine(_snapshotRoot, $"kb-tree-v{version}.json"), treeJson);
+            KnowledgePath.WriteText(Path.Combine(Path.GetDirectoryName(_publishedConcepts)!, "tree.json"), treeJson);
+        }
+        KnowledgePath.WriteText(_publishedConcepts, conceptsJson);
 
         using var c = Open();
         Exec(c, "INSERT INTO publishes(version,published_at,term_count,file) VALUES($v,$p,$n,$f)", cmd =>
@@ -255,6 +265,52 @@ public sealed class KbStore
             cmd.Parameters.AddWithValue("$f", Path.GetFileName(_publishedConcepts));
         });
         return new PublishInfo(version, publishedAt, approved.Count, Path.GetFileName(_publishedConcepts));
+    }
+
+    private List<Term> ApprovedTreeTerms()
+    {
+        var reader = new TreeStore(_conceptsSeed);
+        var terms = new List<Term>();
+        foreach (var directory in Directory.EnumerateDirectories(_conceptsSeed).OrderBy(x => x, StringComparer.Ordinal))
+        {
+            if (!File.Exists(Path.Combine(directory, "overview.yaml"))) continue;
+            var domain = Path.GetFileName(directory);
+            var glossary = reader.Read(domain);
+            var errors = TreeStore.Validate(glossary);
+            if (errors.Count > 0) throw new InvalidDataException(string.Join(" ", errors));
+            foreach (var term in glossary.Terms)
+            {
+                var category = term.Category ?? "General";
+                terms.Add(new Term(term.Id ?? $"{domain}/terms/{Slug(term.Term!)}", term.Term!, category,
+                    "Demo steward", "DS", "Approved", term.Definition!, string.Join('|', term.Aliases ?? []),
+                    "Synthetic Public Demo", domain, "", "", "", "", term.SeeAlso ?? [], 1, "Approved authoring tree"));
+            }
+        }
+        return terms.OrderBy(t => t.Name, StringComparer.Ordinal).ToList();
+    }
+
+    private string ApprovedTreeSnapshot(int version)
+    {
+        var records = new List<object>();
+        var yaml = new YamlDotNet.Serialization.DeserializerBuilder().Build();
+        foreach (var domain in Directory.EnumerateDirectories(_conceptsSeed).OrderBy(x => x, StringComparer.Ordinal))
+        {
+            if (!File.Exists(Path.Combine(domain, "overview.yaml"))) continue;
+            foreach (var catalog in new[] { "objects", "concepts", "policies", "systems", "metrics" })
+            {
+                var directory = KnowledgePath.Catalog(_conceptsSeed, Path.GetFileName(domain), catalog);
+                if (!Directory.Exists(directory)) continue;
+                foreach (var file in Directory.EnumerateFiles(directory).OrderBy(x => x, StringComparer.Ordinal))
+                {
+                    if (Path.GetFileName(file) == "index.yaml") continue;
+                    var content = File.ReadAllText(file);
+                    if (Path.GetExtension(file) == ".yaml") yaml.Deserialize<object>(content);
+                    else if (Path.GetExtension(file) != ".md") continue;
+                    records.Add(new { path = Path.GetRelativePath(_conceptsSeed, file).Replace('\\', '/'), content });
+                }
+            }
+        }
+        return JsonSerializer.Serialize(new { version, syntheticData = true, records }, J);
     }
 
     public List<PublishInfo> Publishes()
@@ -402,7 +458,7 @@ public sealed class KbStore
         }
     }
 
-    // Ensure each imported report carries its Power BI URL (idempotent; only fills empty ones).
+    // Fill missing synthetic report URLs from the checked-in demo catalog.
     private void BackfillSourceUrls()
     {
         if (!File.Exists(_reportsSeed)) return;
@@ -475,6 +531,8 @@ public sealed class KbStore
     // ---- demo: answer from the SAME published file the agent reads ----------
     public object AnswerFromPublished(string q)
     {
+        if (string.IsNullOrWhiteSpace(q))
+            return new { answered = false, message = "Enter a synthetic glossary term or alias." };
         if (!File.Exists(_publishedConcepts))
             return new { answered = false, message = "Nothing published yet \u2014 the app has not released a glossary version." };
         using var doc = JsonDocument.Parse(File.ReadAllText(_publishedConcepts));

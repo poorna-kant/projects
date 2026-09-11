@@ -1,0 +1,18 @@
+type: Metric
+id: plan/metrics/planning-coverage
+name: Supply Coverage
+domain: plan
+metric_code: DEMO-002
+measure_ref: planning.coverage
+unit: percent
+owner_role: Demo supply steward
+description: Synthetic supportable quantity divided by synthetic demand quantity for the same scope.
+interpretation: 100 * SUM(supportable_quantity) / SUM(quantity). Zero demand is undefined. A ratio over 100 indicates surplus under this fictional rule, not a capped service score.
+context:
+  - Use matching product family, period and snapshot.
+  - Aggregate quantities before dividing; do not average percentages.
+  - Coverage alone does not demonstrate quality, timing or customer outcomes.
+related_objects: [plan/objects/demo-demand]
+related_systems: [plan/systems/demo-platform]
+evidence: examples/planning-metrics.json, illustrative expected results only.
+notes: This is a documented demo contract; the application does not calculate live operational results.
