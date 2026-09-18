@@ -70,6 +70,61 @@ flowchart LR
 
 The hosted default is read-only: visitors can inspect the demo, but cannot alter shared content.
 
+## Capability Status
+
+These statuses describe only this public repository. Proposed extensions are design ideas, not
+runnable features, delivery commitments, or claims about another implementation.
+
+| Capability | Status | Boundary |
+| --- | --- | --- |
+| Catalog browsing, search and metric context | Available | Uses fictional knowledge; metric context is read-only. |
+| Proposals, steward review and numbered publication | Available locally | Requires local interactive mode; the hosted default is read-only. |
+| Published definition lookup and version reference | Available | Reads the published glossary; not a conversational or numerical agent. |
+| Freshness metadata and worked metric calculations | Illustrative only | Fixed sample metadata and documented expected results, not live verification or runtime calculations. |
+| Evidence verification, release activation and rollback | Proposed extension | Treat approval, verification and selection of the serving release as separate decisions. |
+| Source qualification | Proposed extension | Qualify individual definitions and their dependencies, not an entire report by association. |
+| Answerability and safe refusal | Proposed extension | Distinguish answerable questions, missing scope and insufficient evidence before execution. |
+| Context-aware follow-ups | Proposed extension | Make inherited scope visible; clarify ambiguous changes instead of guessing. |
+| Evidence-rich answer presentation | Proposed extension | Keep scope, version, supporting evidence and limitations beside an answer. |
+
+The public application has no numerical execution engine, LLM, live source connector or production
+authentication. The examples below do not add those capabilities.
+
+## Fictional Extension Scenarios
+
+These independently authored toy scenarios illustrate the proposed extensions only. They are not
+application outputs, measured results, or representations of any organization's processes or data.
+
+1. **Separate governance decisions.** A fictional steward approves a revised definition of
+   "available stock." That approval does not verify source accuracy or change the serving release.
+   A future demo would separately record evidence verification, activate a selected release and
+   demonstrate rollback. Editing the definition would require its verification to be reconsidered.
+2. **Qualify source content.** An invented report contains "units requested" and "units packed."
+   The first definition has complete supporting references; the second has an unresolved dependency.
+   A future qualification view would show both states and their reasons rather than treating every
+   definition in the report as ready to use.
+3. **Explain answerability.** A proposed demo would distinguish "What does units requested mean?"
+   from "How many were requested?" The latter needs a period and product selection. If the chosen
+   scope has no usable evidence, the response would state that limitation instead of inventing a
+   quantity. The current public demo does not execute these numerical questions.
+4. **Make follow-up scope explicit.** In a fictional conversation about Product A during Period 1,
+   "What about Period 2?" would retain Product A and display the changed period. An ambiguous
+   follow-up such as "Compare the other one" would request clarification.
+5. **Show the answer's boundaries.** A proposed answer card could contain the following invented
+   fields. Its number is a manually authored illustration, not an application calculation:
+
+   | Field | Fictional illustration |
+   | --- | --- |
+   | Answer | 12 units requested |
+   | Scope | Product A, Period 1, sample snapshot |
+   | Knowledge version | Sample release 1 |
+   | Evidence | Invented order list, rows 1-3 |
+   | Limitation | Does not establish availability or delivery timing |
+
+Before labelling any extension available, implement it using independent synthetic fixtures,
+demonstrate both success and limitation cases, and update the status table to match what visitors
+can actually run. No accuracy, business-impact or production-readiness result is implied.
+
 ## Run Locally
 
 ### Prerequisite
@@ -210,6 +265,11 @@ Use only fictional knowledge, role names, schemas, dates, identifiers, reports a
 Do not upload employer materials, internal URLs, source exports, private code, screenshots, recordings,
 credentials or operational examples. The demo adapter never connects to a live source; fixed sample
 dates must not be read as current data freshness.
+
+Author public examples independently; do not transform official materials into demo content merely
+by renaming systems, masking identifiers or changing numbers. Generic wording does not establish
+release rights for private-derived designs or code. Obtain the required release approval before
+including such material, and keep private evidence and review notes out of commits and pull requests.
 
 The content-policy script is a heuristic guard, not proof of provenance or permission to publish.
 Removing content from the current tree does not remove it from Git history or existing clones.
