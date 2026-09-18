@@ -1,0 +1,25 @@
+{
+  "exampleNotice": "ILLUSTRATIVE EXAMPLE. Every row below is invented for public demonstration of the SCOPE workflow. These are not extracts from any real system and describe no real organisation, product or plan.",
+  "object": "plan/objects/demo-demand-actual",
+  "table": "demo.demand_actual",
+  "grain": "One row per product family, per closed planning period.",
+  "note": "Held separately from the plan on purpose. In standard demand planning, actuals arrive from order or shipment history, not from the planning system, so they are a different source with a different owner and a different arrival date. Keeping them apart is what makes forecast accuracy, bias and forecast value add honest measures rather than self-assessment.",
+  "why_separate": "If actuals lived in the plan table, a plan edit could silently change a measured accuracy result. Separation means the scoreboard cannot be edited by the team being scored.",
+  "closed_periods_only": "Only periods whose demand is complete appear here. Open periods are deliberately absent, because comparing a forecast against a partial actual overstates error.",
+  "columns": ["product_family", "period", "actual_quantity", "baseline_forecast", "consensus_forecast", "closed_on", "source_note"],
+  "rows": [
+    { "product_family": "DEMO-STANDARD", "period": "2025-Q3", "actual_quantity": 1180, "baseline_forecast": 1250, "consensus_forecast": 1200, "closed_on": "2025-10-12", "source_note": "Closed and reconciled." },
+    { "product_family": "DEMO-PREMIUM",  "period": "2025-Q3", "actual_quantity": 640,  "baseline_forecast": 600,  "consensus_forecast": 660,  "closed_on": "2025-10-12", "source_note": "Closed and reconciled." },
+    { "product_family": "DEMO-EDGE",     "period": "2025-Q3", "actual_quantity": 410,  "baseline_forecast": 500,  "consensus_forecast": 560,  "closed_on": "2025-10-12", "source_note": "Closed and reconciled." },
+
+    { "product_family": "DEMO-STANDARD", "period": "2025-Q4", "actual_quantity": 1300, "baseline_forecast": 1200, "consensus_forecast": 1280, "closed_on": "2026-01-15", "source_note": "Closed and reconciled." },
+    { "product_family": "DEMO-PREMIUM",  "period": "2025-Q4", "actual_quantity": 700,  "baseline_forecast": 720,  "consensus_forecast": 690,  "closed_on": "2026-01-15", "source_note": "Closed and reconciled." },
+    { "product_family": "DEMO-EDGE",     "period": "2025-Q4", "actual_quantity": 480,  "baseline_forecast": 520,  "consensus_forecast": 610,  "closed_on": "2026-01-15", "source_note": "Closed and reconciled." }
+  ],
+  "rowNotes": {
+    "DEMO-EDGE / 2025-Q3": "Judgement moved the forecast further from the actual than the statistical baseline was. This is the case that makes forecast value add negative, and it is included deliberately - a demo where human judgement always wins would not be a useful demo.",
+    "DEMO-STANDARD / 2025-Q4": "Judgement moved the forecast towards the actual. Positive value add.",
+    "DEMO-PREMIUM / 2025-Q3": "Both forecasts under-called the period, so bias is negative for both."
+  },
+  "caveat": "These rows demonstrate how accuracy, bias and forecast value add are derived and traced. They are not evidence that any source has been quality-checked."
+}

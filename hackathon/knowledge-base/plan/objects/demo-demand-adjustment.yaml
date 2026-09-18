@@ -1,0 +1,30 @@
+type: Object
+id: plan/objects/demo-demand-adjustment
+title: Demo Demand Adjustment
+name: Demo Demand Adjustment
+domain: plan
+identifiers: [adjustment_id]
+aliases: [consensus adjustment, judgement override, demand override]
+description: >-
+  ILLUSTRATIVE EXAMPLE. The signed human change applied to the statistical baseline during the
+  demand review, with the reason it was made. This is where commercial judgement enters the
+  plan, and it is recorded rather than absorbed.
+lifecycle: Captured during the demo demand review, then frozen with the cycle.
+business_note: >-
+  An adjustment without a stated reason is indistinguishable from an error. Recording the
+  reason is what allows a later reviewer to ask whether the judgement was sound, instead of
+  only whether the arithmetic was.
+source_mapping:
+  system: plan/systems/demo-planning-workbench
+  schema: demo
+  primary_table: demo_demand_adjustment
+  key_fields: [adjustment_id]
+  snapshot_policy: Use the latest approved demo snapshot.
+  columns: [adjustment_id, demand_id, product_family, period, adjustment_quantity, adjustment_reason, snapshot_date]
+  column_notes:
+    adjustment_quantity: Signed units. Positive raises the plan, negative lowers it.
+    adjustment_reason: Why the planner overrode the statistics. Free text in the demo.
+  sample_rows: plan/_data/demo-demand.json
+relationships:
+  - Applies to plan/objects/demo-demand via demand_id.
+  - baseline_quantity + adjustment_quantity = quantity on the demand line.

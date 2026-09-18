@@ -1,0 +1,30 @@
+type: Policy
+id: plan/policies/demand-plan-approval
+policy_id: demand_plan_approval
+name: Demand Plan Approval
+domain: plan
+category: governance
+description: >-
+  ILLUSTRATIVE EXAMPLE. Only demand lines that have completed the demand review and reached
+  Approved status may be counted as Planned Demand. Draft and Rejected lines are excluded
+  from every published figure.
+rationale: >-
+  Counting unapproved demand lets a proposal become a commitment without anyone deciding
+  that it should. The approval step is the moment intent becomes something supply will act
+  on, so it must be the filter.
+how_to_use: >-
+  Filter on demand_status = 'Approved' before aggregating. If a figure is produced without
+  this filter, label it clearly as a working view and never publish it as the plan.
+values:
+  demand_status: [Draft, In review, Approved, Rejected]
+  countable_statuses: [Approved]
+rules:
+  - Draft lines are excluded even when the quantity looks settled.
+  - Rejected lines are retained for audit but never counted.
+  - >-
+    A line that is excluded must be reported as an exclusion with its reason, not silently
+    dropped. A number that is quietly smaller is worse than one that explains itself.
+owner_role: Planning Data Steward (fictional demo role)
+demo_note: >-
+  Enforced in the demo. The demo dataset contains a Draft line specifically so the
+  filter visibly changes the answer.

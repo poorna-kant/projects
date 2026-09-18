@@ -1,0 +1,29 @@
+{
+  "exampleNotice": "ILLUSTRATIVE EXAMPLE. Every row below is invented for public demonstration of the SCOPE workflow. These are not extracts from any real system and describe no real organisation, product or plan.",
+  "object": "plan/objects/demo-demand",
+  "table": "demo.demand",
+  "grain": "One row per demand line, per plan version, per snapshot.",
+  "note": "Deliberately small and hand-written so a reviewer can verify every published number by eye. Rows reproduce the worked examples in plan/metric-context/ exactly.",
+  "identity": "baseline_quantity + adjustment_quantity = quantity, on every row where quantity is known.",
+  "columns": ["demand_id", "product_family", "period", "quantity", "baseline_quantity", "adjustment_quantity", "adjustment_reason", "plan_version", "demand_status", "snapshot_date"],
+  "rows": [
+    { "demand_id": "D-0901", "product_family": "DEMO-STANDARD", "period": "2026-Q1", "quantity": 1350, "baseline_quantity": 1300, "adjustment_quantity": 50,  "adjustment_reason": "Early indication of enterprise interest.", "plan_version": "v2", "demand_status": "Approved", "snapshot_date": "2026-02-14" },
+    { "demand_id": "D-0902", "product_family": "DEMO-PREMIUM",  "period": "2026-Q2", "quantity": 700,  "baseline_quantity": 700,  "adjustment_quantity": 0,   "adjustment_reason": "", "plan_version": "v2", "demand_status": "Approved", "snapshot_date": "2026-02-14" },
+    { "demand_id": "D-0903", "product_family": "DEMO-EDGE",     "period": "2026-Q3", "quantity": 500,  "baseline_quantity": 500,  "adjustment_quantity": 0,   "adjustment_reason": "", "plan_version": "v2", "demand_status": "Approved", "snapshot_date": "2026-02-14" },
+
+    { "demand_id": "D-1001", "product_family": "DEMO-STANDARD", "period": "2026-Q1", "quantity": 1200, "baseline_quantity": 1100, "adjustment_quantity": 100, "adjustment_reason": "New demo customer confirmed after the baseline was frozen.", "plan_version": "v3", "demand_status": "Approved", "snapshot_date": "2026-03-14" },
+    { "demand_id": "D-1002", "product_family": "DEMO-STANDARD", "period": "2026-Q1", "quantity": 300,  "baseline_quantity": 250,  "adjustment_quantity": 50,  "adjustment_reason": "Planned promotion not visible in history.", "plan_version": "v3", "demand_status": "Approved", "snapshot_date": "2026-03-14" },
+    { "demand_id": "D-1003", "product_family": "DEMO-STANDARD", "period": "2026-Q1", "quantity": 950,  "baseline_quantity": 950,  "adjustment_quantity": 0,   "adjustment_reason": "", "plan_version": "v2", "demand_status": "Approved", "snapshot_date": "2026-03-14" },
+    { "demand_id": "D-1004", "product_family": "DEMO-PREMIUM",  "period": "2026-Q1", "quantity": 400,  "baseline_quantity": 380,  "adjustment_quantity": 20,  "adjustment_reason": "Proposed uplift, still being argued in the demand review.", "plan_version": "v3", "demand_status": "Draft", "snapshot_date": "2026-03-14" },
+    { "demand_id": "D-1005", "product_family": "DEMO-PREMIUM",  "period": "2026-Q2", "quantity": 750,  "baseline_quantity": 800,  "adjustment_quantity": -50, "adjustment_reason": "Demo competitor launch expected to reduce uptake.", "plan_version": "v3", "demand_status": "Approved", "snapshot_date": "2026-03-14" },
+    { "demand_id": "D-1006", "product_family": "DEMO-EDGE",     "period": "2026-Q3", "quantity": 620,  "baseline_quantity": 500,  "adjustment_quantity": 120, "adjustment_reason": "Pilot conversion assumed. Judgement-heavy; flagged for review.", "plan_version": "v3", "demand_status": "Approved", "snapshot_date": "2026-03-14" },
+    { "demand_id": "D-1007", "product_family": "DEMO-EDGE",     "period": "2026-Q3", "quantity": null, "baseline_quantity": null, "adjustment_quantity": null, "adjustment_reason": "", "plan_version": "v3", "demand_status": "Approved", "snapshot_date": "2026-03-14" }
+  ],
+  "rowNotes": {
+    "D-1003": "Superseded v2 line. Demonstrates the plan-version filter; including it would inflate the answer.",
+    "D-1004": "Still in demand review. Demonstrates the approval filter and produces a genuine zero for DEMO-PREMIUM / 2026-Q1.",
+    "D-1005": "Negative adjustment. Demonstrates that judgement can lower the plan as well as raise it.",
+    "D-1006": "Adjustment is 24% of the agreed quantity. Demonstrates a plan driven more by judgement than by history.",
+    "D-1007": "Null quantity. Demonstrates that a missing value is reported as an exclusion, not silently read as zero."
+  }
+}

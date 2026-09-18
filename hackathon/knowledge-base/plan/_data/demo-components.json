@@ -1,0 +1,30 @@
+{
+  "exampleNotice": "ILLUSTRATIVE EXAMPLE. Every row below is invented for public demonstration of the SCOPE workflow. These are not extracts from any real system and describe no real organisation, part, supplier or supply position.",
+  "object": "plan/objects/demo-component",
+  "table": "demo.component",
+  "grain": "One row per component, per product family, per period, per plan version, per snapshot.",
+  "note": "The component layer beneath plan/_data/demo-supply.json. Demonstrates how a product-family supply position is limited by the parts underneath it, and gives the buffer measures something real to stand on.",
+  "identity": "net_requirement = gross_requirement - on_hand - scheduled_receipts, floored at zero.",
+  "pairsWith": "plan/_data/demo-supply.json",
+  "columns": ["component_id", "component_name", "product_family", "period", "gross_requirement", "on_hand", "scheduled_receipts", "buffer_quantity", "average_daily_usage", "lead_time_days", "supplier", "plan_version", "snapshot_date"],
+  "rows": [
+    { "component_id": "DEMO-PART-A", "component_name": "Demo chassis assembly", "product_family": "DEMO-STANDARD", "period": "2026-Q1", "gross_requirement": 1500, "on_hand": 400, "scheduled_receipts": 950, "buffer_quantity": 120, "average_daily_usage": 16.7, "lead_time_days": 84, "supplier": "DEMO-SUPPLIER-1", "plan_version": "v3", "snapshot_date": "2026-03-14" },
+    { "component_id": "DEMO-PART-B", "component_name": "Demo power module", "product_family": "DEMO-STANDARD", "period": "2026-Q1", "gross_requirement": 3000, "on_hand": 1800, "scheduled_receipts": 1400, "buffer_quantity": 400, "average_daily_usage": 33.3, "lead_time_days": 35, "supplier": "DEMO-SUPPLIER-2", "plan_version": "v3", "snapshot_date": "2026-03-14" },
+    { "component_id": "DEMO-PART-B", "component_name": "Demo power module", "product_family": "DEMO-PREMIUM", "period": "2026-Q2", "gross_requirement": 1500, "on_hand": 600, "scheduled_receipts": 900, "buffer_quantity": 200, "average_daily_usage": 16.5, "lead_time_days": 35, "supplier": "DEMO-SUPPLIER-2", "plan_version": "v3", "snapshot_date": "2026-03-14" },
+    { "component_id": "DEMO-PART-C", "component_name": "Demo accelerator card", "product_family": "DEMO-EDGE", "period": "2026-Q3", "gross_requirement": 620, "on_hand": 150, "scheduled_receipts": 400, "buffer_quantity": 0, "average_daily_usage": 6.8, "lead_time_days": 126, "supplier": "DEMO-SUPPLIER-3", "plan_version": "v3", "snapshot_date": "2026-03-14" },
+    { "component_id": "DEMO-PART-D", "component_name": "Demo cable harness", "product_family": "DEMO-EDGE", "period": "2026-Q3", "gross_requirement": 1240, "on_hand": 900, "scheduled_receipts": 500, "buffer_quantity": 300, "average_daily_usage": 13.6, "lead_time_days": 21, "supplier": "DEMO-SUPPLIER-2", "plan_version": "v3", "snapshot_date": "2026-03-14" },
+    { "component_id": "DEMO-PART-E", "component_name": "Demo thermal plate", "product_family": "DEMO-PREMIUM", "period": "2026-Q2", "gross_requirement": 750, "on_hand": 0, "scheduled_receipts": null, "buffer_quantity": 0, "average_daily_usage": 8.2, "lead_time_days": 56, "supplier": "DEMO-SUPPLIER-4", "plan_version": "v3", "snapshot_date": "2026-03-14" },
+    { "component_id": "DEMO-PART-A", "component_name": "Demo chassis assembly", "product_family": "DEMO-STANDARD", "period": "2026-Q1", "gross_requirement": 1350, "on_hand": 400, "scheduled_receipts": 800, "buffer_quantity": 120, "average_daily_usage": 15.0, "lead_time_days": 84, "supplier": "DEMO-SUPPLIER-1", "plan_version": "v2", "snapshot_date": "2026-03-14" },
+
+    { "component_id": "DEMO-PART-A", "component_name": "Demo chassis assembly", "product_family": "DEMO-STANDARD", "period": "2026-Q1", "gross_requirement": 1350, "on_hand": 350, "scheduled_receipts": 850, "buffer_quantity": 120, "average_daily_usage": 15.0, "lead_time_days": 84, "supplier": "DEMO-SUPPLIER-1", "plan_version": "v2", "snapshot_date": "2026-02-14" },
+    { "component_id": "DEMO-PART-C", "component_name": "Demo accelerator card", "product_family": "DEMO-EDGE", "period": "2026-Q3", "gross_requirement": 500, "on_hand": 150, "scheduled_receipts": 300, "buffer_quantity": 0, "average_daily_usage": 5.5, "lead_time_days": 126, "supplier": "DEMO-SUPPLIER-3", "plan_version": "v2", "snapshot_date": "2026-02-14" }
+  ],
+  "rowNotes": {
+    "DEMO-PART-A / DEMO-STANDARD / 2026-Q1": "400 on hand plus 950 scheduled against 1500 gross leaves a net shortage of 150 - exactly the 150-unit shortfall that appears as 90% supply coverage one level up. This is the component that explains the family-level number.",
+    "DEMO-PART-B / DEMO-STANDARD / 2026-Q1": "Covered, with buffer on top. Demonstrates a part that is not the constraint.",
+    "DEMO-PART-C / DEMO-EDGE / 2026-Q3": "Short by 70 units with a 126-day lead time and no buffer. Demonstrates the difference between a shortage you can recover inside the horizon and one you cannot.",
+    "DEMO-PART-D / DEMO-EDGE / 2026-Q3": "Covered, and the buffer holds about 22 days of supply. Demonstrates days of supply on a healthy part.",
+    "DEMO-PART-E / DEMO-PREMIUM / 2026-Q2": "Null scheduled receipts, nothing on hand. Demonstrates that an unknown is reported as an exclusion and never read as zero - reading it as zero would declare a 750-unit shortage that may not exist.",
+    "DEMO-PART-A v2 rows": "Superseded plan version. Demonstrates that the plan-version filter applies at component level exactly as it does at family level."
+  }
+}

@@ -1,0 +1,32 @@
+type: Policy
+id: plan/policies/planning-horizon-and-time-fence
+policy_id: planning_horizon_time_fence
+name: Planning Horizon and Time Fence
+domain: plan
+category: planning
+description: >-
+  ILLUSTRATIVE EXAMPLE. Each planning period carries a horizon state that governs whether it may
+  still be changed. Frozen periods are committed, Firm periods are revisable through the normal
+  cycle, and Open periods are expected to move.
+rationale: >-
+  Supply commits materials and capacity ahead of demand. Beyond a certain point a change costs
+  more than the benefit it delivers, so the plan is deliberately fixed even when a better
+  number becomes available. The time fence makes that trade-off explicit instead of leaving it
+  to whoever argues hardest.
+how_to_use: >-
+  Read the horizon state alongside the quantity. Comparing a frozen period with an open one
+  without saying so implies a stability the open period does not have.
+values:
+  horizon_states: [Frozen, Firm, Open]
+rules:
+  - Frozen - inside the time fence. Changes require a documented exception, not a normal edit.
+  - Firm - agreed for the cycle. Revisable through the standard demand review.
+  - Open - beyond the fence. Movement cycle over cycle is expected and is not an error.
+  - >-
+    Plan churn in Open periods is normal and should not be reported as instability. Churn in
+    Frozen periods is an exception and should be visible.
+owner_role: Demand Planning Lead (fictional demo role)
+demo_note: >-
+  Documented and carried on plan/objects/demo-planning-calendar, where 2026-Q1 is Frozen,
+  2026-Q2 is Firm and 2026-Q3 is Open. The demo does not yet block edits to frozen periods -
+  it records the state so the distinction is visible.

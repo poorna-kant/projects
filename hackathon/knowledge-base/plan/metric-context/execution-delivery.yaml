@@ -1,0 +1,348 @@
+type: MetricContext
+id: plan/metric-context/execution-delivery
+domain: plan
+measure_key: execution.delivery.otd
+also_covers: [execution.delivery.otif, execution.po.fulfilment, execution.receipt.lag]
+name: 'Supplier Delivery: On-Time, In-Full, Fulfilment and Lag'
+status: Draft for review
+version: 0.1.0
+
+example_notice: >-
+  ILLUSTRATIVE EXAMPLE. This record documents invented measures over an invented dataset,
+  created to demonstrate how business context and evidence are governed in SCOPE. It is not a
+  production definition and must not be reused as one. Supplier names such as DEMO-SUPPLIER-1 are
+  placeholders and rank nobody.
+
+industry_definition:
+  note: >-
+    Described in general, widely used supply-chain planning language, written for this demo. It
+    is not a quotation from any standards body, certification syllabus or published dictionary,
+    and no organisation's house definition is reproduced here.
+  standard_usage: >-
+    In common supply-chain execution practice, supplier delivery is often described with several
+    related measures because dates and quantities answer different questions. On-time delivery
+    tests whether a line arrived by the promised date. On-time in-full tests both date and
+    quantity. Fulfilment rate compares received units with ordered units. Receipt lag measures
+    how many days early or late the receipt was.
+
+    Their disagreement is the point. A line can be on time but short, late but complete, or almost
+    complete by volume while many lines miss their dates.
+  typical_cycle_position: >-
+    Calculated after receipt posting and reviewed in supplier performance review, material review
+    and shortage recovery meetings.
+  what_practitioners_argue_about:
+    - Whether the same-day boundary counts as on time.
+    - Whether early receipts should be clipped to zero or kept as negative lag.
+    - Whether over-delivery is in full, a quality problem, or a storage cost.
+    - Whether performance should be line-counted or volume-weighted.
+    - Whether lag should use promised date or originally requested date.
+  demo_position: >-
+    The demo keeps four measures in one record because the differences are material. Same-day
+    receipt counts as on time. Early receipts keep negative lag. In full means received quantity
+    is at least ordered quantity. On-time delivery counts lines; fulfilment rate weights by volume.
+
+business_context:
+  plain_english: >-
+    Whether supplier lines arrived when promised, arrived complete, and how far receipts moved from promise.
+  what_it_measures: >-
+    OTD measures the share of scored purchase order lines received on or before the promised date.
+    OTIF measures the share received on time and in full. Fulfilment rate measures received units
+    divided by ordered units. Receipt lag measures actual receipt date minus promised date.
+  why_it_matters: >-
+    Delivery performance shapes component availability. A supplier can look good by one measure
+    and poor by another. OTD ignores quantity entirely. Fulfilment rate can look high because large
+    lines were complete, even when smaller lines were late or short.
+
+    In the demo, 98.67% fulfilment and 66.67% OTD describe the same six lines. Quoting only one of
+    them would mislead the review.
+  unit: percent and days
+  grain: One value per purchase order line, supplier, component, product family, period and snapshot.
+  planning_context: >-
+    Used in material review to explain scheduled receipt confidence and in supplier review to
+    separate date reliability from quantity reliability.
+
+inclusions:
+  - Purchase order lines with received or partially received status and actual receipt date.
+  - Lines with ordered quantity, received quantity, promised date and actual receipt date.
+  - Over-received lines, which count as in full but remain visible as surplus.
+exclusions:
+  - Open purchase order lines not yet received.
+  - Cancelled purchase order lines.
+  - Lines missing promised or actual receipt dates.
+
+interpretation:
+  read_it_as: "Four views of the same delivery evidence: date pass rate, date-and-quantity pass rate, volume fulfilment and day variance."
+  do_not_read_it_as:
+    - A single supplier score.
+    - Proof that over-delivery is good news.
+    - Evidence against the original requested date, because the demo has no original request date.
+  common_misreadings:
+    - >-
+      Treating OTD as a quantity measure. OTD ignores quantity entirely.
+    - >-
+      Treating fulfilment rate as a line reliability measure. It is volume-weighted.
+    - >-
+      Clipping early receipts to zero. Early arrivals can create real cash and storage cost.
+    - >-
+      Quoting mean lag without median, or median without mean. The mean is dragged by one badly
+      late line; quoting either alone is how this measure wins arguments.
+  read_alongside: >-
+    Component Shortage, scheduled receipts and buffer. Delivery history changes how much trust a
+    planner should place in future receipts.
+
+stewardship:
+  business_owner_role: Supplier Performance Lead (fictional demo role)
+  co_owner_role: Material Planning Lead (fictional demo role)
+  data_steward_role: Execution Data Steward (fictional demo role)
+  technical_owner_role: Planning Semantic Layer Engineer (fictional demo role)
+  note: Fictional placeholder roles. No real person is named or implied.
+
+source_mapping:
+  disclaimer: An agreed demo contract over an invented table. Not a production mapping.
+  system: plan/systems/demo-procurement-log
+  object: plan/objects/demo-purchase-order
+  primary_table: demo.purchase_order
+  measure_column: actual_receipt_date
+  fields:
+    - name: po_id
+      role: Trace key
+      description: Demo purchase order line identifier.
+    - name: supplier
+      role: Dimension
+      description: Fictional placeholder supplier code used only for the demo.
+    - name: ordered_quantity
+      role: Denominator column
+      description: Quantity ordered on the purchase order line.
+    - name: received_quantity
+      role: Numerator column
+      description: Quantity received against the purchase order line.
+    - name: promised_date
+      role: Date baseline
+      description: Date against which on-time delivery and lag are measured.
+    - name: actual_receipt_date
+      role: Date result
+      description: Date the receipt was posted in the demo data.
+    - name: po_status
+      role: Filter
+      description: Received and partially received lines are scored; open and cancelled lines are excluded.
+    - name: component_id
+      role: Dimension
+      description: Component supplied by the line.
+    - name: product_family
+      role: Dimension
+      description: Demo product family associated with the purchase order line.
+    - name: snapshot_date
+      role: Snapshot key
+      description: Date of the purchase order evidence.
+
+dimensions:
+  supported: [supplier, component_id, product_family, period, po_status]
+  not_supported:
+    - name: original requested date
+      reason: The demo purchase order table holds promised date but no original request date.
+    - name: carrier or route
+      reason: The demo table has no logistics execution grain.
+    - name: buyer
+      reason: Owner fields and dimensions avoid named people; the demo has no buyer role on the line.
+
+calculation_contract:
+  disclaimer: An agreed demo rule, not a production specification.
+  aggregate: mixed
+  expression: >-
+    OTD = 100 * COUNT(on_time lines) / COUNT(scored lines); OTIF = 100 * COUNT(on_time and in_full lines) / COUNT(scored lines);
+    fulfilment = 100 * SUM(received_quantity) / SUM(ordered_quantity); lag = days(actual_receipt_date - promised_date)
+
+  scored_line_rule:
+    includes: Received and partially received lines with ordered quantity, received quantity, promised date and actual receipt date.
+    excludes: Open lines, cancelled lines and incomplete date rows.
+
+  on_time_delivery:
+    definition: 100 * COUNT(lines where actual_receipt_date <= promised_date) / COUNT(scored lines)
+    unit: percent
+    boundary_rule: >-
+      Same-day receipt counts as on time. This is a choice written down here rather than buried in a query.
+    quantity_rule: OTD ignores quantity entirely.
+
+  on_time_in_full:
+    definition: 100 * COUNT(lines where actual_receipt_date <= promised_date and received_quantity >= ordered_quantity) / COUNT(scored lines)
+    unit: percent
+    in_full_rule: >-
+      In full means received quantity is at least ordered quantity. Over-delivery counts as in full,
+      although the surplus was paid for and stored.
+
+  fulfilment_rate:
+    definition: 100 * SUM(received_quantity) / SUM(ordered_quantity)
+    unit: percent
+    weighting: >-
+      Volume-weighted. This is why fulfilment can be 98.67% while OTD is 66.67% on the same six lines.
+    over_receipt_rule: Received quantity is not capped at ordered quantity, so over-receipt remains visible.
+
+  receipt_lag:
+    definition: actual_receipt_date - promised_date, in days
+    unit: days
+    sign_convention: Negative means early; positive means late.
+    early_receipt_rule: >-
+      Early receipts are not clipped to zero, because arriving early can be a cash, space and handling cost.
+    statistics: Report mean, median and worst lag together.
+    limitation: >-
+      Lag is measured against promised date, not originally requested date. A supplier who
+      renegotiated a promise can show perfect lag while being late against the plan. The demo data
+      holds no original request date, so this is recorded as a gap.
+
+  scope_filters:
+    - po_status in ('Received', 'Partially received')
+    - snapshot_date = the selected snapshot
+
+  null_handling: Null received quantity or missing receipt date is excluded unless the line is open, in which case it is simply not yet scored.
+  additivity:
+    within_snapshot: Counts and quantities are additive; percentages and lag statistics must be recomputed.
+    across_snapshot: Not additive.
+
+snapshot_context:
+  mode: LatestSnapshot
+  run_date_column: snapshot_date
+  rule: Resolve to the most recent snapshot unless an as-of date is supplied, and always state which was used.
+
+worked_example:
+  disclaimer: Entirely invented rows, shipped in plan/_data/demo-purchase-orders.json.
+  as_of_snapshot: 2026-03-14
+  expected_result:
+    - po_id: P-3001
+      ordered_quantity: 950
+      received_quantity: 950
+      promised_date: 2025-11-10
+      actual_receipt_date: 2025-11-08
+      lag_days: -2
+      on_time: true
+      in_full: true
+      note: Two days early and complete.
+    - po_id: P-3002
+      ordered_quantity: 1400
+      received_quantity: 1400
+      promised_date: 2025-11-15
+      actual_receipt_date: 2025-11-15
+      lag_days: 0
+      on_time: true
+      in_full: true
+      note: Same day counts as on time.
+    - po_id: P-3003
+      ordered_quantity: 400
+      received_quantity: 330
+      promised_date: 2025-12-01
+      actual_receipt_date: 2025-12-18
+      lag_days: 17
+      on_time: false
+      in_full: false
+      short_units: 70
+      note: Late and short; fails every delivery measure.
+    - po_id: P-3004
+      ordered_quantity: 500
+      received_quantity: 500
+      promised_date: 2025-12-05
+      actual_receipt_date: 2025-12-12
+      lag_days: 7
+      on_time: false
+      in_full: true
+      note: Late but complete.
+    - po_id: P-3006
+      ordered_quantity: 300
+      received_quantity: 280
+      promised_date: 2025-12-20
+      actual_receipt_date: 2025-12-19
+      lag_days: -1
+      on_time: true
+      in_full: false
+      short_units: 20
+      note: Early but short.
+    - po_id: P-3008
+      ordered_quantity: 200
+      received_quantity: 240
+      promised_date: 2025-12-10
+      actual_receipt_date: 2025-12-09
+      lag_days: -1
+      on_time: true
+      in_full: true
+      surplus_units: 40
+      note: Over-received; counts as in full but surplus remains visible.
+    - po_id: P-3005
+      result: excluded
+      note: Open and not yet received.
+    - po_id: P-3007
+      result: excluded
+      note: Cancelled.
+  total_check:
+    scored_lines: 6
+    on_time_lines: 4
+    otif_lines: 3
+    ordered_quantity: 3750
+    received_quantity: 3700
+    otd_percent: 66.67
+    otif_percent: 50.0
+    fulfilment_percent: 98.67
+    receipt_lag_mean_days: 3.33
+    receipt_lag_median_days: -0.5
+    receipt_lag_worst_days: 17
+    note: The same six lines produce materially different answers because the measures ask different questions.
+  edge_cases:
+    - name: Same-day boundary
+      scenario: P-3002 is received on the promised date.
+      expected_behaviour: Count as on time.
+    - name: Early but short
+      scenario: P-3006 arrives one day early but 20 units short.
+      expected_behaviour: Pass OTD and fail OTIF.
+    - name: Late but complete
+      scenario: P-3004 arrives seven days late but complete.
+      expected_behaviour: Fail OTD and pass the quantity test used by fulfilment.
+    - name: Over-receipt
+      scenario: P-3008 receives 240 against 200 ordered.
+      expected_behaviour: Count as in full and keep the 40 surplus visible.
+    - name: Mean versus median lag
+      scenario: One badly late line sits beside several early or on-time lines.
+      expected_behaviour: Report both mean 3.33 days and median -0.5 days.
+
+evidence:
+  traceability_statement: Shows where each delivery number claims to come from, so a reviewer can follow the chain.
+  quality_disclaimer: >-
+    A source reference demonstrates traceability only. It does not prove receipt postings are
+    complete, promises were stable or supplier performance has been certified.
+  references:
+    - kind: Semantic layer measure
+      ref: plan/_runtime/registry.json -> measures['execution.delivery.otd']
+    - kind: Semantic layer measure
+      ref: plan/_runtime/registry.json -> measures['execution.delivery.otif']
+    - kind: Semantic layer measure
+      ref: plan/_runtime/registry.json -> measures['execution.po.fulfilment']
+    - kind: Semantic layer measure
+      ref: plan/_runtime/registry.json -> measures['execution.receipt.lag']
+    - kind: Object mapping
+      ref: plan/objects/demo-purchase-order
+    - kind: Governed terms
+      ref: plan/terms/index.yaml -> On-Time Delivery, On-Time In-Full, Fulfilment, Receipt Lag
+
+expected_versus_actual:
+  items:
+    - topic: OTD calculation
+      documented_expectation: Same-day counts as on time; OTD counts scored lines and ignores quantity.
+      currently_executed: The worked example reports 4 of 6 lines, or 66.67%.
+      gap: false
+    - topic: OTIF calculation
+      documented_expectation: A line must be on time and received quantity must be at least ordered quantity.
+      currently_executed: The worked example reports 3 of 6 lines, or 50%.
+      gap: false
+    - topic: Fulfilment calculation
+      documented_expectation: 100 * SUM(received_quantity) / SUM(ordered_quantity), volume-weighted and uncapped.
+      currently_executed: The worked example reports 3700 / 3750, or 98.67%.
+      gap: false
+    - topic: Receipt lag calculation
+      documented_expectation: Keep early receipts as negative values and report mean, median and worst.
+      currently_executed: Mean 3.33 days, median -0.5 days and worst 17 days are documented.
+      gap: false
+    - topic: Original requested date
+      documented_expectation: Lag should also be available against the originally requested date.
+      currently_executed: The demo data holds only promised date.
+      gap: true
+
+open_questions:
+  - Should supplier review show promised-date lag and original-request lag side by side?
+  - Should over-receipt create a separate cost or inventory exception?
+  - Should OTD be published by line count, volume weighting, or both?

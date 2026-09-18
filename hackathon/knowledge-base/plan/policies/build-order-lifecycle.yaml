@@ -1,0 +1,38 @@
+type: Policy
+id: plan/policies/build-order-lifecycle
+policy_id: build_order_lifecycle
+name: Build Order Lifecycle
+domain: plan
+category: execution
+description: >-
+  ILLUSTRATIVE EXAMPLE. A build order records what was actually done. It is completed, cancelled
+  or left open. It is never superseded by a newer plan version, and it is never rewritten to
+  match one.
+rationale: >-
+  A plan is a statement of intent and can be replaced. A completed build is a fact and cannot.
+  Filtering execution records by the current plan version would quietly delete the history that a
+  later plan disowned - which is precisely the history worth keeping, because it records what the
+  organisation did when it believed something it no longer believes.
+how_to_use: >-
+  Read schedule attainment beside the planning gap. Attainment tells you whether the plan was
+  followed; it cannot tell you whether the plan was right, and a plan lowered to match a known
+  shortage will attain fully while leaving demand unmet.
+rules:
+  - Build orders carry no plan version and are never filtered by one.
+  - >-
+    Open orders are excluded from attainment. They have not yet had the chance to succeed or
+    fail, and including them understates performance simply because the period is unfinished.
+  - >-
+    Cancelled orders are excluded and retained. A cancellation is an outcome, not a gap in the
+    data, and the record of it is what connects an execution miss to its upstream cause.
+  - >-
+    Over-build is included uncapped. Capping at one hundred per cent hides the fact that extra
+    builds consumed components another family was relying on.
+  - >-
+    A completed order is never edited to match a revised plan. If the plan changed, that belongs
+    in the plan version history, not in the execution record.
+owner_role: Build Execution Lead (fictional demo role)
+demo_note: >-
+  Enforced. The demo build order table carries no plan_version column at all, which is a
+  deliberate shape rather than an oversight. Open and cancelled orders are excluded and shown in
+  the exclusion list with reasons, and the two over-built orders are included uncapped.

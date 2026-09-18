@@ -1,0 +1,37 @@
+type: System
+id: plan/systems/demo-execution-system
+name: Demo Execution System
+display_name: Demo Execution System
+domain: plan
+aliases: [execution system, order management, fulfilment system]
+role: >-
+  ILLUSTRATIVE EXAMPLE. Releases build orders against the approved plan, raises purchase orders
+  to suppliers, and records what was actually built and actually received. This is where the demo
+  stops recording intent and starts recording outcome. Invented system for the public
+  demonstration.
+capabilities:
+  - name: Build order release
+    description: Turns an approved plan quantity into an executable order with a site and a date.
+  - name: Build completion capture
+    description: Records the quantity actually built, including over-build and cancellation.
+  - name: Purchase order management
+    description: Raises supplier orders carrying both a quantity and a promised date.
+  - name: Receipt capture
+    description: Records the quantity and date actually received against each order line.
+boundaries:
+  - >-
+    Records outcomes without judging them. An order attained in full against a plan that had
+    already been lowered looks identical to one attained against the original ask.
+  - >-
+    Scores supplier lines against the promised date rather than the originally requested date.
+    Promised dates can be renegotiated, so this is the kinder of the two readings, and the demo
+    states it rather than leaving it implied.
+  - >-
+    Carries no plan version. Execution records are not superseded by a newer plan, which is
+    deliberate - a completed build is a fact.
+  - Does not explain a miss. Tracing a shortfall back to a gating part requires the supply planning records.
+owner_role: Build Execution Lead (fictional demo role)
+co_owner_role: Supplier Performance Lead (fictional demo role, owns the purchase order records)
+provides_objects:
+  - plan/objects/demo-build-order
+  - plan/objects/demo-purchase-order

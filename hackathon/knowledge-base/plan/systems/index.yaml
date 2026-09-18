@@ -1,5 +1,12 @@
 type: SystemIndex
 id: plan/systems
 domain: plan
+note: >-
+  ILLUSTRATIVE EXAMPLE. Invented systems spanning demand planning, supply planning and execution. None of these describe a
+  real platform, and no internal system is referenced.
 systems:
   - plan/systems/demo-platform
+  - plan/systems/demo-statistical-engine
+  - plan/systems/demo-planning-workbench
+  - plan/systems/demo-supply-planning-engine
+  - plan/systems/demo-execution-system

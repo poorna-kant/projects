@@ -1,16 +1,243 @@
 {
-  "generatedUtc": "2026-01-15T00:00:00Z",
-  "source": "synthetic-public-demo",
+  "generatedUtc": "2026-03-14T00:00:00Z",
+  "source": "illustrative-public-demo",
+  "note": "Machine-generated projection of the distinct values each groundable dimension actually holds, so a vague request can be snapped to a real value instead of being guessed at.",
+  "purpose": "Grounding exists to stop plausible invention. When someone asks for 'premium kit last quarter', the words must resolve to values that exist in the data, or the request must be refused. A system with no grounding index answers confidently and wrongly.",
+  "refusal_rule": "If a phrase does not resolve to a known value with reasonable confidence, return no match and say so. Never substitute the closest-looking value silently.",
+  "regeneration": "Derived from the demo dataset. Aliases are authored, because no projection of the data can know what people call things in conversation.",
   "views": {
     "demo_demand": {
       "dimensions": {
         "product_family": {
           "cardinality": 3,
-          "values": ["DEMO-STANDARD", "DEMO-PREMIUM", "DEMO-EDGE"]
+          "groundable": true,
+          "meaning": "The product grouping demand is planned at.",
+          "values": ["DEMO-STANDARD", "DEMO-PREMIUM", "DEMO-EDGE"],
+          "valueDetail": [
+            { "value": "DEMO-STANDARD", "label": "Standard family", "aliases": ["standard", "std", "base range", "standard kit", "mainstream"], "note": "Highest volume, most stable demand in the demo dataset." },
+            { "value": "DEMO-PREMIUM", "label": "Premium family", "aliases": ["premium", "prem", "high end", "top range", "premium kit"], "note": "Carries the row still in demand review, so it demonstrates a genuine zero." },
+            { "value": "DEMO-EDGE", "label": "Edge family", "aliases": ["edge", "edge devices", "small form", "remote units"], "note": "Most judgement-heavy family. Drives the negative forecast value add." }
+          ]
         },
         "period": {
+          "cardinality": 5,
+          "groundable": true,
+          "meaning": "The planning bucket a quantity is stated in.",
+          "values": ["2025-Q3", "2025-Q4", "2026-Q1", "2026-Q2", "2026-Q3"],
+          "valueDetail": [
+            { "value": "2025-Q3", "label": "Q3 2025", "aliases": ["q3 25", "third quarter 2025"], "note": "Closed and reconciled. Scoreable for accuracy." },
+            { "value": "2025-Q4", "label": "Q4 2025", "aliases": ["q4 25", "last quarter", "fourth quarter 2025"], "note": "Closed and reconciled. Scoreable for accuracy." },
+            { "value": "2026-Q1", "label": "Q1 2026", "aliases": ["q1 26", "this quarter", "current quarter"], "note": "Open. Planned but not scoreable." },
+            { "value": "2026-Q2", "label": "Q2 2026", "aliases": ["q2 26", "next quarter"], "note": "Open." },
+            { "value": "2026-Q3", "label": "Q3 2026", "aliases": ["q3 26"], "note": "Open." }
+          ],
+          "relativeTermWarning": "Phrases like 'last quarter' and 'this quarter' resolve against the demo clock of 2026-03-14, not against today's date. A relative phrase is only groundable once the clock it is relative to is stated."
+        },
+        "demand_status": {
+          "cardinality": 4,
+          "groundable": true,
+          "meaning": "Where a demand line has reached in the approval process. Decides whether it counts.",
+          "values": ["Approved", "Draft", "In review", "Rejected"],
+          "valueDetail": [
+            { "value": "Approved", "label": "Approved", "aliases": ["signed off", "agreed", "final", "locked"], "note": "The only status counted by the demand measures." },
+            { "value": "Draft", "label": "Draft", "aliases": ["work in progress", "wip", "proposed"], "note": "Excluded, with the exclusion reported rather than hidden." },
+            { "value": "In review", "label": "In review", "aliases": ["under review", "being discussed", "pending"], "note": "Excluded. Present in the dimension but unused in the demo rows." },
+            { "value": "Rejected", "label": "Rejected", "aliases": ["declined", "turned down"], "note": "Excluded. Retained as a value so a filter on it returns an explicit empty rather than an error." }
+          ]
+        },
+        "plan_version": {
+          "cardinality": 2,
+          "groundable": true,
+          "meaning": "Which approved release of the plan a line belongs to. Only the latest in a snapshot counts.",
+          "values": ["v2", "v3"],
+          "valueDetail": [
+            { "value": "v2", "label": "Version 2", "aliases": ["previous plan", "prior version", "older plan"], "note": "Superseded inside the 2026-03-14 snapshot. Including it would double-count." },
+            { "value": "v3", "label": "Version 3", "aliases": ["current plan", "latest", "plan of record"], "note": "The plan of record in the latest snapshot." }
+          ]
+        },
+        "snapshot_date": {
+          "cardinality": 2,
+          "groundable": true,
+          "meaning": "The day the planning data was captured. Two people quoting the same plan version can still disagree if they read different snapshots.",
+          "values": ["2026-02-14", "2026-03-14"],
+          "valueDetail": [
+            { "value": "2026-02-14", "label": "February capture", "aliases": ["february", "feb snapshot", "last month", "previous capture"], "note": "Agreed plan totals 2550 units." },
+            { "value": "2026-03-14", "label": "March capture", "aliases": ["march", "mar snapshot", "latest", "current", "today"], "note": "Agreed plan totals 2870 units. Default when no as-of date is supplied." }
+          ]
+        },
+        "horizon_state": {
           "cardinality": 3,
-          "values": ["2026-Q1", "2026-Q2", "2026-Q3"]
+          "groundable": true,
+          "meaning": "How firm a period is, and therefore what a change to it costs.",
+          "values": ["Frozen", "Firm", "Open"],
+          "valueDetail": [
+            { "value": "Frozen", "label": "Frozen", "aliases": ["locked", "committed", "inside the fence"], "note": "Changes require an exception, because supply has already acted." },
+            { "value": "Firm", "label": "Firm", "aliases": ["semi-firm", "committed-ish"], "note": "Changes allowed but expected to be rare and visible." },
+            { "value": "Open", "label": "Open", "aliases": ["unfrozen", "far horizon", "outside the fence"], "note": "Movement here is normal replanning, not churn to be alarmed about." }
+          ]
+        },
+        "adjustment_reason": {
+          "cardinality": 0,
+          "groundable": false,
+          "meaning": "Free text explaining why a human changed the baseline.",
+          "values": [],
+          "notGroundableReason": "Free text has no closed value set, so it cannot be snapped to a known value. It can be read and quoted as evidence, but it must never be used as a filter, because a filter over free text silently drops rows whose wording differs."
+        }
+      }
+    },
+    "demo_demand_actual": {
+      "dimensions": {
+        "product_family": {
+          "cardinality": 3,
+          "groundable": true,
+          "meaning": "Same families as the plan, so accuracy can be compared like for like.",
+          "values": ["DEMO-STANDARD", "DEMO-PREMIUM", "DEMO-EDGE"],
+          "valueDetail": [
+            { "value": "DEMO-STANDARD", "label": "Standard family", "aliases": ["standard", "std"], "note": "Judgement improved the forecast here." },
+            { "value": "DEMO-PREMIUM", "label": "Premium family", "aliases": ["premium", "prem"], "note": "Both forecasts under-called 2025-Q3." },
+            { "value": "DEMO-EDGE", "label": "Edge family", "aliases": ["edge"], "note": "Judgement moved the forecast away from the actual, twice." }
+          ]
+        },
+        "period": {
+          "cardinality": 2,
+          "groundable": true,
+          "meaning": "Closed periods only. Open periods are deliberately absent.",
+          "values": ["2025-Q3", "2025-Q4"],
+          "valueDetail": [
+            { "value": "2025-Q3", "label": "Q3 2025", "aliases": ["q3 25"], "note": "Closed 2025-10-12." },
+            { "value": "2025-Q4", "label": "Q4 2025", "aliases": ["q4 25", "last quarter"], "note": "Closed 2026-01-15." }
+          ],
+          "absenceIsMeaningful": "A request for accuracy in 2026-Q1 finds no value here. That is the correct answer, not a data gap - the period has not closed."
+        }
+      }
+    },
+    "demo_supply": {
+      "dimensions": {
+        "product_family": {
+          "cardinality": 3,
+          "groundable": true,
+          "meaning": "Same families as demand, which is what allows coverage to be a ratio between two functions' tables.",
+          "values": ["DEMO-STANDARD", "DEMO-PREMIUM", "DEMO-EDGE"],
+          "valueDetail": [
+            { "value": "DEMO-STANDARD", "label": "Standard family", "aliases": ["standard", "std", "base range"], "note": "Covered to 90% in 2026-Q1. The shortfall traces to DEMO-PART-A." },
+            { "value": "DEMO-PREMIUM", "label": "Premium family", "aliases": ["premium", "prem", "high end"], "note": "Fully supportable in the demo periods." },
+            { "value": "DEMO-EDGE", "label": "Edge family", "aliases": ["edge", "remote units"], "note": "Carries the supply position with no matching approved demand, so it demonstrates the orphaned-supply case." }
+          ]
+        },
+        "constraint_type": {
+          "cardinality": 3,
+          "groundable": true,
+          "meaning": "Why a position is limited. Material and capacity constrain independently and have entirely different remedies.",
+          "values": ["Component lead time", "Supplier capacity", "Unconstrained"],
+          "valueDetail": [
+            { "value": "Component lead time", "label": "Component lead time", "aliases": ["lead time", "long lead", "material"], "note": "The part exists but will not arrive in the period. A procurement and scheduling problem." },
+            { "value": "Supplier capacity", "label": "Supplier capacity", "aliases": ["capacity", "supplier limit", "allocation"], "note": "The supplier cannot make enough. Ordering earlier does not help." },
+            { "value": "Unconstrained", "label": "Unconstrained", "aliases": ["no constraint", "clear", "unlimited"], "note": "Nothing is binding. Read with care - it may mean nothing was checked." }
+          ]
+        },
+        "supply_status": {
+          "cardinality": 3,
+          "groundable": true,
+          "meaning": "Approval state of the supply position. Only Approved counts towards coverage.",
+          "values": ["Approved", "Draft", "Superseded"],
+          "valueDetail": [
+            { "value": "Approved", "label": "Approved", "aliases": ["signed off", "agreed", "final"], "note": "The only status counted." },
+            { "value": "Draft", "label": "Draft", "aliases": ["wip", "proposed"], "note": "Excluded, with the exclusion reported." },
+            { "value": "Superseded", "label": "Superseded", "aliases": ["old", "replaced"], "note": "Excluded. Retained so the history of a changed position survives." }
+          ]
+        },
+        "gating_component": {
+          "cardinality": 3,
+          "groundable": true,
+          "meaning": "The part that caps the position. Qualitative evidence - never aggregated into a measure.",
+          "values": ["DEMO-PART-A", "DEMO-PART-C", "None"],
+          "valueDetail": [
+            { "value": "DEMO-PART-A", "label": "Chassis assembly", "aliases": ["part a", "chassis"], "note": "Gates the standard family. 84-day lead time." },
+            { "value": "DEMO-PART-C", "label": "Accelerator card", "aliases": ["part c", "accelerator", "card"], "note": "Gates the edge family. 126-day lead time and zero buffer held." },
+            { "value": "None", "label": "No gating part", "aliases": ["none", "unconstrained"], "note": "Nothing binding on this position." }
+          ]
+        }
+      }
+    },
+    "demo_component": {
+      "dimensions": {
+        "component_id": {
+          "cardinality": 4,
+          "groundable": true,
+          "meaning": "The part a requirement is stated against. This is the level at which a family-level gap becomes an action.",
+          "values": ["DEMO-PART-A", "DEMO-PART-B", "DEMO-PART-C", "DEMO-PART-D"],
+          "valueDetail": [
+            { "value": "DEMO-PART-A", "label": "Chassis assembly", "aliases": ["part a", "chassis", "frame"], "note": "Short by 150 against an 84-day lead time. The reason the standard family sits at 90% coverage." },
+            { "value": "DEMO-PART-B", "label": "Power module", "aliases": ["part b", "power", "psu"], "note": "In surplus. The surplus cannot substitute for any other part's shortage." },
+            { "value": "DEMO-PART-C", "label": "Accelerator card", "aliases": ["part c", "accelerator", "card", "gpu"], "note": "Short by 70, 126-day lead time, no buffer held. The single most exposed part in the dataset." },
+            { "value": "DEMO-PART-D", "label": "Interconnect cable", "aliases": ["part d", "cable", "interconnect"], "note": "Comfortably buffered. Included to show that a healthy part does not offset a starved one." }
+          ]
+        },
+        "supplier": {
+          "cardinality": 3,
+          "groundable": true,
+          "meaning": "Who the part is sourced from. Links planned shortage to actual delivery performance.",
+          "values": ["DEMO-SUPPLIER-1", "DEMO-SUPPLIER-2", "DEMO-SUPPLIER-3"],
+          "valueDetail": [
+            { "value": "DEMO-SUPPLIER-1", "label": "Supplier 1", "aliases": ["supplier one", "s1"], "note": "Largest by volume. Strong fulfilment rate, weaker punctuality." },
+            { "value": "DEMO-SUPPLIER-2", "label": "Supplier 2", "aliases": ["supplier two", "s2"], "note": "Delivers complete but late in the demo rows." },
+            { "value": "DEMO-SUPPLIER-3", "label": "Supplier 3", "aliases": ["supplier three", "s3"], "note": "Supplies the gating accelerator card." }
+          ]
+        }
+      }
+    },
+    "demo_execution": {
+      "dimensions": {
+        "build_site": {
+          "cardinality": 3,
+          "groundable": true,
+          "meaning": "Where a build was executed. A supported breakdown for attainment.",
+          "values": ["DEMO-SITE-NORTH", "DEMO-SITE-SOUTH", "DEMO-SITE-EAST"],
+          "valueDetail": [
+            { "value": "DEMO-SITE-NORTH", "label": "North site", "aliases": ["north", "site north"], "note": "Highest volume site in the demo rows." },
+            { "value": "DEMO-SITE-SOUTH", "label": "South site", "aliases": ["south", "site south"], "note": "Carries the two over-built orders." },
+            { "value": "DEMO-SITE-EAST", "label": "East site", "aliases": ["east", "site east"], "note": "Carries the edge-family misses caused by DEMO-PART-C." }
+          ]
+        },
+        "order_status": {
+          "cardinality": 3,
+          "groundable": true,
+          "meaning": "Outcome of a build order. Decides whether it is scoreable.",
+          "values": ["Completed", "Open", "Cancelled"],
+          "valueDetail": [
+            { "value": "Completed", "label": "Completed", "aliases": ["done", "finished", "built"], "note": "The only status scored for attainment." },
+            { "value": "Open", "label": "Open", "aliases": ["in progress", "wip", "running"], "note": "Excluded. It has not yet had the chance to succeed or fail." },
+            { "value": "Cancelled", "label": "Cancelled", "aliases": ["stopped", "pulled", "dropped"], "note": "Excluded and retained. A cancellation is an outcome, not missing data." }
+          ]
+        },
+        "po_status": {
+          "cardinality": 3,
+          "groundable": true,
+          "meaning": "State of a purchase order line. Only received lines are scored for delivery.",
+          "values": ["Received", "Open", "Cancelled"],
+          "valueDetail": [
+            { "value": "Received", "label": "Received", "aliases": ["delivered", "arrived", "booked in"], "note": "The only status scored. Six lines in the demo dataset." },
+            { "value": "Open", "label": "Open", "aliases": ["in transit", "on order", "outstanding"], "note": "Excluded. It has not yet had the opportunity to be late." },
+            { "value": "Cancelled", "label": "Cancelled", "aliases": ["withdrawn", "pulled"], "note": "Excluded. Cancellation reasons are not modelled, which is a recorded gap." }
+          ]
+        },
+        "supplier": {
+          "cardinality": 3,
+          "groundable": true,
+          "meaning": "Grouping for delivery performance. The same values as the component view, deliberately.",
+          "values": ["DEMO-SUPPLIER-1", "DEMO-SUPPLIER-2", "DEMO-SUPPLIER-3"],
+          "valueDetail": [
+            { "value": "DEMO-SUPPLIER-1", "label": "Supplier 1", "aliases": ["supplier one", "s1"], "note": "Where the four delivery measures disagree most sharply." },
+            { "value": "DEMO-SUPPLIER-2", "label": "Supplier 2", "aliases": ["supplier two", "s2"], "note": "On time in the demo rows but short on quantity." },
+            { "value": "DEMO-SUPPLIER-3", "label": "Supplier 3", "aliases": ["supplier three", "s3"], "note": "Late on the gating part, which is the delivery miss that actually cost a build." }
+          ]
+        },
+        "promised_versus_requested": {
+          "cardinality": 0,
+          "groundable": false,
+          "meaning": "Whether a line is scored against the promised date or the originally requested date.",
+          "values": [],
+          "notGroundableReason": "Not a dimension in the data at all. The demo scores against the promised date only, and the requested date is not carried - so the kinder of the two readings is the only one available. Recorded here because its absence changes every delivery figure and would otherwise be invisible."
         }
       }
     }

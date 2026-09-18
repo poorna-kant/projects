@@ -1,0 +1,34 @@
+type: Object
+id: plan/objects/demo-product-family
+title: Demo Product Family
+name: Demo Product Family
+domain: plan
+identifiers: [product_family]
+aliases: [family, planning family, product group]
+description: >-
+  ILLUSTRATIVE EXAMPLE. The grouping of products at which demand is planned. Master data, not
+  transactional: it defines the grain every demand number is expressed at.
+lifecycle: Slowly changing. Treated as stable within a planning cycle in the demo.
+business_note: >-
+  Demand is planned at family level rather than item level because the aggregate forecast is
+  more stable than its parts. This is also the most common source of confusion when a number
+  is quoted: a family figure cannot be compared with an item figure, and splitting a family
+  back down to items is an allocation assumption, not a fact.
+source_mapping:
+  system: plan/systems/demo-platform
+  schema: demo
+  primary_table: demo_product_family
+  key_fields: [product_family]
+  snapshot_policy: Latest approved demo snapshot.
+  columns: [product_family, family_name, family_tier, active_flag]
+groundable: true
+values:
+  - code: DEMO-STANDARD
+    name: Demo Standard Line
+    tier: Volume
+  - code: DEMO-PREMIUM
+    name: Demo Premium Line
+    tier: Specialty
+  - code: DEMO-EDGE
+    name: Demo Edge Line
+    tier: Emerging

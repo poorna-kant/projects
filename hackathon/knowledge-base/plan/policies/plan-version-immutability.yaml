@@ -1,0 +1,28 @@
+type: Policy
+id: plan/policies/plan-version-immutability
+policy_id: plan_version_immutability
+name: Plan Version Immutability
+domain: plan
+category: governance
+description: >-
+  ILLUSTRATIVE EXAMPLE. A published plan version is never edited in place. Corrections create a
+  new version; superseded versions remain readable. Only the latest version present in a
+  snapshot is counted.
+rationale: >-
+  If a published version can be changed after the fact, no figure quoted from it can be
+  reproduced, and no decision taken on it can be defended. Immutability is what makes the
+  plan auditable rather than merely current.
+how_to_use: >-
+  Determine the latest plan_version within the selected snapshot, then count only lines
+  carrying that version. Older versions of the same line are superseded, not additional demand.
+rules:
+  - Never sum across plan versions. A v2 and a v3 line for the same family and period are one intent expressed twice.
+  - Superseded lines stay queryable so that a prior figure can still be explained.
+  - A correction is a new version with a reason, never an overwrite.
+failure_mode: >-
+  The characteristic symptom is a plan that inflates without anyone raising demand: every
+  revision silently adds to the total instead of replacing it.
+owner_role: Planning Data Steward (fictional demo role)
+demo_note: >-
+  Enforced in the demo. The demo dataset carries a superseded v2 line alongside current
+  v3 lines so the inflation failure is demonstrable rather than theoretical.

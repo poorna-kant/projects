@@ -1,0 +1,21 @@
+type: System
+id: plan/systems/demo-statistical-engine
+name: Demo Statistical Engine
+display_name: Demo Statistical Engine
+domain: plan
+aliases: [baseline engine, demo forecasting engine]
+role: >-
+  ILLUSTRATIVE EXAMPLE. Generates the unadjusted statistical baseline from illustrative history at
+  product family and planning period grain. Invented system for the public demonstration.
+capabilities:
+  - name: Baseline generation
+    description: Produces a statistical forecast per product family and period, before any human adjustment.
+  - name: Baseline freeze
+    description: Fixes the baseline for the cycle so that later adjustments remain attributable.
+boundaries:
+  - Produces a baseline only. It does not decide the plan and holds no approval authority.
+  - Has no view of supply, capacity or materials.
+  - Its output is an input to the demand review, never a published figure in its own right.
+owner_role: Planning Semantic Layer Engineer (fictional demo role)
+provides_objects:
+  - plan/objects/demo-demand-baseline

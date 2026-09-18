@@ -1,5 +1,12 @@
 type: ObjectIndex
 id: plan/objects
 domain: plan
+note: >-
+  ILLUSTRATIVE EXAMPLE. Objects for the demand planning stage of the public demo. Each describes
+  an invented table in an invented system.
 objects:
   - plan/objects/demo-demand
+  - plan/objects/demo-demand-baseline
+  - plan/objects/demo-demand-adjustment
+  - plan/objects/demo-product-family
+  - plan/objects/demo-planning-calendar

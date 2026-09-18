@@ -1,0 +1,275 @@
+type: MetricContext
+id: plan/metric-context/planning-gap
+domain: plan
+measure_key: planning.gap
+name: Planning Gap
+status: Draft for review
+version: 0.1.0
+
+example_notice: >-
+  ILLUSTRATIVE EXAMPLE. This record documents an invented measure over an invented dataset,
+  created to demonstrate how business context and evidence are governed in SCOPE. It is not a
+  production definition and must not be reused as one.
+
+industry_definition:
+  note: >-
+    Described in general, widely used supply-chain planning language, written for this demo. It
+    is not a quotation from any standards body, certification syllabus or published dictionary,
+    and no organisation's house definition is reproduced here.
+  standard_usage: >-
+    In common supply-chain practice, a planning gap is the positive difference between agreed
+    demand and the supply that can support it. It is usually expressed in units, not as a
+    percentage, because the operating question is how many units still need an action.
+
+    The measure is deliberately one-sided. A shortage in one product family and period is not
+    erased by spare supply somewhere else. Time, configuration and component fit all matter.
+  typical_cycle_position: >-
+    Calculated after demand approval and supply assessment, then reviewed in the supply review
+    before escalation to the executive plan review.
+  what_practitioners_argue_about:
+    - Whether gaps should be shown before or after allocation decisions.
+    - Whether shortages should be netted against surplus in another family, site or period.
+    - Whether the calculation should floor each line before aggregation or only floor the final total.
+    - Whether a shortage inside a lead-time fence should be given a different severity from one outside it.
+  demo_position: >-
+    The demo floors the gap at zero for each product family and period before summing. Shortages
+    are not netted against surpluses. A DEMO-EDGE surplus in 2026-Q3 does not fill a
+    DEMO-STANDARD hole in 2026-Q1. Surplus is reported separately as a cost, not treated as a
+    cushion.
+
+business_context:
+  plain_english: >-
+    How many agreed units supply cannot currently support.
+  what_it_measures: >-
+    The unit shortfall between approved demand and supportable supply for each product family
+    and planning period, with each combination floored at zero before aggregation.
+  why_it_matters: >-
+    A coverage percentage can make a shortfall look small. A unit gap says how much work remains.
+    It points to the unresolved decision: buy more, build later, change demand, allocate supply or
+    accept the miss.
+
+    It also prevents surplus from hiding pain. Spare supportability in one place may be a carrying
+    cost, while a short family in another place still stops a build.
+  unit: units
+  grain: One value per product family, per planning period, per snapshot.
+  planning_context: >-
+    Produced with supply coverage during the supply review, using the same approved demand and
+    current supportability assessment.
+
+inclusions:
+  - Approved, current-version demand lines for the selected snapshot.
+  - Approved, current-version supply positions for the same snapshot.
+  - Product family and period combinations with assessed supportable quantity.
+exclusions:
+  - Draft demand lines.
+  - Superseded plan versions.
+  - Rows where supportable quantity is null because supportability has not been assessed.
+  - Surplus units, which are reported separately and never netted into the shortage measure.
+
+interpretation:
+  read_it_as: "The number of agreed units for which supply has no current supportable answer."
+  do_not_read_it_as:
+    - A root cause. It says how large the gap is, not why it exists.
+    - A service-level or delivery result. It is a plan-time risk signal.
+    - A net position after moving surplus across families and periods.
+  common_misreadings:
+    - >-
+      Subtracting total supply from total demand and flooring only once. That lets surplus in one
+      combination hide shortage in another.
+    - >-
+      Treating surplus as safety. It may be inventory, capacity or commitment that nobody asked for.
+    - >-
+      Reading all equal gaps alike. A 150-unit gap behind an 84-day lead time is not the same
+      operating problem as a 150-unit gap behind a short replenishment path.
+  read_alongside: >-
+    Supply Coverage, gating component, constraint type and component lead time. The unit gap says
+    size; the constraint explains whether it can be recovered inside the horizon.
+
+stewardship:
+  business_owner_role: Supply Planning Lead (fictional demo role)
+  co_owner_role: Demand Planning Lead (fictional demo role, owns the demand baseline)
+  data_steward_role: Planning Data Steward (fictional demo role)
+  technical_owner_role: Planning Semantic Layer Engineer (fictional demo role)
+  note: Fictional placeholder roles. No real person is named or implied.
+
+source_mapping:
+  disclaimer: An agreed demo contract over invented tables. Not a production mapping.
+  system: plan/systems/demo-planning-workbench
+  object: plan/objects/demo-supply
+  primary_table: demo.supply
+  measure_column: supportable_quantity
+  fields:
+    - name: supportable_quantity
+      role: Supply input
+      description: Units the current supply plan can support for the family and period.
+    - name: quantity
+      role: Demand input
+      description: Approved agreed demand from the matching demand line.
+    - name: product_family
+      role: Grain key
+      description: Demo product family used to align demand and supply.
+    - name: period
+      role: Grain key
+      description: Planning period used to keep shortages from being netted across time.
+    - name: gating_component
+      role: Qualitative evidence
+      description: Component named as limiting supportability, where one is present.
+    - name: constraint_type
+      role: Qualitative evidence
+      description: Planning explanation for the supportability limit.
+    - name: plan_version
+      role: Filter
+      description: Latest plan version in the selected snapshot only.
+    - name: snapshot_date
+      role: Snapshot key
+      description: Date used to align demand and supply evidence.
+
+dimensions:
+  supported: [product_family, period]
+  not_supported:
+    - name: supplier
+      reason: >-
+        The family-level supply table does not hold a supplier grain. Supplier analysis belongs
+        at component or purchase order level.
+    - name: component
+      reason: >-
+        A family gap may name one gating component, but the gap itself is not additive across all
+        components. Component shortage is a separate governed measure.
+
+calculation_contract:
+  disclaimer: An agreed demo rule, not a production specification.
+  aggregate: sum
+  expression: SUM(MAX(agreed_demand - supportable_quantity, 0))
+
+  shortage_rule:
+    definition: MAX(agreed_demand - supportable_quantity, 0)
+    level: product_family and period
+    note: >-
+      Flooring happens at this level before summing. This is the central rule. A surplus line
+      contributes zero to planning gap, not a negative value.
+
+  surplus_rule:
+    definition: MAX(supportable_quantity - agreed_demand, 0)
+    treatment: Report separately, never net into planning gap.
+    rationale: >-
+      Surplus may be a cost or an allocation question. It is not proof that a different family or
+      period can be covered.
+
+  demand:
+    source: demo.demand
+    includes: Approved, current-plan-version agreed demand for the selected snapshot.
+    excludes: Draft demand, superseded versions and null quantities.
+
+  supply:
+    source: demo.supply
+    includes: Approved, current-plan-version assessed supportable quantity for the selected snapshot.
+    excludes: Null supportable quantity, where the answer is unknown.
+
+  aggregation_rule:
+    method: Calculate the floored gap for each family-period combination, then sum those gaps.
+    never: >-
+      Never sum all demand and all supportable quantity first. That would let DEMO-EDGE surplus in
+      2026-Q3 hide DEMO-STANDARD shortage in 2026-Q1.
+
+  scope_filters:
+    - supply_status = 'Approved'
+    - demand_status = 'Approved'
+    - plan_version = the latest version present in the selected snapshot, on both tables
+    - snapshot_date = the selected snapshot, on both tables
+
+  null_handling: >-
+    A null supportable quantity is excluded and reported. It is an unknown, not zero supply.
+  additivity:
+    within_snapshot: Additive after line-level flooring.
+    across_snapshot: Not additive.
+
+snapshot_context:
+  mode: LatestSnapshot
+  run_date_column: snapshot_date
+  rule: Resolve to the most recent snapshot unless an as-of date is supplied, and always state which was used.
+
+worked_example:
+  disclaimer: >-
+    Entirely invented rows, shipped in plan/_data/demo-supply.json and plan/_data/demo-demand.json.
+  as_of_snapshot: 2026-03-14
+  plan_version: v3
+  expected_result:
+    - product_family: DEMO-STANDARD
+      period: 2026-Q1
+      agreed_demand: 1500
+      supportable_quantity: 1350
+      gap_units: 150
+      surplus_units: 0
+      note: DEMO-PART-A is the gating component.
+    - product_family: DEMO-PREMIUM
+      period: 2026-Q2
+      agreed_demand: 750
+      supportable_quantity: 750
+      gap_units: 0
+      surplus_units: 0
+      note: Balanced.
+    - product_family: DEMO-EDGE
+      period: 2026-Q3
+      agreed_demand: 620
+      supportable_quantity: 700
+      gap_units: 0
+      surplus_units: 80
+      note: Surplus is visible but contributes zero to the gap.
+    - product_family: DEMO-PREMIUM
+      period: 2026-Q1
+      agreed_demand: 0
+      supportable_quantity: 120
+      gap_units: 0
+      surplus_units: 120
+      note: Zero demand with supply present.
+  total_check:
+    value: 150
+    unit: units
+    surplus_value: 200
+    note: Total shortfall is 150 units. Total surplus is 80 + 120 = 200 units and is not netted.
+  edge_cases:
+    - name: Zero demand with supply present
+      scenario: DEMO-PREMIUM / 2026-Q1 has zero approved demand and 120 supportable units.
+      expected_behaviour: Report no gap and report 120 surplus units separately.
+    - name: Surplus not netted
+      scenario: DEMO-EDGE / 2026-Q3 has 80 surplus units while DEMO-STANDARD / 2026-Q1 is 150 short.
+      expected_behaviour: Keep the total planning gap at 150, not 70.
+    - name: Lead-time severity
+      scenario: Two gaps have the same unit size but different component lead times.
+      expected_behaviour: >-
+        Report the same unit gap, but read severity alongside lead time because recovery options differ.
+
+evidence:
+  traceability_statement: Shows where the number claims to come from, so a reviewer can follow the chain.
+  quality_disclaimer: >-
+    A source reference demonstrates traceability only. It does not mean the data has been
+    profiled, reconciled or certified, and it does not mean the supportability judgement is sound.
+  references:
+    - kind: Semantic layer measure
+      ref: plan/_runtime/registry.json -> measures['planning.gap']
+    - kind: Object mapping
+      ref: plan/objects/demo-supply
+    - kind: Object mapping
+      ref: plan/objects/demo-demand
+    - kind: Governed terms
+      ref: plan/terms/index.yaml -> Planning Gap, Supportability, Gating Component
+
+expected_versus_actual:
+  items:
+    - topic: Calculation
+      documented_expectation: SUM(MAX(agreed_demand - supportable_quantity, 0)), floored by family and period before summing.
+      currently_executed: Documented for the demo semantic layer using invented demand and supply tables.
+      gap: false
+    - topic: Surplus reporting
+      documented_expectation: Surplus is reported separately and never used to reduce shortage.
+      currently_executed: The worked example lists 200 surplus units outside the 150-unit gap.
+      gap: false
+    - topic: Lead-time severity
+      documented_expectation: A gap behind a long lead time should be flagged differently from one behind a short lead time.
+      currently_executed: Lead time is available at component level but not scored into this family-level measure.
+      gap: true
+
+open_questions:
+  - Should planning gap publish a severity band based on lead time and time fence?
+  - Should surplus have its own governed cost measure?
+  - Who decides whether a gap is solved by demand reduction, supply action or allocation?

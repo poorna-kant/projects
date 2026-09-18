@@ -1,0 +1,39 @@
+type: Policy
+id: plan/policies/supplier-delivery-scoring
+policy_id: supplier_delivery_scoring
+name: Supplier Delivery Scoring
+domain: plan
+category: execution
+description: >-
+  ILLUSTRATIVE EXAMPLE. Supplier delivery performance is published as a set of measures with
+  their conventions attached, never as a single headline figure. The conventions that decide the
+  answer are stated in full.
+rationale: >-
+  A purchase order line carries both a quantity and a date, so no single number can describe
+  whether it was honoured. Where several readings exist, quoting whichever is most flattering is
+  the ordinary abuse, and it is rarely deliberate - people reach for the figure they were shown
+  last. Publishing the readings together makes their disagreement informative instead of
+  embarrassing.
+how_to_use: >-
+  Quote on-time delivery, on-time in-full, fulfilment rate and receipt lag together. When they
+  diverge, read the divergence rather than reconciling it away - the gap between on-time delivery
+  and on-time in-full is made up entirely of deliveries that hit the date and missed the quantity.
+rules:
+  - >-
+    Lines are scored against the promised date, not the originally requested date. This is the
+    kinder of the two readings and is stated rather than left implied.
+  - >-
+    Only received lines are scored. An open line has not yet had the opportunity to be late, and
+    a cancelled line was never going to arrive.
+  - >-
+    Cancellation reasons are recorded. Excluding cancelled lines is standard practice and is also
+    a quiet way of removing the worst cases if nobody checks why they were cancelled.
+  - Receipt lag is reported signed, so that early arrivals stay visible. Early delivery is not free.
+  - >-
+    No single figure may be published as "supplier performance". A measure quoted without its
+    convention is not publishable.
+owner_role: Supplier Performance Lead (fictional demo role)
+demo_note: >-
+  Enforced for the four execution delivery measures, which compute over the same six received
+  lines and deliberately disagree. Cancellation reasons are NOT modelled in the demo dataset,
+  so the third rule is documented but not executable. This is a recorded gap.

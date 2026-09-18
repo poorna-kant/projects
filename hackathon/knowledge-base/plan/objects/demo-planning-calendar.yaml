@@ -1,0 +1,35 @@
+type: Object
+id: plan/objects/demo-planning-calendar
+title: Demo Planning Calendar
+name: Demo Planning Calendar
+domain: plan
+identifiers: [period]
+aliases: [planning period, planning calendar, bucket]
+description: >-
+  ILLUSTRATIVE EXAMPLE. The time buckets demand is planned into, and the state of each bucket
+  within the planning horizon. Master data that determines which periods may still be changed.
+lifecycle: Rolls forward each cycle. Period states change as the horizon advances.
+business_note: >-
+  Two numbers for the same product are not comparable unless they sit in the same bucket and
+  the same horizon state. A quantity in a frozen period means something different from the
+  same quantity in an open one, because only the second can still be changed.
+source_mapping:
+  system: plan/systems/demo-platform
+  schema: demo
+  primary_table: demo_planning_calendar
+  key_fields: [period]
+  snapshot_policy: Latest approved demo snapshot.
+  columns: [period, period_start, period_end, horizon_state]
+  column_notes:
+    horizon_state: Frozen, Firm or Open. Governs whether the period may still be revised.
+groundable: true
+values:
+  - period: 2026-Q1
+    horizon_state: Frozen
+    note: Inside the time fence. Committed; changes require an exception.
+  - period: 2026-Q2
+    horizon_state: Firm
+    note: Agreed but still revisable through the normal cycle.
+  - period: 2026-Q3
+    horizon_state: Open
+    note: Planning horizon. Expected to move cycle over cycle.

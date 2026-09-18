@@ -1,5 +1,17 @@
 type: ConceptIndex
 id: plan/concepts
 domain: plan
+note: >-
+  ILLUSTRATIVE EXAMPLE. Generic, industry-standard planning concepts written for the public demo.
 concepts:
   - plan/concepts/governed-knowledge
+  - plan/concepts/consensus-demand-planning
+  - plan/concepts/unconstrained-vs-constrained-demand
+  - plan/concepts/plan-of-record
+  - plan/concepts/forecast-value-add
+  - plan/concepts/snapshot-and-reproducibility
+  - plan/concepts/bill-of-materials-explosion
+  - plan/concepts/supportability-and-gating
+  - plan/concepts/safety-stock-and-variability
+  - plan/concepts/planning-versus-execution
+  - plan/concepts/measuring-supplier-delivery

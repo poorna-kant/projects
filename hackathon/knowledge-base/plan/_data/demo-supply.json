@@ -1,0 +1,29 @@
+{
+  "exampleNotice": "ILLUSTRATIVE EXAMPLE. Every row below is invented for public demonstration of the SCOPE workflow. These are not extracts from any real system and describe no real organisation, product, supplier or supply position.",
+  "object": "plan/objects/demo-supply",
+  "table": "demo.supply",
+  "grain": "One row per product family, per period, per plan version, per snapshot.",
+  "note": "Deliberately small and hand-written so a reviewer can verify every published number by eye. Product families and periods line up with plan/_data/demo-demand.json so coverage can be calculated against the agreed demand plan.",
+  "pairsWith": "plan/_data/demo-demand.json",
+  "columns": ["supply_id", "product_family", "period", "supportable_quantity", "gating_component", "constraint_type", "plan_version", "supply_status", "snapshot_date"],
+  "rows": [
+    { "supply_id": "S-0901", "product_family": "DEMO-STANDARD", "period": "2026-Q1", "supportable_quantity": 1200, "gating_component": "DEMO-PART-A", "constraint_type": "Component lead time", "plan_version": "v2", "supply_status": "Approved", "snapshot_date": "2026-02-14" },
+    { "supply_id": "S-0902", "product_family": "DEMO-PREMIUM",  "period": "2026-Q2", "supportable_quantity": 700,  "gating_component": "",            "constraint_type": "Unconstrained",      "plan_version": "v2", "supply_status": "Approved", "snapshot_date": "2026-02-14" },
+    { "supply_id": "S-0903", "product_family": "DEMO-EDGE",     "period": "2026-Q3", "supportable_quantity": 450,  "gating_component": "DEMO-PART-C", "constraint_type": "Supplier capacity",  "plan_version": "v2", "supply_status": "Approved", "snapshot_date": "2026-02-14" },
+
+    { "supply_id": "S-1001", "product_family": "DEMO-STANDARD", "period": "2026-Q1", "supportable_quantity": 1350, "gating_component": "DEMO-PART-A", "constraint_type": "Component lead time", "plan_version": "v3", "supply_status": "Approved", "snapshot_date": "2026-03-14" },
+    { "supply_id": "S-1002", "product_family": "DEMO-PREMIUM",  "period": "2026-Q2", "supportable_quantity": 750,  "gating_component": "",            "constraint_type": "Unconstrained",      "plan_version": "v3", "supply_status": "Approved", "snapshot_date": "2026-03-14" },
+    { "supply_id": "S-1003", "product_family": "DEMO-EDGE",     "period": "2026-Q3", "supportable_quantity": 700,  "gating_component": "",            "constraint_type": "Unconstrained",      "plan_version": "v3", "supply_status": "Approved", "snapshot_date": "2026-03-14" },
+    { "supply_id": "S-1004", "product_family": "DEMO-PREMIUM",  "period": "2026-Q1", "supportable_quantity": 120,  "gating_component": "",            "constraint_type": "Unconstrained",      "plan_version": "v3", "supply_status": "Approved", "snapshot_date": "2026-03-14" },
+    { "supply_id": "S-1005", "product_family": "DEMO-STANDARD", "period": "2026-Q1", "supportable_quantity": 900,  "gating_component": "DEMO-PART-A", "constraint_type": "Component lead time", "plan_version": "v2", "supply_status": "Approved", "snapshot_date": "2026-03-14" },
+    { "supply_id": "S-1006", "product_family": "DEMO-EDGE",     "period": "2026-Q4", "supportable_quantity": null, "gating_component": "DEMO-PART-C", "constraint_type": "Not yet assessed",   "plan_version": "v3", "supply_status": "Approved", "snapshot_date": "2026-03-14" }
+  ],
+  "rowNotes": {
+    "S-1001": "Supportable quantity is below agreed demand of 1500. This is the short position the measure exists to surface.",
+    "S-1002": "Supportable quantity exactly equals agreed demand of 750. Demonstrates a clean 100%.",
+    "S-1003": "Supportable quantity of 700 exceeds agreed demand of 620. Demonstrates why the demo does not cap coverage at 100% - capping would hide the surplus.",
+    "S-1004": "Supply exists for a product family and period with zero agreed demand, because the only demand line was left in Draft. This is the zero-demand edge case: the ratio is undefined, and 120 supportable units sit outside the headline number entirely.",
+    "S-1005": "Superseded v2 row. Demonstrates that the plan-version filter applies to supply exactly as it does to demand.",
+    "S-1006": "Null supportable quantity, not yet assessed. Demonstrates that an unknown is reported as an exclusion rather than coerced to zero, which would wrongly read as no supply at all."
+  }
+}

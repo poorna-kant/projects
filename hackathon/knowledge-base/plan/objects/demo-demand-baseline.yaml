@@ -1,0 +1,30 @@
+type: Object
+id: plan/objects/demo-demand-baseline
+title: Demo Demand Baseline
+name: Demo Demand Baseline
+domain: plan
+identifiers: [baseline_id]
+aliases: [statistical baseline, baseline forecast]
+description: >-
+  ILLUSTRATIVE EXAMPLE. The unadjusted statistical forecast produced before any human judgement
+  is applied. Kept as a separate object so the machine's opinion and the planner's opinion
+  stay distinguishable after they are combined.
+lifecycle: Regenerated each planning cycle in the demo dataset, then frozen for the cycle.
+business_note: >-
+  The baseline is not the plan. It is the starting point the demand review argues with. Its
+  value lies in being an untouched reference: once judgement is folded in, you can no longer
+  tell what the statistics alone said unless it was preserved.
+source_mapping:
+  system: plan/systems/demo-statistical-engine
+  schema: demo
+  primary_table: demo_demand_baseline
+  key_fields: [baseline_id]
+  snapshot_policy: Use the latest approved demo snapshot.
+  columns: [baseline_id, demand_id, product_family, period, baseline_quantity, snapshot_date]
+  column_notes:
+    demand_id: Links the baseline to the demand line it seeded.
+    baseline_quantity: Statistical forecast in units, before adjustment.
+  sample_rows: plan/_data/demo-demand.json
+relationships:
+  - Seeds plan/objects/demo-demand via demand_id.
+  - Paired with plan/objects/demo-demand-adjustment to reconstruct the agreed quantity.

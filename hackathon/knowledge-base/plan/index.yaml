@@ -17,3 +17,5 @@ catalogs:
     index: systems/index.yaml
   - id: plan/metrics
     index: metrics/index.yaml
+  - id: plan/metric-context
+    index: metric-context/index.yaml
