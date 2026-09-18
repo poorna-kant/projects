@@ -1,0 +1,186 @@
+type: MetricContext
+id: plan/metric-context/planning-demand-baseline
+domain: plan
+measure_key: planning.demand.baseline
+name: Demand Baseline
+status: Draft for review
+version: 0.1.0
+
+example_notice: >-
+  ILLUSTRATIVE EXAMPLE. This record documents an invented measure over an invented dataset,
+  created to demonstrate how business context and evidence are governed in SCOPE. It is not a
+  production definition and must not be reused as one.
+
+industry_definition:
+  note: >-
+    Described in general, widely used supply-chain planning language, written for this demo. It
+    is not a quotation from any standards body, certification syllabus or published dictionary,
+    and no organisation's house definition is reproduced here.
+  standard_usage: >-
+    In common supply-chain practice, the statistical baseline is the forecast produced purely by
+    applying a fitted model to demand history, before any person has intervened. It is generated
+    at the start of a planning cycle and then frozen.
+
+    Freezing it is the entire point. Once judgement is applied, the original machine view is
+    unrecoverable unless it was preserved, and with it goes any possibility of asking later
+    whether the intervention helped. Organisations that overwrite the baseline in place can
+    measure how accurate their forecast was, but never whether their forecasting process added
+    anything.
+
+    A baseline is not expected to be the best available number. It cannot see a promotion, a new
+    customer, a discontinued line or a competitor launch, because none of those appear in history
+    until after the fact. Its role is comparative, not operational.
+  typical_cycle_position: >-
+    Generated before the demand review, usually by a statistical engine running on cleansed
+    history, and published read-only for the cycle.
+  what_practitioners_argue_about:
+    - Whether history should be cleansed of outliers before fitting, and who decides what counts as an outlier.
+    - How much history is enough, and whether a changed product mix invalidates older periods.
+    - Whether the baseline should be regenerated mid-cycle when new history arrives, or left frozen.
+  demo_position: >-
+    The demo treats the baseline as frozen for the cycle and stores it alongside the agreed plan
+    on the same row, so the comparison is always available and never depends on finding an
+    archived file.
+
+business_context:
+  plain_english: >-
+    What the maths said before anyone argued with it - the untouched statistical forecast.
+  what_it_measures: >-
+    The statistical forecast for a product family and period as generated from history, before
+    any human judgement has been applied to it.
+  why_it_matters: >-
+    The baseline is the reference point that makes judgement auditable. On its own it is rarely
+    the number anyone should act on, because it cannot know about a promotion, a new customer
+    or a discontinued line. Its value is comparative: without a preserved baseline, nobody can
+    later ask whether overriding the statistics helped or hurt.
+  unit: units
+  grain: One value per product family, per planning period, per snapshot.
+  planning_context: >-
+    Produced by the statistical engine at the start of the cycle and frozen, so that adjustments
+    made during the demand review remain attributable afterwards.
+
+inclusions:
+  - The unadjusted statistical forecast on approved, current-version demand lines.
+exclusions:
+  - Any human adjustment. That is a separate measure by design.
+  - Lines not yet approved, and superseded plan versions.
+
+interpretation:
+  read_it_as: "What the statistics alone predicted for this family and period, before anyone intervened."
+  do_not_read_it_as:
+    - The plan. It is an input to the plan, not the plan itself.
+    - A more objective or more trustworthy number than the agreed figure. It is differently informed, not better informed.
+  common_misreadings:
+    - >-
+      Treating a large gap between baseline and agreed quantity as evidence of error. A large
+      adjustment may be entirely correct; it simply means the plan rests on judgement rather
+      than history, which is worth knowing either way.
+
+stewardship:
+  business_owner_role: Demand Planning Lead (fictional demo role)
+  data_steward_role: Planning Data Steward (fictional demo role)
+  technical_owner_role: Planning Semantic Layer Engineer (fictional demo role)
+  note: Fictional placeholder roles. No real person is named or implied.
+
+source_mapping:
+  disclaimer: An agreed demo contract over an invented table. Not a production mapping.
+  system: plan/systems/demo-statistical-engine
+  object: plan/objects/demo-demand-baseline
+  primary_table: demo.demand
+  measure_column: baseline_quantity
+  fields:
+    - name: baseline_quantity
+      role: Measure column
+      description: Statistical forecast in units, before adjustment.
+    - name: product_family
+      role: Dimension
+    - name: period
+      role: Dimension and date column
+    - name: plan_version
+      role: Filter - latest version in the snapshot only
+    - name: demand_status
+      role: Filter - Approved only
+    - name: snapshot_date
+      role: Snapshot key
+
+dimensions:
+  supported: [product_family, period]
+  not_supported:
+    - name: adjustment reason
+      reason: Reasons attach to adjustments, not to the baseline.
+
+calculation_contract:
+  disclaimer: An agreed demo rule, not a production specification.
+  aggregate: sum
+  expression: SUM(baseline_quantity)
+  scope_filters:
+    - demand_status = 'Approved'
+    - plan_version = the latest version present in the selected snapshot
+  null_handling: A null baseline is excluded and the exclusion is reported. It is never read as zero.
+  additivity:
+    within_snapshot: Additive across product family and period.
+    across_snapshot: Not additive. Two snapshots are two views of one plan.
+  identity: >-
+    planning.demand.baseline + planning.demand.adjustment = planning.demand, row by row. If this
+    identity fails, the definitions and the data disagree and the figures must not be published.
+
+snapshot_context:
+  mode: LatestSnapshot
+  run_date_column: snapshot_date
+  rule: Resolve to the most recent snapshot unless an as-of date is supplied, and always state which was used.
+
+worked_example:
+  disclaimer: Entirely invented rows, shipped in plan/_data/demo-demand.json.
+  as_of_snapshot: 2026-03-14
+  expected_result:
+    - {product_family: DEMO-STANDARD, period: 2026-Q1, baseline: 1350, note: 1100 + 250}
+    - {product_family: DEMO-PREMIUM,  period: 2026-Q1, baseline: 0,    note: "Only row is Draft. Genuine zero."}
+    - {product_family: DEMO-PREMIUM,  period: 2026-Q2, baseline: 800,  note: "Baseline exceeds the agreed 750 - the adjustment was negative."}
+    - {product_family: DEMO-EDGE,     period: 2026-Q3, baseline: 500,  note: "Agreed quantity is 620; judgement supplied the difference."}
+  total_check:
+    value: 2650
+    note: Against an agreed Planned Demand of 2870. The 220 difference is the net adjustment.
+  edge_cases:
+    - name: Baseline above the agreed plan
+      scenario: DEMO-PREMIUM / 2026-Q2 has a baseline of 800 but an agreed quantity of 750.
+      expected_behaviour: >-
+        Both are correct. The demand review lowered the plan by 50 for a stated reason. A
+        baseline higher than the plan is not an error and must not be "corrected".
+    - name: Judgement-dominated plan
+      scenario: DEMO-EDGE / 2026-Q3 has a baseline of 500 against an agreed 620.
+      expected_behaviour: >-
+        Report it plainly. Roughly a fifth of that number rests on an assumption rather than on
+        history, which is exactly the kind of thing a reviewer should be told.
+
+evidence:
+  traceability_statement: Shows where the number claims to come from, so a reviewer can follow the chain.
+  quality_disclaimer: >-
+    A source reference demonstrates traceability only. It does not mean the data has been
+    profiled, reconciled or certified.
+  references:
+    - kind: Semantic layer measure
+      ref: plan/_runtime/registry.json -> measures['planning.demand.baseline']
+    - kind: Object mapping
+      ref: plan/objects/demo-demand-baseline
+    - kind: Concept
+      ref: plan/concepts/forecast-value-add
+    - kind: Governed terms
+      ref: plan/terms/index.yaml -> Statistical Baseline
+
+expected_versus_actual:
+  items:
+    - topic: Calculation
+      documented_expectation: SUM(baseline_quantity) with approval and plan-version filters.
+      currently_executed: Implemented, with the same evidence trail as Planned Demand.
+      gap: false
+    - topic: Identity check
+      documented_expectation: baseline + adjustment must reconcile to the agreed quantity.
+      currently_executed: Implemented at GET /api/measures/reconcile, which reports any row that breaks the identity.
+      gap: false
+    - topic: Forecast value add
+      documented_expectation: Compare baseline error against adjusted-plan error once actuals exist.
+      currently_executed: >-
+        Not implemented, and deliberately so. The demo dataset contains plan only, with no
+        actuals, so the comparison cannot be made. The structure that would make it possible is
+        in place; the analysis is not.
+      gap: true

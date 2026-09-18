@@ -1,0 +1,27 @@
+{
+  "exampleNotice": "ILLUSTRATIVE EXAMPLE. Every row below is invented for public demonstration of the SCOPE workflow. No real supplier, purchase order, price, contract or delivery performance is described or implied. Supplier names are placeholders and rank nobody.",
+  "object": "plan/objects/demo-purchase-order",
+  "table": "demo.purchase_order",
+  "grain": "One row per purchase order line, per snapshot.",
+  "note": "Execution-stage supplier facts. Supports the delivery measures - on-time delivery, on-time in-full, fulfilment rate and receipt lag - and deliberately contains the cases where those four measures disagree with each other.",
+  "columns": ["po_id", "supplier", "component_id", "product_family", "period", "ordered_quantity", "received_quantity", "promised_date", "actual_receipt_date", "po_status", "snapshot_date"],
+  "rows": [
+    { "po_id": "P-3001", "supplier": "DEMO-SUPPLIER-1", "component_id": "DEMO-PART-A", "product_family": "DEMO-STANDARD", "period": "2025-Q4", "ordered_quantity": 950,  "received_quantity": 950,  "promised_date": "2025-11-10", "actual_receipt_date": "2025-11-08", "po_status": "Received", "snapshot_date": "2026-03-14" },
+    { "po_id": "P-3002", "supplier": "DEMO-SUPPLIER-2", "component_id": "DEMO-PART-B", "product_family": "DEMO-STANDARD", "period": "2025-Q4", "ordered_quantity": 1400, "received_quantity": 1400, "promised_date": "2025-11-15", "actual_receipt_date": "2025-11-15", "po_status": "Received", "snapshot_date": "2026-03-14" },
+    { "po_id": "P-3003", "supplier": "DEMO-SUPPLIER-3", "component_id": "DEMO-PART-C", "product_family": "DEMO-EDGE",     "period": "2025-Q4", "ordered_quantity": 400,  "received_quantity": 330,  "promised_date": "2025-12-01", "actual_receipt_date": "2025-12-18", "po_status": "Partially received", "snapshot_date": "2026-03-14" },
+    { "po_id": "P-3004", "supplier": "DEMO-SUPPLIER-2", "component_id": "DEMO-PART-D", "product_family": "DEMO-EDGE",     "period": "2025-Q4", "ordered_quantity": 500,  "received_quantity": 500,  "promised_date": "2025-12-05", "actual_receipt_date": "2025-12-12", "po_status": "Received", "snapshot_date": "2026-03-14" },
+    { "po_id": "P-3005", "supplier": "DEMO-SUPPLIER-4", "component_id": "DEMO-PART-E", "product_family": "DEMO-PREMIUM",  "period": "2026-Q2", "ordered_quantity": 750,  "received_quantity": null, "promised_date": "2026-04-20", "actual_receipt_date": "", "po_status": "Open", "snapshot_date": "2026-03-14" },
+    { "po_id": "P-3006", "supplier": "DEMO-SUPPLIER-1", "component_id": "DEMO-PART-A", "product_family": "DEMO-STANDARD", "period": "2025-Q4", "ordered_quantity": 300,  "received_quantity": 280,  "promised_date": "2025-12-20", "actual_receipt_date": "2025-12-19", "po_status": "Partially received", "snapshot_date": "2026-03-14" },
+    { "po_id": "P-3007", "supplier": "DEMO-SUPPLIER-3", "component_id": "DEMO-PART-C", "product_family": "DEMO-EDGE",     "period": "2025-Q4", "ordered_quantity": 200,  "received_quantity": 0,    "promised_date": "2025-11-30", "actual_receipt_date": "", "po_status": "Cancelled", "snapshot_date": "2026-03-14" },
+    { "po_id": "P-3008", "supplier": "DEMO-SUPPLIER-2", "component_id": "DEMO-PART-B", "product_family": "DEMO-PREMIUM",  "period": "2025-Q4", "ordered_quantity": 200,  "received_quantity": 240,  "promised_date": "2025-12-10", "actual_receipt_date": "2025-12-09", "po_status": "Received", "snapshot_date": "2026-03-14" }
+  ],
+  "rowNotes": {
+    "P-3002": "Received exactly on the promised date. Demonstrates the boundary rule - the demo counts same-day as on time, which is a choice and is written down rather than left to the query.",
+    "P-3003": "Seventeen days late AND 70 units short. The only line that fails every delivery measure at once, and the one behind the DEMO-EDGE build shortfall.",
+    "P-3004": "Seven days late but complete. Demonstrates why on-time delivery and fulfilment rate must be read together - this line is a full success by quantity and a failure by date.",
+    "P-3005": "Open, nothing received yet, promised in a future period. Demonstrates that an unreceived line is excluded from delivery performance rather than scored as late. Scoring it would blame a supplier for a deadline that has not arrived.",
+    "P-3006": "Arrived a day early but 20 units short. Demonstrates the case that separates on-time delivery from on-time in-full - it passes the first and fails the second.",
+    "P-3007": "Cancelled. Excluded entirely, because a line nobody expects cannot be delivered late.",
+    "P-3008": "Over-received by 40 units. Demonstrates that the demo reports over-delivery rather than capping it - 40 unplanned units still had to be paid for and stored."
+  }
+}

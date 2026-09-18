@@ -1,0 +1,401 @@
+type: MetricContext
+id: plan/metric-context/planning-coverage
+domain: plan
+measure_key: planning.coverage
+name: Supply Coverage
+status: Draft for review
+version: 0.1.0
+
+example_notice: >-
+  ILLUSTRATIVE EXAMPLE. This record documents an invented measure over an invented dataset,
+  created to demonstrate how business context and evidence are governed in SCOPE. It is not a
+  production definition and must not be reused as one.
+
+industry_definition:
+  note: >-
+    Described in general, widely used supply-chain planning language, written for this demo. It
+    is not a quotation from any standards body, certification syllabus or published dictionary,
+    and no organisation's house definition is reproduced here.
+  standard_usage: >-
+    In common supply-chain practice, supply coverage expresses how much of agreed demand the
+    supply plan can actually support, stated as a percentage. It is the point in the sales and
+    operations planning cycle where the demand side and the supply side are forced to meet a
+    single number, and it is usually the number that starts the argument.
+
+    The shape is always the same - something supportable divided by something demanded - but
+    almost every element of it is a local decision. What counts as supportable, which demand it
+    is measured against, at what level of aggregation, and over what horizon are all choices,
+    and two organisations using the same word frequently mean different things.
+  why_it_is_contested: >-
+    Coverage is a ratio between two numbers owned by two different groups. Demand planning owns
+    the denominator, supply planning owns the numerator, and each has a reasonable interest in
+    the definition. A denominator that quietly excludes unapproved demand makes coverage look
+    better. A numerator that counts inventory nobody can physically move makes it look better
+    still. This is precisely why the definition, not just the value, needs governance.
+  typical_cycle_position: >-
+    Calculated after demand is approved and supply has been assessed, and reviewed at the
+    supply review before the executive meeting.
+  what_practitioners_argue_about:
+    - Whether the numerator counts on-hand stock, scheduled receipts, capacity, or some combination.
+    - Whether the denominator is unconstrained demand, approved consensus demand, or only firm orders.
+    - Whether coverage is capped at 100%, or allowed to exceed it so surplus is visible.
+    - Whether a period with zero demand is 100% covered, 0% covered, or simply undefined.
+    - Whether coverage is aggregated by averaging percentages or by summing before dividing.
+  demo_position: >-
+    The demo takes an explicit position on every one of the arguments above and writes it down
+    below. The positions are demo rules, agreed for demonstration only. The point of the record
+    is not that these answers are correct - it is that they are stated, so a reviewer can
+    disagree with something concrete.
+
+business_context:
+  plain_english: >-
+    How much of the demand we agreed to, supply can actually deliver.
+  what_it_measures: >-
+    The proportion of approved demand, for a product family and period, that the current supply
+    plan can support. Expressed as a percentage.
+  why_it_matters: >-
+    Coverage is where an agreed plan meets physical reality. A demand plan everyone signed up to
+    is still only an intention until someone confirms the parts, capacity and time exist to meet
+    it. Coverage turns that confirmation into a number, and a shortfall in it is the earliest
+    honest warning that a commitment is not going to be met.
+
+    It matters in a second way. Because the numerator and denominator are owned by different
+    groups, the measure only works if both groups accept the definition. A coverage figure
+    without an agreed contract behind it is not evidence; it is an opening negotiating position.
+  unit: percent
+  grain: One value per product family, per planning period, per snapshot.
+  planning_context: >-
+    Produced by the supply review after the demand plan is approved, using the supportability
+    assessment from the planning workbench.
+
+inclusions:
+  - Approved, current-version supply positions for the selected snapshot.
+  - Approved, current-version demand lines for the same snapshot, as the denominator.
+  - Product family and period combinations present on either side.
+exclusions:
+  - Draft or superseded supply positions.
+  - Draft demand, which never enters the denominator.
+  - Supply held for a family and period with no agreed demand. Reported separately, never netted into the headline.
+  - Rows where supportable quantity has not yet been assessed.
+
+interpretation:
+  read_it_as: "Of the demand we agreed to, what proportion can supply currently support?"
+  do_not_read_it_as:
+    - A delivery or service-level figure. It is a plan-time assessment, not an outcome.
+    - A statement that the shortfall is somebody's fault. Coverage locates a gap; it does not explain it.
+    - Evidence of surplus stock when it exceeds 100%. It may simply mean demand was lowered after supply committed.
+  common_misreadings:
+    - >-
+      Averaging coverage percentages across product families. A family with tiny demand and full
+      coverage then counts as much as a large family that is badly short. Always sum the
+      numerator and denominator first, then divide.
+    - >-
+      Reading a high headline as safety. Coverage of 97% can contain one family at 40%, and it is
+      the 40% that will stop a build.
+    - >-
+      Assuming a period absent from the result is fully covered. It may have been excluded because
+      supportability was never assessed.
+  read_alongside: >-
+    The gating component and constraint type. Coverage says how short; only the constraint says
+    whether it is fixable inside the horizon.
+
+stewardship:
+  business_owner_role: Supply Planning Lead (fictional demo role)
+  co_owner_role: Demand Planning Lead (fictional demo role, owns the denominator)
+  data_steward_role: Planning Data Steward (fictional demo role)
+  technical_owner_role: Planning Semantic Layer Engineer (fictional demo role)
+  note: >-
+    Fictional placeholder roles. No real person is named or implied. This measure is deliberately
+    shown with two business owners, because a ratio spanning two functions cannot honestly have one.
+
+source_mapping:
+  disclaimer: An agreed demo contract over invented tables. Not a production mapping.
+  system: plan/systems/demo-planning-workbench
+  object: plan/objects/demo-supply
+  primary_table: demo.supply
+  joined_table: demo.demand
+  join_keys: [product_family, period, snapshot_date]
+  join_type: >-
+    Full outer on the demo rules. An inner join would silently drop both of the cases this
+    measure most needs to show - demand with no supply, and supply with no demand.
+  measure_column: supportable_quantity
+  fields:
+    - name: supportable_quantity
+      role: Numerator column
+      table: demo.supply
+      description: >-
+        Units the supply plan can support for this family and period, after components, capacity
+        and lead time have been considered.
+    - name: quantity
+      role: Denominator column
+      table: demo.demand
+      description: Agreed demand quantity, the approved current-version plan of record.
+    - name: gating_component
+      role: Qualitative evidence
+      table: demo.supply
+      description: The part that limits the position. Not aggregated; carried alongside the number.
+    - name: constraint_type
+      role: Qualitative evidence
+      table: demo.supply
+      description: Why it is limited - component lead time, supplier capacity, or unconstrained.
+    - name: plan_version
+      role: Filter - latest version in the snapshot only, applied on BOTH tables
+    - name: supply_status
+      role: Filter - Approved only
+    - name: demand_status
+      role: Filter - Approved only
+    - name: snapshot_date
+      role: Snapshot key, must match on both sides
+
+dimensions:
+  supported: [product_family, period]
+  not_supported:
+    - name: gating component
+      reason: >-
+        A single supply position names one gating part, but coverage is not additive across
+        parts. Breaking coverage down by component would produce percentages that cannot be
+        recombined.
+    - name: customer or region
+      reason: >-
+        The demo supply table has no customer or region grain, so the denominator could be
+        split but the numerator could not. A ratio can only be broken down by a dimension
+        present on both sides.
+
+calculation_contract:
+  disclaimer: An agreed demo rule, not a production specification.
+  aggregate: ratio
+  expression: 100 * SUM(supportable_quantity) / SUM(quantity)
+
+  numerator:
+    definition: SUM(supportable_quantity)
+    source: demo.supply
+    includes: Approved, current-plan-version supportable quantity for the selected snapshot.
+    excludes:
+      - Null supportable quantity, where supportability has not been assessed.
+      - Supply for a family and period with no agreed demand.
+    note: >-
+      Supportable quantity in this demo is a single assessed figure. It is deliberately NOT
+      decomposed into on-hand, scheduled receipts and capacity, because deciding which of those
+      may be counted is exactly the kind of question this record exists to force into the open.
+
+  denominator:
+    definition: SUM(quantity)
+    source: demo.demand
+    includes: Approved, current-plan-version agreed demand for the same snapshot.
+    excludes:
+      - Draft demand lines.
+      - Superseded plan versions.
+      - Null quantities.
+    note: >-
+      The denominator is the agreed consensus plan, NOT unconstrained demand. This is a choice.
+      Measuring against unconstrained demand would produce a lower, and arguably more honest,
+      coverage figure. The demo measures against the plan of record because that is the number
+      the business committed to.
+
+  percentage_convention:
+    scale: Expressed 0-100, not 0-1.
+    capped: false
+    rationale: >-
+      Coverage above 100% is reported, not clamped. Capping would hide surplus supportability,
+      and surplus is information - it usually means demand fell after supply committed, which is
+      a cost that someone is already carrying.
+    rounding: Two decimal places at presentation only. Never round the components before dividing.
+
+  zero_demand_handling:
+    rule: >-
+      When the denominator is zero, coverage is UNDEFINED. The demo returns no percentage for
+      that combination, states why, and reports the orphaned supportable quantity separately.
+    rejected_alternatives:
+      - value: 0%
+        why_rejected: >-
+          Reads as a total shortfall and would pull the headline down, when in fact nothing was
+          demanded and nothing is short.
+      - value: 100%
+        why_rejected: >-
+          Reads as fully covered and would flatter the headline. Covering zero demand is not an
+          achievement.
+      - value: null treated as 100%
+        why_rejected: >-
+          The most common silent version of the same flattery, and the hardest to spot in a report.
+    aggregation_effect: >-
+      Zero-demand combinations contribute nothing to either the numerator or the denominator of
+      the overall figure. Their supportable quantity is reported as an orphan so it is not lost.
+
+  aggregation_rule:
+    method: Sum the numerator and sum the denominator across the requested grouping, then divide.
+    never: >-
+      Never average the per-family percentages. Doing so weights a family with 10 units of demand
+      equally with one carrying 1500, and is the single most common way this measure is misstated.
+
+  scope_filters:
+    - supply_status = 'Approved'
+    - demand_status = 'Approved'
+    - plan_version = the latest version present in the selected snapshot, on both tables
+    - snapshot_date = the selected snapshot, on both tables
+
+  null_handling: >-
+    A null supportable quantity is excluded and reported, never read as zero. Zero supportable
+    means assessed and nothing available; null means nobody has looked yet. Treating them alike
+    would turn an unanswered question into a confident statement of shortage.
+
+  additivity:
+    within_snapshot: >-
+      The components are additive. The ratio is not - it must be recomputed from summed
+      components at every level.
+    across_snapshot: Not additive.
+
+snapshot_context:
+  mode: LatestSnapshot
+  run_date_column: snapshot_date
+  rule: Resolve to the most recent snapshot unless an as-of date is supplied, and always state which was used.
+  both_sides_rule: >-
+    Numerator and denominator must come from the SAME snapshot. Comparing this week's supply
+    against last week's demand produces a number that is wrong in a way nobody can see, and is a
+    common real-world failure.
+
+worked_example:
+  disclaimer: >-
+    Entirely invented rows, shipped in plan/_data/demo-supply.json and plan/_data/demo-demand.json.
+  as_of_snapshot: 2026-03-14
+  plan_version: v3
+  expected_result:
+    - product_family: DEMO-STANDARD
+      period: 2026-Q1
+      supportable: 1350
+      agreed_demand: 1500
+      coverage_percent: 90.0
+      note: "Short by 150 units. Gated by DEMO-PART-A on component lead time."
+    - product_family: DEMO-PREMIUM
+      period: 2026-Q2
+      supportable: 750
+      agreed_demand: 750
+      coverage_percent: 100.0
+      note: "Exactly covered."
+    - product_family: DEMO-EDGE
+      period: 2026-Q3
+      supportable: 700
+      agreed_demand: 620
+      coverage_percent: 112.9
+      note: "Above 100% and reported as such. Capping would hide 80 units of surplus."
+    - product_family: DEMO-PREMIUM
+      period: 2026-Q1
+      supportable: 120
+      agreed_demand: 0
+      coverage_percent: undefined
+      note: "Zero-demand edge case. No percentage is produced; the 120 units are reported as orphaned supply."
+  total_check:
+    numerator: 2800
+    denominator: 2870
+    value: 97.56
+    note: >-
+      Summed first, then divided. Note that averaging the three defined percentages would give
+      100.97% instead - a different and misleading answer, which is why the aggregation rule
+      above is explicit.
+  what_the_headline_hides:
+    - >-
+      97.56% overall looks comfortable, but DEMO-STANDARD is 150 units short in the nearest
+      period, and that is the one that will stop a build.
+    - >-
+      120 supportable units sit against zero agreed demand and appear nowhere in the headline.
+      They are still being paid for.
+  edge_cases:
+    - name: Zero agreed demand
+      scenario: DEMO-PREMIUM / 2026-Q1 has 120 supportable units and zero approved demand, because its only demand line is still Draft.
+      expected_behaviour: >-
+        Return no percentage. State that the denominator is zero, and report the 120 supportable
+        units as orphaned supply so they remain visible.
+      why_it_matters: >-
+        This is the case where the demand-side filter silently changes the supply-side answer. The
+        units did not disappear; the demand did.
+    - name: Coverage above 100%
+      scenario: DEMO-EDGE / 2026-Q3 can support 700 units against agreed demand of 620.
+      expected_behaviour: Report 112.9%, uncapped, and note the 80-unit surplus.
+    - name: Supportability not yet assessed
+      scenario: DEMO-EDGE / 2026-Q4 has a null supportable quantity.
+      expected_behaviour: >-
+        Exclude from both numerator and denominator, and report the exclusion with its reason.
+        Never read the null as zero, which would show a false shortage.
+    - name: Superseded supply row
+      scenario: S-1005 carries plan_version v2 within the v3 snapshot.
+      expected_behaviour: >-
+        Exclude. Including it would add 900 phantom supportable units and lift DEMO-STANDARD
+        coverage from 90% to 150%.
+    - name: Mismatched snapshots
+      scenario: Supply from 2026-03-14 compared against demand from 2026-02-14.
+      expected_behaviour: >-
+        Refuse. The demo requires both sides from the same snapshot and states which was used.
+
+evidence:
+  traceability_statement: Shows where the number claims to come from, so a reviewer can follow the chain.
+  quality_disclaimer: >-
+    A source reference demonstrates traceability only. It does not mean the data has been
+    profiled, reconciled or certified, and it does not mean the supportability assessment
+    behind the numerator is sound.
+  references:
+    - kind: Semantic layer measure
+      ref: plan/_runtime/registry.json -> measures['planning.coverage']
+    - kind: Object mapping
+      ref: plan/objects/demo-supply
+    - kind: Object mapping
+      ref: plan/objects/demo-demand
+    - kind: Concept
+      ref: plan/concepts/unconstrained-vs-constrained-demand
+    - kind: Concept
+      ref: plan/concepts/plan-of-record
+    - kind: Policy
+      ref: plan/policies/measure-evidence
+    - kind: Governed terms
+      ref: plan/terms/index.yaml -> Supply Coverage, Supportability, Gating Component, Planning Gap
+
+expected_versus_actual:
+  note: >-
+    Recorded honestly. Before this record existed the application refused to calculate this
+    measure at all, on the grounds that its meaning was not agreed. That refusal was correct,
+    and it is the behaviour this pilot is trying to make normal.
+  items:
+    - topic: Calculation
+      documented_expectation: 100 * SUM(supportable_quantity) / SUM(quantity), summed before dividing.
+      currently_executed: Implemented, against the invented supply and demand tables.
+      gap: false
+    - topic: Zero-demand handling
+      documented_expectation: Undefined, reported as such, with orphaned supply shown separately.
+      currently_executed: Implemented. No percentage is produced and the orphan is listed.
+      gap: false
+    - topic: Uncapped percentage
+      documented_expectation: Values above 100% reported, not clamped.
+      currently_executed: Implemented.
+      gap: false
+    - topic: Numerator composition
+      documented_expectation: >-
+        Supportable quantity should be decomposable into on-hand, scheduled receipts and
+        capacity, so a reviewer can see what kind of supply is being counted.
+      currently_executed: >-
+        A single assessed figure with no decomposition. A reviewer cannot tell whether the
+        number rests on stock in hand or on a purchase order that may slip.
+      gap: true
+    - topic: Denominator choice
+      documented_expectation: >-
+        Coverage against unconstrained demand should be available alongside coverage against the
+        agreed plan, since the gap between them is itself a finding.
+      currently_executed: Only coverage against the approved plan of record is calculated.
+      gap: true
+    - topic: Snapshot alignment
+      documented_expectation: Refuse if numerator and denominator come from different snapshots.
+      currently_executed: >-
+        Both sides are read from the same resolved snapshot by construction, so the mismatch
+        cannot currently arise. The guard itself is not implemented and would be needed the
+        moment the two tables load independently.
+      gap: true
+    - topic: Time fence
+      documented_expectation: >-
+        A shortfall inside the time fence is a materially different event from one in an open
+        period, and should be flagged differently.
+      currently_executed: Not implemented. All periods are treated alike.
+      gap: true
+
+open_questions:
+  - Which components of supply may be counted in the numerator, and who decides?
+  - Should coverage against unconstrained demand be published alongside coverage against the agreed plan?
+  - Should a shortfall inside the time fence raise an exception rather than simply report a lower percentage?
+  - Who arbitrates when the denominator owner and the numerator owner disagree about the definition?
+  - Should orphaned supply against zero demand have its own governed measure?

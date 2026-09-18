@@ -1,0 +1,69 @@
+type: Object
+id: plan/objects/demo-component
+title: Demo Component Requirement
+name: Demo Component Requirement
+domain: plan
+identifiers: [component_id, product_family, period]
+aliases: [component, part, bill of materials line, BOM line]
+description: >-
+  Illustrative component-level requirements produced by exploding the approved demand plan
+  through a bill of materials. This is the layer that explains a family-level shortfall: the
+  supply position says how much can be supported, and this table says which part is the reason.
+example_notice: >-
+  ILLUSTRATIVE EXAMPLE. Invented for public demonstration of the SCOPE workflow. No real part,
+  supplier, bill of materials, inventory position or lead time is described or implied.
+lifecycle: >-
+  Regenerated whenever the demand plan is re-approved or the bill of materials changes. In the
+  demo it shares the snapshot cadence of demand and supply so the three can be read together.
+source_mapping:
+  system: plan/systems/demo-supply-planning-engine
+  schema: demo
+  primary_table: demo_component_requirement
+  key_fields: [component_id, product_family, period]
+  snapshot_policy: >-
+    Read on the same snapshot as demand and supply. A component shortage calculated against a
+    newer demand snapshot than the supply position it is meant to explain will not reconcile,
+    and the discrepancy is invisible unless the snapshot is quoted.
+  columns: [component_id, component_name, product_family, period, gross_requirement, on_hand, scheduled_receipts, buffer_quantity, average_daily_usage, lead_time_days, supplier, plan_version, snapshot_date]
+  column_notes:
+    gross_requirement: >-
+      Total units of this part needed to build the approved plan, before any netting. Derived
+      from the demand quantity and the bill of materials ratio. The ratio itself is not carried
+      in this demo table, which is a recorded gap - a reviewer cannot re-derive the requirement
+      from demand without it.
+    on_hand: >-
+      Physical stock available now. Includes the buffer quantity rather than sitting alongside
+      it, which is a deliberate demo choice and is stated in the calculation rules. Netting a
+      requirement against stock that is meant to be untouched safety stock overstates coverage.
+    scheduled_receipts: >-
+      Supply already ordered and expected within the period, not yet received. Counted as
+      available. This is optimistic by construction - a promised date is a supplier's intention.
+    buffer_quantity: >-
+      The safety stock actually held for this part. Compared against a target elsewhere; the
+      target is a policy figure and is NOT carried in this table.
+    average_daily_usage: >-
+      Consumption rate used to convert a buffer quantity into days of supply. A single flat rate
+      in this demo, with no seasonality, which is a recorded simplification.
+    lead_time_days: >-
+      Replenishment lead time. Read beside days of supply - a buffer smaller than the lead time
+      it must cover is a warning, not protection.
+    supplier: Source of the part. Used to group execution performance, never aggregated as a measure.
+    plan_version: Iteration of the supply plan this explosion belongs to. Older versions are superseded.
+    snapshot_date: As-of date of the capture.
+  sample_rows: plan/_data/demo-components.json
+joins:
+  - object: plan/objects/demo-supply
+    on: [product_family, period, snapshot_date]
+    type: Many to one
+    why: >-
+      Several components roll up to one supply position. The join is what lets a reviewer move
+      from "this family is short" to "this part is why".
+  - object: plan/objects/demo-purchase-order
+    on: [component_id, supplier]
+    type: One to many
+    why: >-
+      Connects a planned shortage to the orders intended to close it, and to whether those
+      orders actually arrived.
+used_by:
+  - plan/metric-context/planning-component-shortage
+  - plan/metric-context/planning-buffer

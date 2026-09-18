@@ -1,0 +1,270 @@
+type: MetricContext
+id: plan/metric-context/execution-attainment
+domain: plan
+measure_key: execution.build.attainment
+name: Build Schedule Attainment
+status: Draft for review
+version: 0.1.0
+
+example_notice: >-
+  ILLUSTRATIVE EXAMPLE. This record documents an invented measure over an invented dataset,
+  created to demonstrate how business context and evidence are governed in SCOPE. It is not a
+  production definition and must not be reused as one.
+
+industry_definition:
+  note: >-
+    Described in general, widely used supply-chain planning language, written for this demo. It
+    is not a quotation from any standards body, certification syllabus or published dictionary,
+    and no organisation's house definition is reproduced here.
+  standard_usage: >-
+    In common supply-chain execution practice, build attainment compares what was built with what
+    the schedule planned to build for completed orders. It is a measure of adherence to the build
+    plan, not a measure of whether the plan itself was the right one.
+
+    The distinction matters. A plan quietly lowered to match a known shortage can attain 100%
+    while leaving demand unmet.
+  typical_cycle_position: >-
+    Calculated after build completion and reviewed in execution review, with misses traced back
+    to material, labour, equipment or scheduling causes.
+  what_practitioners_argue_about:
+    - Whether over-build should be capped at the planned quantity.
+    - Whether open orders should be counted as zero, estimated or excluded until complete.
+    - Whether cancelled orders are misses or deliberate removals from scope.
+    - Whether attainment should be measured against the original plan or the latest revised plan.
+  demo_position: >-
+    The demo is uncapped so over-build is visible. It scores completed orders only. Cancelled
+    orders are excluded entirely, and open orders are excluded rather than treated as zero.
+
+business_context:
+  plain_english: >-
+    How closely completed builds followed the build schedule.
+  what_it_measures: >-
+    Built quantity divided by planned quantity for completed build orders, expressed as a percent.
+  why_it_matters: >-
+    Attainment shows whether execution delivered the plan it was given. It helps separate a build
+    line miss from a plan quality problem.
+
+    The key insight is that attainment measures adherence to the plan, not whether the plan was
+    right. It must be read beside Planning Gap. A perfectly attained constrained plan may still
+    leave agreed demand uncovered.
+  unit: percent
+  grain: One value per product family, period, build site and snapshot, recomputed for any aggregate.
+  planning_context: >-
+    Used in execution review after the planned build period has closed, then traced back to the
+    constraints that shaped the schedule.
+
+inclusions:
+  - Completed build orders in the selected snapshot.
+  - Over-build quantities, reported uncapped.
+exclusions:
+  - In-progress build orders with null built quantity.
+  - Cancelled build orders, because they were deliberately removed from the schedule.
+  - Planned orders that have not yet reached completion status.
+
+interpretation:
+  read_it_as: "Of the completed schedule, what share was actually built?"
+  do_not_read_it_as:
+    - A demand service measure.
+    - Proof that over-build is good news.
+    - Evidence that the plan was unconstrained or sufficient.
+  common_misreadings:
+    - >-
+      Capping over-build at 100%. That hides the fact that extra builds consumed components
+      committed elsewhere.
+    - >-
+      Scoring open orders as zero. That turns timing into failure before the work has finished.
+    - >-
+      Treating a cancelled order as a miss. Cancellation is a scope decision and needs separate evidence.
+  read_alongside: >-
+    Planning Gap, Component Shortage and Supplier Delivery. DEMO-EDGE misses on B-2003 and B-2006
+    trace back to DEMO-PART-C; the miss belongs to the component constraint, not simply the build line.
+
+stewardship:
+  business_owner_role: Build Execution Lead (fictional demo role)
+  co_owner_role: Supply Planning Lead (fictional demo role)
+  data_steward_role: Execution Data Steward (fictional demo role)
+  technical_owner_role: Planning Semantic Layer Engineer (fictional demo role)
+  note: Fictional placeholder roles. No real person is named or implied.
+
+source_mapping:
+  disclaimer: An agreed demo contract over an invented table. Not a production mapping.
+  system: plan/systems/demo-execution-log
+  object: plan/objects/demo-build-order
+  primary_table: demo.build_order
+  measure_column: built_quantity
+  fields:
+    - name: built_quantity
+      role: Numerator column
+      description: Units actually built on a completed order.
+    - name: planned_quantity
+      role: Denominator column
+      description: Units planned on the build order schedule.
+    - name: order_status
+      role: Filter
+      description: Completed orders are scored; in-progress and cancelled orders are excluded.
+    - name: order_id
+      role: Trace key
+      description: Demo build order identifier used to inspect misses.
+    - name: product_family
+      role: Dimension
+      description: Demo product family built by the order.
+    - name: period
+      role: Dimension
+      description: Build period used for reporting.
+    - name: build_site
+      role: Dimension
+      description: Demo build site.
+    - name: snapshot_date
+      role: Snapshot key
+      description: Date of the execution extract.
+
+dimensions:
+  supported: [product_family, period, build_site, order_status]
+  not_supported:
+    - name: component
+      reason: Build orders do not carry component-level consumption in the demo table.
+    - name: supplier
+      reason: Supplier cause must be joined through component and purchase order evidence, not inferred from build rows.
+
+calculation_contract:
+  disclaimer: An agreed demo rule, not a production specification.
+  aggregate: ratio
+  expression: 100 * SUM(built_quantity) / SUM(planned_quantity)
+
+  numerator:
+    definition: SUM(built_quantity)
+    includes: Built quantities from completed orders only.
+    excludes: Null built quantities and cancelled orders.
+
+  denominator:
+    definition: SUM(planned_quantity)
+    includes: Planned quantities from completed orders only.
+    excludes: Planned quantities on open or cancelled orders.
+
+  completion_rule: >-
+    Only order_status = 'Completed' is scored. Open orders are excluded rather than treated as
+    zero, because their outcome is not final.
+
+  over_build_rule:
+    capped: false
+    rationale: >-
+      Over-build is visible by design. It may have consumed components committed elsewhere, so it
+      is not automatically good news.
+
+  cancellation_rule: >-
+    Cancelled orders are excluded entirely. They are not misses; they represent a deliberate
+    decision to remove work from the schedule.
+
+  scope_filters:
+    - order_status = 'Completed'
+    - snapshot_date = the selected snapshot
+
+  null_handling: Null built quantity is excluded unless the order is completed, in which case it is a data quality exception.
+  additivity:
+    within_snapshot: Built and planned quantities are additive; the percentage must be recomputed.
+    across_snapshot: Not additive.
+
+snapshot_context:
+  mode: LatestSnapshot
+  run_date_column: snapshot_date
+  rule: Resolve to the most recent snapshot unless an as-of date is supplied, and always state which was used.
+
+worked_example:
+  disclaimer: Entirely invented rows, shipped in plan/_data/demo-build-orders.json.
+  as_of_snapshot: 2026-03-14
+  expected_result:
+    - order_id: B-2001
+      product_family: DEMO-STANDARD
+      period: 2025-Q3
+      planned_quantity: 1200
+      built_quantity: 1180
+    - order_id: B-2002
+      product_family: DEMO-PREMIUM
+      period: 2025-Q3
+      planned_quantity: 660
+      built_quantity: 640
+    - order_id: B-2003
+      product_family: DEMO-EDGE
+      period: 2025-Q3
+      planned_quantity: 560
+      built_quantity: 410
+      note: Miss traces back to DEMO-PART-C.
+    - order_id: B-2004
+      product_family: DEMO-STANDARD
+      period: 2025-Q4
+      planned_quantity: 1280
+      built_quantity: 1300
+      note: Over-build is included uncapped.
+    - order_id: B-2005
+      product_family: DEMO-PREMIUM
+      period: 2025-Q4
+      planned_quantity: 690
+      built_quantity: 700
+      note: Over-build is included uncapped.
+    - order_id: B-2006
+      product_family: DEMO-EDGE
+      period: 2025-Q4
+      planned_quantity: 610
+      built_quantity: 480
+      note: Miss traces back to DEMO-PART-C.
+    - order_id: B-2007
+      result: excluded
+      note: In progress with null built quantity.
+    - order_id: B-2008
+      result: excluded
+      note: Cancelled.
+  total_check:
+    built_quantity: 4710
+    planned_quantity: 5000
+    value: 94.2
+    unit: percent
+    note: Completed orders only, with over-build included uncapped.
+  edge_cases:
+    - name: Over-build
+      scenario: B-2004 and B-2005 exceed planned quantity.
+      expected_behaviour: Include full built quantity and allow attainment above 100% where it occurs.
+    - name: Open order
+      scenario: B-2007 is in progress and built quantity is null.
+      expected_behaviour: Exclude until completed, rather than score as zero.
+    - name: Cancelled order
+      scenario: B-2008 is cancelled.
+      expected_behaviour: Exclude entirely because it was removed from scope.
+
+evidence:
+  traceability_statement: Shows where the attainment number claims to come from, so a reviewer can follow the chain.
+  quality_disclaimer: >-
+    A source reference demonstrates traceability only. It does not prove the schedule was right,
+    stable or feasible.
+  references:
+    - kind: Semantic layer measure
+      ref: plan/_runtime/registry.json -> measures['execution.build.attainment']
+    - kind: Object mapping
+      ref: plan/objects/demo-build-order
+    - kind: Object mapping
+      ref: plan/objects/demo-component
+    - kind: Governed terms
+      ref: plan/terms/index.yaml -> Build Attainment, Planning Gap, Component Shortage
+
+expected_versus_actual:
+  items:
+    - topic: Calculation
+      documented_expectation: 100 * SUM(built_quantity) / SUM(planned_quantity) over completed orders only.
+      currently_executed: Documented against the invented build-order table.
+      gap: false
+    - topic: Over-build visibility
+      documented_expectation: Uncapped so over-build remains visible.
+      currently_executed: B-2004 and B-2005 are included at actual built quantity.
+      gap: false
+    - topic: Cause attribution
+      documented_expectation: Build misses should trace to component constraints where evidence exists.
+      currently_executed: The record documents the DEMO-PART-C trace, but no formal join path is scored.
+      gap: true
+    - topic: Original schedule comparison
+      documented_expectation: Attainment should distinguish original plan from later constrained revisions.
+      currently_executed: The demo table holds one planned quantity per order.
+      gap: true
+
+open_questions:
+  - Should attainment be reported against original schedule and latest schedule as two measures?
+  - Should over-build trigger a component allocation review?
+  - What evidence is required before a build miss is attributed to material rather than execution?

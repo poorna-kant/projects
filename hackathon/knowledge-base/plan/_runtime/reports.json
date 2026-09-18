@@ -1,4 +1,6 @@
 {
+  "exampleNotice": "ILLUSTRATIVE EXAMPLE. Invented reports at example.com placeholders. None of these exist, and no internal report or link is referenced.",
+  "note": "Report signposts point a person at the approved place to answer a question, and just as importantly name the retired places they should stop using.",
   "reports": [
     {
       "name": "Demo Planning Report",
@@ -6,6 +8,49 @@
       "url": "https://example.com/demo-planning-report",
       "coverageEntities": ["Demand"],
       "coverageQuestions": ["period trend", "plan comparison", "coverage summary"]
+    },
+    {
+      "name": "Demo Demand Review Pack",
+      "active": true,
+      "url": "https://example.com/demo-demand-review-pack",
+      "coverageEntities": ["Demand"],
+      "coverageQuestions": [
+        "what changed since the last cycle",
+        "which adjustments were proposed and why",
+        "what is still in review"
+      ]
+    },
+    {
+      "name": "Demo Baseline vs Consensus",
+      "active": true,
+      "url": "https://example.com/demo-baseline-vs-consensus",
+      "coverageEntities": ["Demand"],
+      "coverageQuestions": [
+        "how much of the plan is judgement",
+        "where did the review move the baseline",
+        "which lines are judgement-dominated"
+      ]
+    },
+    {
+      "name": "Demo Plan Churn by Snapshot",
+      "active": true,
+      "url": "https://example.com/demo-plan-churn",
+      "coverageEntities": ["Demand"],
+      "coverageQuestions": [
+        "how much did the plan move between snapshots",
+        "is a frozen period being changed",
+        "which families are least stable"
+      ]
+    },
+    {
+      "name": "Demo Demand Tracker (retired)",
+      "active": false,
+      "url": "https://example.com/demo-demand-tracker-retired",
+      "coverageEntities": ["Demand"],
+      "coverageQuestions": [
+        "legacy period totals",
+        "superseded plan view"
+      ]
     }
   ]
 }

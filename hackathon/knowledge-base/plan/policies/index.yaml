@@ -1,5 +1,15 @@
 type: PolicyIndex
 id: plan/policies
 domain: plan
+note: >-
+  ILLUSTRATIVE EXAMPLE. Demo governance rules spanning demand planning, supply planning and execution. These are agreed
+  rules for this public example, not production policy.
 policies:
   - plan/policies/data-freshness
+  - plan/policies/demand-plan-approval
+  - plan/policies/plan-version-immutability
+  - plan/policies/planning-horizon-and-time-fence
+  - plan/policies/measure-evidence
+  - plan/policies/buffer-target-ownership
+  - plan/policies/supplier-delivery-scoring
+  - plan/policies/build-order-lifecycle

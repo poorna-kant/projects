@@ -1,0 +1,25 @@
+{
+  "exampleNotice": "ILLUSTRATIVE EXAMPLE. Every row below is invented for public demonstration of the SCOPE workflow. These are not extracts from any real system and describe no real organisation, site, build or order.",
+  "object": "plan/objects/demo-build-order",
+  "table": "demo.build_order",
+  "grain": "One row per build order, per snapshot.",
+  "note": "Execution-stage facts. Unlike the planning tables there is no plan_version filter here, because a build order records what was actually done rather than what is currently intended. A superseded plan can be replaced; a completed build cannot.",
+  "planning_versus_execution": "Planning rows answer 'what do we intend?'. Execution rows answer 'what happened?'. They are filtered differently on purpose, and the demo keeps them in separate tables so the distinction cannot be lost.",
+  "columns": ["order_id", "product_family", "period", "planned_quantity", "built_quantity", "build_site", "order_status", "completed_on", "snapshot_date"],
+  "rows": [
+    { "order_id": "B-2001", "product_family": "DEMO-STANDARD", "period": "2025-Q3", "planned_quantity": 1200, "built_quantity": 1180, "build_site": "DEMO-SITE-NORTH", "order_status": "Completed", "completed_on": "2025-09-28", "snapshot_date": "2026-03-14" },
+    { "order_id": "B-2002", "product_family": "DEMO-PREMIUM",  "period": "2025-Q3", "planned_quantity": 660,  "built_quantity": 640,  "build_site": "DEMO-SITE-NORTH", "order_status": "Completed", "completed_on": "2025-09-30", "snapshot_date": "2026-03-14" },
+    { "order_id": "B-2003", "product_family": "DEMO-EDGE",     "period": "2025-Q3", "planned_quantity": 560,  "built_quantity": 410,  "build_site": "DEMO-SITE-SOUTH", "order_status": "Completed", "completed_on": "2025-09-30", "snapshot_date": "2026-03-14" },
+    { "order_id": "B-2004", "product_family": "DEMO-STANDARD", "period": "2025-Q4", "planned_quantity": 1280, "built_quantity": 1300, "build_site": "DEMO-SITE-NORTH", "order_status": "Completed", "completed_on": "2025-12-22", "snapshot_date": "2026-03-14" },
+    { "order_id": "B-2005", "product_family": "DEMO-PREMIUM",  "period": "2025-Q4", "planned_quantity": 690,  "built_quantity": 700,  "build_site": "DEMO-SITE-NORTH", "order_status": "Completed", "completed_on": "2025-12-20", "snapshot_date": "2026-03-14" },
+    { "order_id": "B-2006", "product_family": "DEMO-EDGE",     "period": "2025-Q4", "planned_quantity": 610,  "built_quantity": 480,  "build_site": "DEMO-SITE-SOUTH", "order_status": "Completed", "completed_on": "2025-12-29", "snapshot_date": "2026-03-14" },
+    { "order_id": "B-2007", "product_family": "DEMO-EDGE",     "period": "2026-Q1", "planned_quantity": 120,  "built_quantity": null, "build_site": "DEMO-SITE-SOUTH", "order_status": "In progress", "completed_on": "", "snapshot_date": "2026-03-14" },
+    { "order_id": "B-2008", "product_family": "DEMO-PREMIUM",  "period": "2025-Q4", "planned_quantity": 80,   "built_quantity": 0,    "build_site": "DEMO-SITE-NORTH", "order_status": "Cancelled", "completed_on": "", "snapshot_date": "2026-03-14" }
+  ],
+  "rowNotes": {
+    "B-2003": "Built 410 against a plan of 560. The shortfall traces back to DEMO-PART-C, the accelerator card with a 126-day lead time and no buffer. This is the chain the demo exists to show: a component constraint becomes a supply shortfall becomes a missed build.",
+    "B-2004": "Built 1300 against a plan of 1280. Over-build. Demonstrates that attainment above 100% is possible and is not automatically good news - it consumed components that were planned for something else.",
+    "B-2007": "Still in progress with a null built quantity. Demonstrates that an open order is excluded from attainment rather than counted as a zero, which would understate performance.",
+    "B-2008": "Cancelled with zero built. Demonstrates that a cancelled order is excluded entirely. Counting it as a miss would punish the organisation for a decision it took deliberately."
+  }
+}

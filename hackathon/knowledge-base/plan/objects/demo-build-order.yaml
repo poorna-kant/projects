@@ -1,0 +1,50 @@
+type: Object
+id: plan/objects/demo-build-order
+title: Demo Build Order
+name: Demo Build Order
+domain: plan
+identifiers: [order_id]
+aliases: [build order, work order, production order]
+description: >-
+  Illustrative build orders recording what was planned to be built and what was actually built.
+  This is where the demo crosses from planning into execution, and the table is deliberately
+  shaped differently to make that crossing visible.
+example_notice: >-
+  ILLUSTRATIVE EXAMPLE. Invented for public demonstration of the SCOPE workflow. No real build
+  order, site, schedule or production outcome is described or implied.
+lifecycle: >-
+  A row is created when a build is released and updated when it completes or is cancelled. Rows
+  are never superseded by a newer plan version.
+source_mapping:
+  system: plan/systems/demo-execution-system
+  schema: demo
+  primary_table: demo_build_order
+  key_fields: [order_id]
+  snapshot_policy: >-
+    Execution tables carry NO plan_version filter, and this is deliberate. A plan is a statement
+    of intent and can be replaced; a completed build is a fact and cannot. Filtering execution by
+    the current plan version would quietly delete history that a later plan disowned - which is
+    precisely the history worth keeping.
+  columns: [order_id, product_family, period, planned_quantity, built_quantity, build_site, order_status, completed_on, snapshot_date]
+  column_notes:
+    planned_quantity: >-
+      Units the build order asked for. Note this is the build plan, which may already have been
+      lowered to match a known shortage - so full attainment does not mean demand was met.
+    built_quantity: Units actually built. Zero for a cancelled order, which is an outcome rather than a gap in the data.
+    build_site: Where the build was executed. A supported breakdown dimension.
+    order_status: >-
+      Completed, Cancelled or Open. Open orders are excluded from attainment because they have
+      not yet had the chance to succeed or fail; including them would understate performance
+      simply because the period is not finished.
+    completed_on: Actual completion date. Null while open or cancelled.
+    snapshot_date: As-of date of the capture.
+  sample_rows: plan/_data/demo-build-orders.json
+joins:
+  - object: plan/objects/demo-demand
+    on: [product_family, period]
+    type: Many to one
+    why: >-
+      Lets attainment be read beside the planning gap, which is the only way to tell a plan that
+      was delivered from a plan that was quietly reduced until it could be.
+used_by:
+  - plan/metric-context/execution-attainment

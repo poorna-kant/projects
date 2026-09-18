@@ -1,0 +1,393 @@
+type: MetricContext
+id: plan/metric-context/planning-demand
+domain: plan
+measure_key: planning.demand
+metric_ref: plan/metrics/planned-demand
+name: Planned Demand
+status: Draft for review
+version: 0.1.0
+
+example_notice: >-
+  ILLUSTRATIVE EXAMPLE. This record documents an invented measure over an invented dataset,
+  created to demonstrate how business context and evidence are governed in SCOPE. The
+  source fields, systems, owner roles, rules and numbers below are fictional. They are not
+  a production definition and must not be reused as one.
+
+# ---------------------------------------------------------------------------
+# 1. Business context - what a person needs to know before using this number
+# ---------------------------------------------------------------------------
+industry_definition:
+  note: >-
+    Described in general, widely used supply-chain planning language, written for this demo. It
+    is not a quotation from any standards body, certification syllabus or published dictionary,
+    and no organisation's house definition is reproduced here.
+  standard_usage: >-
+    In common supply-chain practice, planned demand - often called the demand plan, the consensus
+    forecast, or simply the one number - is the quantity of product an organisation has agreed it
+    expects to sell or ship in a future period, stated at an agreed level of product and time
+    aggregation, and accepted through a formal review rather than produced by any single function.
+
+    It is conventionally an unconstrained statement of intent. It describes what the business
+    wants to fulfil before any check on whether materials, capacity or lead times allow it. The
+    feasible version of the same number is produced downstream by supply planning and is a
+    different measure with a different owner.
+
+    Its defining characteristic is agreement rather than accuracy. A demand plan carries authority
+    because a cross-functional group accepted it and committed to act on it, not because it is the
+    most statistically sound number available at that moment.
+  typical_cycle_position: >-
+    Produced in the demand review step of a sales and operations planning cycle, after a
+    statistical baseline has been generated and commercial judgement applied to it, and before
+    supply review converts it into a feasible plan.
+  what_practitioners_argue_about:
+    - >-
+      Whether the plan is stated in units, in revenue, or in both. Converting between them
+      embeds a price assumption that is rarely versioned with the plan.
+    - >-
+      Whether it includes intercompany, sample and internal demand. Different functions routinely
+      assume different answers to this and reconcile only at year end.
+    - Whether it represents orders expected, shipments expected, or consumption expected. These diverge whenever lead times are long.
+  demo_position: >-
+    The demo fixes one answer for each of these and writes it down. The value is not in the
+    particular answers chosen; it is that an unwritten answer is how two teams report different
+    demand for the same quarter and each believe they are right.
+
+business_context:
+  plain_english: >-
+    How much we have agreed to plan for - the demand number the business has signed up to.
+  what_it_measures: >-
+    The quantity of product a planning organisation has agreed it intends to fulfil in a
+    given planning period, after the demand review has concluded and the plan has been
+    accepted as the plan of record.
+  why_it_matters: >-
+    Planned Demand is the anchor input to every downstream planning step. Supply planning
+    explodes it into components, network planning converts it into site-level need, buffer
+    policy is sized against its variability, and execution builds against it. If this number
+    is misread, every downstream number inherits the error. It is also the number most often
+    quoted outside planning, which makes a shared, stated definition more valuable than a
+    more precise but undocumented one.
+  unit: units
+  unit_note: >-
+    A count of sellable/buildable units at product-family grain. It is not currency, not
+    weight, and not a component count. Converting it to component quantities requires a bill
+    of materials and is a different measure.
+  grain: One value per product family, per planning period, per plan snapshot.
+  planning_context: >-
+    In the standard sales & operations planning cycle this measure represents the output of
+    the demand review step: a statistical baseline adjusted by commercial judgement, then
+    reconciled into a single consensus figure. It is an unconstrained intent - it states what
+    the business wants, before supply feasibility is applied. The constrained answer lives in
+    supply planning, not here.
+  cycle: >-
+    The demo dataset assumes a monthly consensus cycle with a daily snapshot. The plan is
+    re-agreed monthly; the snapshot simply captures what the plan looked like on a given day.
+
+inclusions:
+  - Approved consensus demand lines at product-family grain.
+  - Demand for periods in the current and future planning horizon.
+  - Lines carried forward unchanged from the previous cycle.
+exclusions:
+  - Draft or in-review demand that has not completed the demand review.
+  - Superseded lines from an earlier plan version of the same period.
+  - Supply-constrained or allocated quantities - those are supply planning outputs.
+  - Actual shipments, bookings, orders or consumption. This is plan, not actual.
+  - Component-level or site-level quantities derived from this number downstream.
+
+interpretation:
+  read_it_as: >-
+    "As of this snapshot, the agreed plan for this product family in this period is N units."
+  do_not_read_it_as:
+    - A forecast of what will actually ship.
+    - A commitment that supply exists to meet it.
+    - A comparable figure across snapshots without stating which snapshot each came from.
+  common_misreadings:
+    - >-
+      Comparing this period's Planned Demand to last period's actuals and calling the gap
+      "forecast error". Plan and actual are different measures on different cycles.
+    - >-
+      Summing across periods to get an annual number without confirming that every period in
+      the range is populated in the same snapshot. A missing period reads as zero, not as
+      unknown.
+    - >-
+      Assuming a change between two days means the business changed its mind. It may simply
+      be a later snapshot picking up a correction.
+
+# ---------------------------------------------------------------------------
+# 2. Stewardship - fictional roles only, never individuals
+# ---------------------------------------------------------------------------
+stewardship:
+  business_owner_role: Demand Planning Lead (fictional demo role)
+  data_steward_role: Planning Data Steward (fictional demo role)
+  technical_owner_role: Planning Semantic Layer Engineer (fictional demo role)
+  review_cadence: Reviewed each planning cycle in the demo narrative.
+  change_process: >-
+    Corrections are raised as a proposal, reviewed by the data steward role, and published
+    as a new approved version. Nothing in this record is edited in place without review.
+  note: >-
+    Roles are illustrative placeholders for the demo workflow. No real person is named,
+    implied, or accountable for this record.
+
+# ---------------------------------------------------------------------------
+# 3. Illustrative source mapping - agreed demo rules
+# ---------------------------------------------------------------------------
+source_mapping:
+  disclaimer: >-
+    The following mapping is an agreed demo contract for this public example. It describes an
+    invented table in an invented system. It is not a production mapping.
+  system: plan/systems/demo-platform
+  object: plan/objects/demo-demand
+  schema: demo
+  primary_table: demo.demand
+  key_fields: [demand_id]
+  fields:
+    - name: demand_id
+      role: Row identifier
+      present_in_demo_object: true
+      description: Unique key of a illustrative demand line.
+    - name: product_family
+      role: Dimension
+      present_in_demo_object: true
+      description: Illustrative product grouping. Demo values are DEMO-STANDARD, DEMO-PREMIUM, DEMO-EDGE.
+    - name: period
+      role: Dimension and date column
+      present_in_demo_object: true
+      description: Planning period the quantity belongs to. Demo values are 2026-Q1, 2026-Q2, 2026-Q3.
+    - name: quantity
+      role: Measure column
+      present_in_demo_object: true
+      description: Planned units for the product family and period on this line.
+    - name: plan_version
+      role: Filter (proposed for the demo contract)
+      present_in_demo_object: false
+      description: >-
+        Identifies which iteration of the plan a line belongs to. Required to exclude
+        superseded lines. Documented here as a demo rule; the demo object mapping does not
+        currently declare this field.
+    - name: demand_status
+      role: Filter (proposed for the demo contract)
+      present_in_demo_object: false
+      description: >-
+        Approval state of the line. Only Approved lines are in scope. Documented here as a
+        demo rule; the demo object mapping does not currently declare this field.
+    - name: snapshot_date
+      role: Snapshot key (proposed for the demo contract)
+      present_in_demo_object: false
+      description: >-
+        The as-of date of the plan capture. The semantic layer already references this field
+        as the snapshot run date column, but the demo object mapping does not declare it.
+        This is a recorded gap, not an assumption that it exists.
+
+dimensions:
+  supported:
+    - name: product_family
+      description: Slice or group by illustrative product family.
+    - name: period
+      description: Slice or group by planning period.
+  not_supported:
+    - name: site / location
+      reason: The demo dataset holds no location field. Site-level demand is a separate measure.
+    - name: customer / channel
+      reason: Not present in the demo dataset and out of scope for this pilot.
+    - name: component / part
+      reason: Requires a bill-of-materials explosion, which is a supply planning concern.
+
+# ---------------------------------------------------------------------------
+# 4. Calculation contract - agreed demo rules
+# ---------------------------------------------------------------------------
+calculation_contract:
+  disclaimer: These are agreed rules for the demo. They are not a production specification.
+  aggregate: sum
+  expression: SUM(quantity)
+  scope_filters:
+    - demand_status = 'Approved'
+    - plan_version = the latest version present in the selected snapshot
+    - period within the requested planning horizon
+  date_column: period
+  grouping: Group by any subset of [product_family, period]; ungrouped returns the total.
+  rounding: Whole units. No rounding is applied because the source is already integral.
+  null_handling: >-
+    A null quantity is treated as an error condition and excluded from the sum, and its
+    exclusion is reported. It is not silently coerced to zero.
+  empty_result_handling: >-
+    A product family and period combination with no qualifying rows returns 0 with an
+    explicit "no rows matched" note. Zero and unknown are not the same answer and the demo
+    should not present them identically.
+  additivity:
+    across_product_family: Additive. Families can be summed.
+    across_period: Additive, but only within one snapshot.
+    across_snapshot: >-
+      NOT additive. Two snapshots are two views of the same plan. Summing them double counts.
+
+snapshot_context:
+  mode: LatestSnapshot
+  run_date_column: snapshot_date
+  rule: >-
+    Unless an as-of date is supplied, resolve to the most recent snapshot available, and
+    always state which snapshot was used alongside the number.
+  why_it_matters: >-
+    The same product family and period will legitimately return different values on different
+    snapshots. A number without its snapshot is not reproducible, and reproducibility is the
+    point of this pilot.
+  recorded_gap: >-
+    The semantic layer declares snapshot_date as the run date column, but the demo object
+    mapping does not list it among its columns. The snapshot rule is therefore documented but
+    not evidenced in the demo dataset.
+
+# ---------------------------------------------------------------------------
+# 5. Worked example - entirely invented data
+# ---------------------------------------------------------------------------
+worked_example:
+  disclaimer: >-
+    Every row below is invented for illustration. These are not sample extracts from any
+    real system.
+  as_of_snapshot: 2026-03-14
+  executable: >-
+    These rows are shipped as illustrative fact data in plan/_data/demo-demand.json, so the
+    application now computes this example rather than only describing it. The numbers below
+    and the numbers the app returns are the same numbers.
+  input_rows:
+    - {demand_id: D-1001, product_family: DEMO-STANDARD, period: 2026-Q1, quantity: 1200, plan_version: v3, demand_status: Approved}
+    - {demand_id: D-1002, product_family: DEMO-STANDARD, period: 2026-Q1, quantity: 300,  plan_version: v3, demand_status: Approved}
+    - {demand_id: D-1003, product_family: DEMO-STANDARD, period: 2026-Q1, quantity: 950,  plan_version: v2, demand_status: Approved}
+    - {demand_id: D-1004, product_family: DEMO-PREMIUM,  period: 2026-Q1, quantity: 400,  plan_version: v3, demand_status: Draft}
+    - {demand_id: D-1005, product_family: DEMO-PREMIUM,  period: 2026-Q2, quantity: 750,  plan_version: v3, demand_status: Approved}
+    - {demand_id: D-1006, product_family: DEMO-EDGE,     period: 2026-Q3, quantity: 620,  plan_version: v3, demand_status: Approved}
+    - {demand_id: D-1007, product_family: DEMO-EDGE,     period: 2026-Q3, quantity: null, plan_version: v3, demand_status: Approved}
+  walkthrough:
+    - Filter to demand_status = 'Approved'. D-1004 drops out because it is still Draft.
+    - Filter to the latest plan_version in the snapshot, v3. D-1003 drops out as superseded.
+    - Drop D-1007 because quantity is null, and report that exclusion rather than reading it as zero.
+    - Group the remaining rows by product_family and period and sum quantity.
+  expected_result:
+    - {product_family: DEMO-STANDARD, period: 2026-Q1, planned_demand: 1500, note: 1200 + 300}
+    - {product_family: DEMO-PREMIUM,  period: 2026-Q1, planned_demand: 0,    note: "No approved v3 rows. Zero with a no-rows-matched note, not null."}
+    - {product_family: DEMO-PREMIUM,  period: 2026-Q2, planned_demand: 750,  note: Single qualifying row}
+    - {product_family: DEMO-EDGE,     period: 2026-Q3, planned_demand: 620,  note: "620 only. The null row is excluded and reported."}
+  total_check:
+    value: 2870
+    note: 1500 + 0 + 750 + 620 across the whole snapshot.
+
+  edge_cases:
+    - name: Superseded plan version double count
+      scenario: >-
+        DEMO-STANDARD / 2026-Q1 carries an older v2 line of 950 units alongside the current
+        v3 lines.
+      wrong_answer: 2450
+      wrong_answer_cause: Summing every approved row without applying the latest-plan-version filter.
+      correct_answer: 1500
+      why_it_matters: >-
+        This is the most likely way the number quietly inflates. The filter is the definition,
+        not an implementation detail.
+    - name: Zero versus unknown
+      scenario: DEMO-PREMIUM / 2026-Q1 has no qualifying rows after filtering.
+      expected_behaviour: >-
+        Return 0 and state that no rows matched. Do not return null, and do not omit the
+        combination from the result, because a missing row silently becomes zero when a user
+        sums a range.
+    - name: Cross-snapshot comparison
+      scenario: >-
+        A user compares DEMO-STANDARD / 2026-Q1 on snapshot 2026-03-14 against snapshot
+        2026-02-14 and sees 1500 versus 1350.
+      expected_behaviour: >-
+        Present both numbers with their snapshot dates. The difference is a plan revision,
+        not an error, and it must never be summed to 2850.
+      demonstrable: >-
+        Both snapshots ship in the dataset. Switch the as-of selector in the evidence panel
+        to see the number legitimately change.
+    - name: Null quantity
+      scenario: DEMO-EDGE / 2026-Q3 carries an approved current-version row with a null quantity.
+      expected_behaviour: >-
+        Exclude the row and report the exclusion with its reason. Returning 620 silently
+        would hide the fact that part of the plan is unreadable.
+
+# ---------------------------------------------------------------------------
+# 6. Evidence and traceability
+# ---------------------------------------------------------------------------
+evidence:
+  traceability_statement: >-
+    The references below exist to show where a number claims to come from, so a reviewer can
+    follow the chain from a reported figure back to a stated definition and a stated source.
+  quality_disclaimer: >-
+    A source reference demonstrates traceability only. It does NOT mean the underlying data
+    has been profiled, reconciled, certified, or quality-checked. No data quality assertion
+    is made anywhere in this record.
+  references:
+    - kind: Semantic layer measure
+      ref: plan/_runtime/registry.json -> measures['planning.demand']
+    - kind: Object mapping
+      ref: plan/objects/demo-demand
+    - kind: Generated metric entry
+      ref: plan/metrics/index.yaml -> plan/metrics/planned-demand (DEMO-001)
+    - kind: Governed terms
+      ref: plan/terms/index.yaml -> Demand Plan, Plan Version
+    - kind: Freshness policy
+      ref: plan/policies/data-freshness
+  freshness_note: >-
+    The demo freshness service is a stub. It always reports a reference outcome and does not
+    connect to any live source. Freshness in this demo is illustrative only.
+
+# ---------------------------------------------------------------------------
+# 7. Expected behaviour versus what the application currently executes
+# ---------------------------------------------------------------------------
+expected_versus_actual:
+  purpose: >-
+    Recorded so the demo never implies it already does what its descriptions say. Each line
+    separates the agreed contract above from the application's present behaviour.
+  items:
+    - topic: Calculation
+      documented_expectation: SUM(quantity) with approval, plan-version and horizon filters applied.
+      currently_executed: >-
+        Implemented. GET /api/measure/planning.demand/compute applies this contract over the
+        demo rows in plan/_data/demo-demand.json and returns the answer together with
+        the rows used, the rows dropped, and the reason for each exclusion.
+      gap: false
+    - topic: Approval and plan-version filters
+      documented_expectation: demand_status and plan_version constrain the result set.
+      currently_executed: >-
+        Implemented. Both fields now exist in the demo object mapping and in the fact rows,
+        and the dataset deliberately contains one Draft row and one superseded row so each
+        filter visibly changes the answer.
+      gap: false
+    - topic: Snapshot resolution
+      documented_expectation: Resolve to the latest snapshot and report which one was used.
+      currently_executed: >-
+        Implemented. snapshot_date is declared on the object and present in the rows. The
+        dataset holds two snapshots, the latest is used by default, and the snapshot in force
+        is reported alongside every number.
+      gap: false
+    - topic: Unit
+      documented_expectation: The unit "units" is part of the governed measure definition.
+      currently_executed: >-
+        The unit is only present in the generated metrics index and in this context record,
+        not in the semantic layer measure, so an API consumer reading the measure alone still
+        gets no unit.
+      gap: true
+    - topic: Metric catalogue entry
+      documented_expectation: Planned Demand appears in the metric catalogue.
+      currently_executed: Present as DEMO-001.
+      gap: false
+    - topic: Regeneration safety
+      documented_expectation: Authored context survives regeneration of the metrics index.
+      currently_executed: >-
+        Satisfied by placing this record in plan/metric-context/, which the metric generator
+        does not write. The generator overwrites plan/metrics/index.yaml wholesale, so
+        authored context must never live there.
+      gap: false
+    - topic: Stewardship workflow
+      documented_expectation: >-
+        A correction to this record is proposed, reviewed with a field-level diff, and
+        published as an approved version.
+      currently_executed: >-
+        Catalog records flow through the proposal and review queue. Semantic-layer measure
+        edits bypass that queue and write directly to the store, so measure changes get no
+        field-level diff.
+      gap: true
+
+open_questions:
+  - Should the unit move into the semantic layer measure so it travels with the definition?
+  - >-
+    Should measure edits flow through the same proposal and review queue as catalog records,
+    so a correction to a definition gets a field-level diff like every other governed change?
+  - >-
+    Should the evidence trail be published as an immutable artifact alongside the number, so a
+    figure quoted in a meeting can be reproduced later exactly as it was computed?

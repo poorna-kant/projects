@@ -1,0 +1,55 @@
+type: Object
+id: plan/objects/demo-purchase-order
+title: Demo Purchase Order Line
+name: Demo Purchase Order Line
+domain: plan
+identifiers: [po_id]
+aliases: [purchase order, PO, PO line, supply order]
+description: >-
+  Illustrative purchase order lines recording what was ordered from a supplier, what was
+  promised, and what actually arrived. One line carries both a quantity and a date, which is why
+  supplier performance needs more than one measure and why those measures disagree.
+example_notice: >-
+  ILLUSTRATIVE EXAMPLE. Invented for public demonstration of the SCOPE workflow. No real
+  supplier, contract, commercial term, price, promise or delivery record is described or implied.
+lifecycle: >-
+  Created when the order is raised, updated on receipt. Received and Cancelled lines are final;
+  Open lines are still in flight.
+source_mapping:
+  system: plan/systems/demo-execution-system
+  schema: demo
+  primary_table: demo_purchase_order_line
+  key_fields: [po_id]
+  snapshot_policy: >-
+    As with build orders, no plan_version filter applies. A receipt happened regardless of which
+    plan version was current at the time.
+  columns: [po_id, supplier, component_id, product_family, period, ordered_quantity, received_quantity, promised_date, actual_receipt_date, po_status, snapshot_date]
+  column_notes:
+    ordered_quantity: Units committed to on the order line. The denominator of the fulfilment rate.
+    received_quantity: >-
+      Units actually received. May be less than ordered on a partial delivery, and a partial
+      delivery that arrived punctually still counts as on time - which is exactly why on-time
+      delivery and on-time in-full separate.
+    promised_date: >-
+      The date the supplier committed to. Measured against, in this demo, rather than the
+      originally requested date. This is a stated demo rule: promised dates can be renegotiated,
+      so scoring against them is kinder than scoring against the original request. Which of the
+      two is used changes the answer materially and is often left unstated.
+    actual_receipt_date: >-
+      When the goods were received. Null while open. The difference from the promised date is
+      the receipt lag, reported signed so that early arrivals stay visible.
+    po_status: >-
+      Received, Open or Cancelled. Only Received lines are scored - an open line has not yet had
+      the opportunity to be late, and a cancelled line was never going to arrive.
+    supplier: Grouping dimension for delivery performance.
+    snapshot_date: As-of date of the capture.
+  sample_rows: plan/_data/demo-purchase-orders.json
+joins:
+  - object: plan/objects/demo-component
+    on: [component_id]
+    type: Many to one
+    why: >-
+      Connects a component shortage to the orders meant to close it, so a reviewer can see
+      whether a shortage is unaddressed or merely not yet arrived.
+used_by:
+  - plan/metric-context/execution-delivery

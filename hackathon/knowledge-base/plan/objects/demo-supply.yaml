@@ -1,0 +1,46 @@
+type: Object
+id: plan/objects/demo-supply
+title: Demo Supply Position
+name: Demo Supply Position
+domain: plan
+identifiers: [supply_id]
+aliases: [supply, supportability, supply position]
+description: >-
+  Illustrative supply positions used to demonstrate a governed cross-function source mapping.
+  Pairs with plan/objects/demo-demand so Supply Coverage can be calculated as a ratio between
+  two tables owned by two different planning functions.
+example_notice: >-
+  ILLUSTRATIVE EXAMPLE. Invented for public demonstration of the SCOPE workflow. No real
+  supplier, part, capacity position or supply plan is described or implied.
+lifecycle: Refreshed daily in the demo dataset, on the same snapshot cadence as demand.
+source_mapping:
+  system: plan/systems/demo-planning-workbench
+  schema: demo
+  primary_table: demo_supply
+  key_fields: [supply_id]
+  snapshot_policy: >-
+    Use the latest approved demo snapshot, and the same snapshot as demand. Comparing supply
+    from one snapshot against demand from another produces a coverage figure that is wrong in
+    a way nobody can see.
+  columns: [supply_id, product_family, period, supportable_quantity, gating_component, constraint_type, plan_version, supply_status, snapshot_date]
+  column_notes:
+    supportable_quantity: >-
+      Units the supply plan can support after components, capacity and lead time are considered.
+      A single assessed figure in this demo. It is NOT decomposed into on-hand, scheduled
+      receipts and capacity, which is a recorded gap - a reviewer cannot currently tell whether
+      the number rests on stock in hand or on a purchase order that may slip.
+    gating_component: The part that limits the position. Qualitative evidence, never aggregated.
+    constraint_type: Why the position is limited - component lead time, supplier capacity, or unconstrained.
+    plan_version: Iteration of the supply plan. Older versions are superseded, not additional supply.
+    supply_status: Approval state. Only Approved positions are in scope for Supply Coverage.
+    snapshot_date: As-of date of the supply capture. Must match the demand snapshot.
+  sample_rows: plan/_data/demo-supply.json
+joins:
+  - object: plan/objects/demo-demand
+    on: [product_family, period, snapshot_date]
+    type: Full outer
+    why: >-
+      An inner join would silently drop the two cases Supply Coverage most needs to show -
+      demand with no supply, and supply with no demand.
+used_by:
+  - plan/metric-context/planning-coverage

@@ -1,0 +1,278 @@
+type: MetricContext
+id: plan/metric-context/planning-buffer
+domain: plan
+measure_key: planning.buffer.days_of_supply
+also_covers: [planning.buffer.coverage]
+name: 'Buffer: Days of Supply and Buffer Coverage'
+status: Draft for review
+version: 0.1.0
+
+example_notice: >-
+  ILLUSTRATIVE EXAMPLE. This record documents invented measures over an invented dataset,
+  created to demonstrate how business context and evidence are governed in SCOPE. It is not a
+  production definition and must not be reused as one.
+
+industry_definition:
+  note: >-
+    Described in general, widely used supply-chain planning language, written for this demo. It
+    is not a quotation from any standards body, certification syllabus or published dictionary,
+    and no organisation's house definition is reproduced here.
+  standard_usage: >-
+    In common supply-chain practice, buffer measures show how much protection exists between
+    normal consumption and a supply interruption. Days of supply translates units into time by
+    dividing buffer quantity by average daily usage. Buffer coverage asks how many parts meet a
+    stated target.
+
+    These measures are useful because units alone do not show exposure. A buffer of 120 units may
+    be thin for a fast-moving part and excessive for a slow-moving part.
+  typical_cycle_position: >-
+    Reviewed during material planning and supply review, especially where long lead times or
+    unstable demand make recovery slow.
+  what_practitioners_argue_about:
+    - Whether the target should be flat, lead-time based or risk based.
+    - Whether average usage should use history, forecast demand or constrained build plans.
+    - Whether parts with zero usage should be excluded, called dead stock or shown as infinite cover.
+    - Whether coverage should be weighted by spend, usage or build criticality.
+  demo_position: >-
+    The demo uses two measures in one record. Days of supply sums buffer units and daily usage
+    before dividing. Buffer coverage counts parts equally against a flat 14-day placeholder target.
+    That target is deliberately recorded as a gap, because a real target should derive from lead
+    time and demand variability.
+
+business_context:
+  plain_english: >-
+    How long the component buffer would last, and how many components meet the demo target.
+  what_it_measures: >-
+    Days of supply measures buffer quantity divided by average daily usage. Buffer coverage
+    measures the share of scored components whose days of supply is at least 14 days.
+  why_it_matters: >-
+    Buffer is the quiet protection in a plan. It can absorb short disruption, but it also costs
+    money and can hide poor planning. The useful question is not simply whether a buffer exists;
+    it is whether the buffer fits the lead time and consumption risk.
+
+    The standout finding in the demo is DEMO-PART-C. It has zero buffer behind a 126-day lead
+    time. That is the worst possible combination, and it is the part that later causes the missed
+    build.
+  unit: days and percent
+  grain: One value per component, product family, planning period, plan version and snapshot.
+  planning_context: >-
+    Used by material planning to judge whether component risk is protected or merely deferred.
+
+inclusions:
+  - Current-version component rows for the selected snapshot.
+  - Rows with known buffer quantity and average daily usage.
+  - Components with zero buffer, where usage is positive.
+exclusions:
+  - Superseded plan versions.
+  - Rows with null buffer quantity or null average daily usage.
+  - Rows with zero average daily usage from days-of-supply scoring, because the result is undefined.
+
+interpretation:
+  read_it_as: "How many days the stated buffer covers at current average usage, and how many components meet the demo target."
+  do_not_read_it_as:
+    - Proof that the buffer target is right.
+    - A replacement for lead-time risk analysis.
+    - Infinite cover when a component has zero usage.
+  common_misreadings:
+    - >-
+      Dividing each component and then averaging the ratios. The demo headline sums buffer and
+      usage first, then divides.
+    - >-
+      Treating a flat 14-day target as good practice. It is a placeholder, and the record names
+      that as a gap.
+    - >-
+      Reading zero usage as infinite days of supply. A part nobody consumes is dead stock or an
+      obsolete planning row, not infinite protection.
+  read_alongside: >-
+    Component Shortage, lead time, supplier delivery lag and build attainment. Buffer without
+    lead-time context is incomplete evidence.
+
+stewardship:
+  business_owner_role: Material Planning Lead (fictional demo role)
+  co_owner_role: Inventory Policy Lead (fictional demo role)
+  data_steward_role: Planning Data Steward (fictional demo role)
+  technical_owner_role: Planning Semantic Layer Engineer (fictional demo role)
+  note: Fictional placeholder roles. No real person is named or implied.
+
+source_mapping:
+  disclaimer: An agreed demo contract over an invented table. Not a production mapping.
+  system: plan/systems/demo-planning-workbench
+  object: plan/objects/demo-component
+  primary_table: demo.component
+  measure_column: buffer_quantity
+  fields:
+    - name: buffer_quantity
+      role: Numerator column
+      description: Component units held as planning buffer.
+    - name: average_daily_usage
+      role: Denominator column
+      description: Average component usage per day used to convert buffer units into days.
+    - name: component_id
+      role: Grain key
+      description: Demo component being scored.
+    - name: product_family
+      role: Context key
+      description: Product family in which the component is used.
+    - name: period
+      role: Context key
+      description: Planning period for the component position.
+    - name: lead_time_days
+      role: Risk context
+      description: Replenishment time used to judge whether the buffer target is credible.
+    - name: plan_version
+      role: Filter
+      description: Latest plan version in the selected snapshot only.
+    - name: snapshot_date
+      role: Snapshot key
+      description: Date of the buffer evidence.
+
+dimensions:
+  supported: [component_id, product_family, period, supplier]
+  not_supported:
+    - name: warehouse
+      reason: The demo component table has no warehouse or storage-location grain.
+    - name: demand variability
+      reason: The demo does not contain usage variability, so a risk-based target cannot yet be calculated.
+
+calculation_contract:
+  disclaimer: An agreed demo rule, not a production specification.
+  aggregate: mixed
+  expression: SUM(buffer_quantity) / SUM(average_daily_usage); 100 * COUNT(days_of_supply >= 14) / COUNT(scored components)
+
+  days_of_supply:
+    definition: SUM(buffer_quantity) / SUM(average_daily_usage)
+    unit: days
+    aggregation_rule: Sum buffer quantity and average daily usage first, then divide.
+    zero_usage_rule: >-
+      If average daily usage is zero, days of supply is undefined, not infinite. A part nobody
+      consumes is dead stock or a planning exception, not limitless coverage.
+    rounding: Two decimal places at presentation only.
+
+  buffer_coverage:
+    definition: 100 * COUNT(components with days_of_supply >= 14) / COUNT(scored components)
+    unit: percent
+    target_days: 14
+    target_note: >-
+      The 14-day target is a flat placeholder. That is the wrong way to set a real buffer target.
+      A real target derives from lead time and demand variability. This is recorded as a gap.
+    weighting: >-
+      Counts parts equally on purpose, because any one missing part can stop a build. It is not
+      weighted by spend or volume.
+
+  scope_filters:
+    - plan_version = the latest version present in the selected snapshot
+    - snapshot_date = the selected snapshot
+
+  null_handling: Null buffer or usage values are excluded and reported.
+  additivity:
+    within_snapshot: Buffer units and usage are additive; days and percentages must be recomputed.
+    across_snapshot: Not additive.
+
+snapshot_context:
+  mode: LatestSnapshot
+  run_date_column: snapshot_date
+  rule: Resolve to the most recent snapshot unless an as-of date is supplied, and always state which was used.
+
+worked_example:
+  disclaimer: Entirely invented rows, shipped in plan/_data/demo-components.json.
+  as_of_snapshot: 2026-03-14
+  plan_version: v3
+  expected_result:
+    - component_id: DEMO-PART-A
+      product_family: DEMO-STANDARD
+      period: 2026-Q1
+      buffer_quantity: 120
+      average_daily_usage: 16.7
+      days_of_supply: 7.19
+      lead_time_days: 84
+    - component_id: DEMO-PART-B
+      product_family: DEMO-STANDARD
+      period: 2026-Q1
+      buffer_quantity: 400
+      average_daily_usage: 33.3
+      days_of_supply: 12.01
+      lead_time_days: 35
+    - component_id: DEMO-PART-B
+      product_family: DEMO-PREMIUM
+      period: 2026-Q2
+      buffer_quantity: 200
+      average_daily_usage: 16.5
+      days_of_supply: 12.12
+      lead_time_days: 35
+    - component_id: DEMO-PART-C
+      product_family: DEMO-EDGE
+      period: 2026-Q3
+      buffer_quantity: 0
+      average_daily_usage: 6.8
+      days_of_supply: 0
+      lead_time_days: 126
+      note: Zero buffer behind the longest lead time.
+    - component_id: DEMO-PART-D
+      product_family: DEMO-EDGE
+      period: 2026-Q3
+      buffer_quantity: 300
+      average_daily_usage: 13.6
+      days_of_supply: 22.06
+      lead_time_days: 21
+    - component_id: DEMO-PART-E
+      product_family: DEMO-PREMIUM
+      period: 2026-Q2
+      buffer_quantity: 0
+      average_daily_usage: 8.2
+      days_of_supply: 0
+      lead_time_days: 56
+  total_check:
+    buffer_quantity: 1020
+    average_daily_usage: 95.1
+    days_of_supply: 10.73
+    buffer_coverage_percent: 16.67
+    note: One of six scored component rows meets the 14-day placeholder target.
+  edge_cases:
+    - name: Zero buffer
+      scenario: DEMO-PART-C has positive usage and zero buffer.
+      expected_behaviour: Report zero days, not exclusion.
+    - name: Zero usage
+      scenario: A component has buffer quantity but no usage.
+      expected_behaviour: Report days of supply as undefined, not infinite.
+    - name: Equal-weight coverage
+      scenario: One low-volume critical part misses the target.
+      expected_behaviour: Count it equally, because one missing part can stop a build.
+
+evidence:
+  traceability_statement: Shows where the buffer number claims to come from, so a reviewer can follow the chain.
+  quality_disclaimer: >-
+    A source reference demonstrates traceability only. It does not mean the buffer policy is right,
+    usage is stable or lead time has been validated.
+  references:
+    - kind: Semantic layer measure
+      ref: plan/_runtime/registry.json -> measures['planning.buffer.days_of_supply']
+    - kind: Semantic layer measure
+      ref: plan/_runtime/registry.json -> measures['planning.buffer.coverage']
+    - kind: Object mapping
+      ref: plan/objects/demo-component
+    - kind: Governed terms
+      ref: plan/terms/index.yaml -> Buffer, Days of Supply, Lead Time
+
+expected_versus_actual:
+  items:
+    - topic: Days of supply calculation
+      documented_expectation: SUM(buffer_quantity) / SUM(average_daily_usage), summed before dividing.
+      currently_executed: Documented against the invented component table.
+      gap: false
+    - topic: Buffer coverage calculation
+      documented_expectation: Count components meeting a 14-day target divided by scored components.
+      currently_executed: The worked example reports 1 of 6, or 16.67%.
+      gap: false
+    - topic: Buffer target design
+      documented_expectation: Target should derive from lead time and demand variability.
+      currently_executed: A flat 14-day placeholder is used for the demo.
+      gap: true
+    - topic: Zero usage handling
+      documented_expectation: Zero usage should return undefined and be reported.
+      currently_executed: Rule is documented; no zero-usage row exists in the demo data.
+      gap: true
+
+open_questions:
+  - What risk model should set component buffer targets?
+  - Should buffer coverage be weighted by build criticality as a second view?
+  - Who approves consuming buffer to protect short-term attainment?

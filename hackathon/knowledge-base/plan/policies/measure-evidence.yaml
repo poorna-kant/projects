@@ -1,0 +1,31 @@
+type: Policy
+id: plan/policies/measure-evidence
+policy_id: measure_evidence
+name: Measure Evidence and Traceability
+domain: plan
+category: governance
+description: >-
+  ILLUSTRATIVE EXAMPLE. Every published measure value must be returned with the snapshot used,
+  the plan version in force, the filters applied, and the rows excluded with their reasons.
+  A number without its evidence is not publishable.
+rationale: >-
+  Trust in a planning figure comes from being able to take it apart, not from being told it is
+  correct. Showing what was excluded is more informative than showing what was included,
+  because exclusions are where disagreement actually lives.
+how_to_use: >-
+  When quoting a measure, carry its snapshot and plan version with it. When a figure is
+  challenged, open the exclusion list before defending the arithmetic.
+rules:
+  - State the snapshot used, including when it was resolved by default.
+  - Report excluded rows individually with a reason each. Never report only a count.
+  - Distinguish a genuine zero from an unknown. They are different answers.
+  - Never coerce a null into zero. Report it as an exclusion.
+  - >-
+    A source reference demonstrates traceability only. It asserts nothing about the quality,
+    completeness or accuracy of the underlying data, and must never be presented as a quality
+    certification.
+owner_role: Planning Data Steward (fictional demo role)
+demo_note: >-
+  Enforced in the demo for planning.demand. The compute endpoint returns the evidence trail
+  alongside every value, and refuses to answer for measures whose meaning is not yet agreed
+  rather than inventing a number.

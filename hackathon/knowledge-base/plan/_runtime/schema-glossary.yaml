@@ -1,6 +1,9 @@
 type: SchemaGlossary
 id: plan/schema-glossary
 domain: plan
+note: >-
+  ILLUSTRATIVE EXAMPLE. Maps the business name a person would say to the invented source field a
+  query would use.
 items:
   - business_name: Product family
     source_field: product_family
@@ -8,3 +11,17 @@ items:
     source_field: period
   - business_name: Planned quantity
     source_field: quantity
+  - business_name: Statistical baseline
+    source_field: baseline_quantity
+  - business_name: Consensus adjustment
+    source_field: adjustment_quantity
+  - business_name: Adjustment reason
+    source_field: adjustment_reason
+  - business_name: Plan version
+    source_field: plan_version
+  - business_name: Approval status
+    source_field: demand_status
+  - business_name: Snapshot date
+    source_field: snapshot_date
+  - business_name: Horizon state
+    source_field: horizon_state

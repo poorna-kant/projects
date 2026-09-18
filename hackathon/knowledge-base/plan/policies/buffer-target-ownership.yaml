@@ -1,0 +1,39 @@
+type: Policy
+id: plan/policies/buffer-target-ownership
+policy_id: buffer_target_ownership
+name: Buffer Target Ownership
+domain: plan
+category: inventory
+description: >-
+  ILLUSTRATIVE EXAMPLE. A buffer target is a funded decision with a named owner and a review
+  date, not a number carried in a spreadsheet. A part may only be measured against a target
+  that someone is accountable for.
+rationale: >-
+  Safety stock consumes cash to buy protection against variability. Both halves of that trade
+  are business decisions. Measuring compliance with a target that nobody owns produces an audit
+  of adherence to a rule that cannot be accounted for, which looks like governance and is not.
+how_to_use: >-
+  Before reporting a part as under-buffered, confirm its target has an owner and a review date.
+  When challenging a buffer, challenge the target and the variability it was sized against,
+  not only the quantity held.
+rules:
+  - Every buffer target names an owning role and the date it was last reviewed.
+  - >-
+    Targets are sized against observed variability and the replenishment lead time over which
+    the organisation is exposed. A flat percentage of demand is not a target, it is a habit.
+  - >-
+    A part whose lead time exceeds its days of supply is flagged regardless of whether it meets
+    its target, because the target itself may be the thing that is wrong.
+  - >-
+    Buffer coverage is counted in parts, not units. A build is halted by any one missing part,
+    not by the average part.
+  - >-
+    Inventory that accumulated because demand was reduced after supply committed is excess, and
+    must not be reclassified as buffer. Doing so disguises a planning failure as a risk decision.
+owner_role: Inventory Policy Lead (fictional demo role)
+co_owner_role: Material Planning Lead (fictional demo role, proposes targets)
+demo_note: >-
+  Partly enforced. The demo carries a held buffer quantity per part and a single flat target of
+  14 days applied to every component. Per-part targets, owners and review dates are NOT modelled,
+  so buffer coverage in this demo measures compliance with a uniform assumption rather than with
+  an owned decision. This is a recorded gap.

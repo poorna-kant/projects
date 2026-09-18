@@ -12,5 +12,28 @@ source_mapping:
   schema: demo
   primary_table: demo_demand
   key_fields: [demand_id]
-  snapshot_policy: Use the latest approved demo snapshot.
-  columns: [demand_id, product_family, period, quantity, supportable_quantity, coverage_percent, snapshot_date]
+  snapshot_policy: >-
+    Use the latest approved demo snapshot. A planning figure is not reproducible unless the
+    snapshot it was read from is stated, because two people quoting the same plan version can
+    still disagree if they read different captures.
+  columns: [demand_id, product_family, period, quantity, supportable_quantity, coverage_percent, plan_version, demand_status, snapshot_date]
+  column_notes:
+    quantity: The agreed demand quantity for the line. Summed by planning.demand.
+    supportable_quantity: >-
+      Retained from the single-table demo mapping. The extended demo dataset carries
+      supportability separately in plan/objects/demo-supply, so that coverage becomes a ratio
+      between two tables owned by two different planning functions - which is what makes the
+      join, and its failure modes, visible to a reviewer.
+    coverage_percent: >-
+      Retained from the single-table demo mapping. Note that averaging a per-row percentage is
+      not the same as dividing one total by another, and the two give different answers.
+    plan_version: Iteration of the plan a line belongs to. Older versions are superseded, not additional demand.
+    demand_status: Approval state of the line. Only Approved lines are in scope for Planned Demand.
+    snapshot_date: As-of date of the plan capture. This is the snapshot run date column the semantic layer references.
+  sample_rows: plan/_data/demo-demand.json
+used_by:
+  - plan/metric-context/planning-demand
+  - plan/metric-context/planning-demand-baseline
+  - plan/metric-context/planning-demand-adjustment
+  - plan/metric-context/planning-coverage
+  - plan/metric-context/planning-gap

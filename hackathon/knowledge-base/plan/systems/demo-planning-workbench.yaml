@@ -1,0 +1,25 @@
+type: System
+id: plan/systems/demo-planning-workbench
+name: Demo Planning Workbench
+display_name: Demo Planning Workbench
+domain: plan
+aliases: [planning workbench, demand workbench]
+role: >-
+  ILLUSTRATIVE EXAMPLE. Where planners review the baseline, record adjustments with reasons, and
+  move demand lines through approval to the plan of record. Invented system for the public
+  demonstration.
+capabilities:
+  - name: Adjustment capture
+    description: Records signed changes to the baseline together with the reason for each.
+  - name: Demand review workflow
+    description: Moves lines through Draft, In review, Approved or Rejected.
+  - name: Plan version publication
+    description: Publishes an approved, immutable plan version and retains superseded ones.
+boundaries:
+  - Records judgement; it does not evaluate whether that judgement was sound.
+  - Does not constrain the plan against supply. Feasibility is a supply planning concern.
+  - Publishing a version does not validate the underlying data quality.
+owner_role: Demand Planning Lead (fictional demo role)
+provides_objects:
+  - plan/objects/demo-demand
+  - plan/objects/demo-demand-adjustment

@@ -1,0 +1,229 @@
+type: MetricContext
+id: plan/metric-context/planning-demand-adjustment
+domain: plan
+measure_key: planning.demand.adjustment
+name: Demand Adjustment
+status: Draft for review
+version: 0.1.0
+
+example_notice: >-
+  ILLUSTRATIVE EXAMPLE. This record documents an invented measure over an invented dataset,
+  created to demonstrate how business context and evidence are governed in SCOPE. It is not a
+  production definition and must not be reused as one.
+
+industry_definition:
+  note: >-
+    Described in general, widely used supply-chain planning language, written for this demo. It
+    is not a quotation from any standards body, certification syllabus or published dictionary,
+    and no organisation's house definition is reproduced here.
+  standard_usage: >-
+    In common supply-chain practice, a demand adjustment - also called an override, a judgemental
+    adjustment or a consensus adjustment - is a deliberate human change applied to the statistical
+    baseline during the demand review, carrying a sign, a size and a stated reason.
+
+    It exists because history cannot contain the future. A signed contract, a planned promotion,
+    a discontinued line or an expected competitor launch are all knowable facts that no model
+    fitted to past demand can see. The adjustment is where that knowledge enters the plan.
+
+    It is recorded separately from the baseline rather than merged into it, for two reasons.
+    First, the reason for a change is as governable as the change itself, and a number without
+    its reason cannot be reviewed. Second, separation is what makes forecast value add
+    calculable later; merged, the intervention becomes invisible the moment it is applied.
+  measured_two_ways: >-
+    Net adjustment shows the effect on the plan and lets opposing changes cancel. Absolute
+    adjustment shows how much intervention actually occurred, regardless of direction. A review
+    that made large offsetting changes has a small net and a large absolute, and reporting only
+    the net would make an active, contentious cycle look like a quiet one.
+  typical_cycle_position: >-
+    Applied during the demand review, between baseline generation and plan approval.
+  what_practitioners_argue_about:
+    - Whether a reason should be mandatory, and whether free text counts as a reason.
+    - Whether adjustments should be capped as a share of baseline, or left unbounded and simply reported.
+    - Whether an adjustment made for a known event should later be reversed automatically when the event passes.
+  demo_position: >-
+    The demo stores the sign, the size and the reason on the same row, and exposes absolute
+    adjustment as a separate measure so that intervention effort is visible independently of its
+    net effect.
+
+business_context:
+  plain_english: >-
+    How much human judgement moved the forecast, and in which direction.
+  what_it_measures: >-
+    The net signed human change applied to the statistical baseline during the demand review,
+    for a product family and period. Positive raises the plan; negative lowers it.
+  why_it_matters: >-
+    This measure makes judgement visible. Every planning organisation overrides its statistics,
+    and often it is right to - the history cannot know about a signed contract or a discontinued
+    line. What causes damage is overriding invisibly. Once adjustment is absorbed into a single
+    agreed quantity and the components are discarded, nobody can ask how much of the plan is
+    evidence and how much is opinion.
+  unit: units (signed)
+  grain: One value per product family, per planning period, per snapshot.
+  planning_context: >-
+    Captured in the planning workbench during the demand review, with a reason recorded against
+    each change.
+
+inclusions:
+  - Signed adjustments on approved, current-version demand lines.
+  - Negative adjustments. Lowering the plan is judgement too.
+exclusions:
+  - The statistical baseline itself.
+  - Adjustments on Draft or superseded lines.
+  - Changes arising from supply constraints. Those belong to supply planning, not the demand review.
+
+interpretation:
+  read_it_as: "How far, and in which direction, people moved the plan away from what the statistics said."
+  do_not_read_it_as:
+    - A measure of error. It says nothing about who was right until actuals arrive.
+    - Something to minimise. A zero-adjustment plan is not a well-governed plan; it may simply mean nobody engaged.
+  common_misreadings:
+    - >-
+      Reading a net figure near zero as "little judgement applied". Large positive and negative
+      adjustments can cancel out. Always look at the absolute adjustment alongside the net.
+    - >-
+      Treating adjustment as additive with the agreed quantity. It is a component of that
+      quantity, not an addition to it. Summing them double counts.
+  read_alongside: >-
+    Adjustment share - net adjustment as a percentage of the agreed plan - is the more useful
+    headline. It answers "how much of this number is opinion?" in one figure.
+
+stewardship:
+  business_owner_role: Demand Planning Lead (fictional demo role)
+  data_steward_role: Planning Data Steward (fictional demo role)
+  technical_owner_role: Planning Semantic Layer Engineer (fictional demo role)
+  note: Fictional placeholder roles. No real person is named or implied.
+
+source_mapping:
+  disclaimer: An agreed demo contract over an invented table. Not a production mapping.
+  system: plan/systems/demo-planning-workbench
+  object: plan/objects/demo-demand-adjustment
+  primary_table: demo.demand
+  measure_column: adjustment_quantity
+  fields:
+    - name: adjustment_quantity
+      role: Measure column
+      description: Signed units. Positive raises the plan, negative lowers it.
+    - name: adjustment_reason
+      role: Qualitative evidence
+      description: >-
+        Why the planner overrode the statistics. Not aggregated, but carried alongside the number.
+        An adjustment without a reason is indistinguishable from an error.
+    - name: plan_version
+      role: Filter - latest version in the snapshot only
+    - name: demand_status
+      role: Filter - Approved only
+    - name: snapshot_date
+      role: Snapshot key
+
+dimensions:
+  supported: [product_family, period]
+  not_supported:
+    - name: adjustment reason
+      reason: >-
+        Free text in the demo, so it is not a groundable dimension. Making reasons analysable
+        would require a controlled reason code list, which is a deliberate open question.
+
+calculation_contract:
+  disclaimer: An agreed demo rule, not a production specification.
+  aggregate: sum
+  expression: SUM(adjustment_quantity)
+  sign_convention: >-
+    Signed. Positive raises the plan, negative lowers it. The sum is a NET figure and may be near
+    zero even when individual adjustments were large.
+  scope_filters:
+    - demand_status = 'Approved'
+    - plan_version = the latest version present in the selected snapshot
+  zero_versus_absent: >-
+    An explicit zero adjustment means the review considered the line and left it alone. An absent
+    line means it was never reviewed. These are different and must not be shown identically.
+  null_handling: A null adjustment is excluded and reported, never read as zero.
+  additivity:
+    within_snapshot: Additive across product family and period.
+    across_snapshot: Not additive.
+  identity: planning.demand.baseline + planning.demand.adjustment = planning.demand, row by row.
+
+snapshot_context:
+  mode: LatestSnapshot
+  run_date_column: snapshot_date
+  rule: Resolve to the most recent snapshot unless an as-of date is supplied, and always state which was used.
+
+worked_example:
+  disclaimer: Entirely invented rows, shipped in plan/_data/demo-demand.json.
+  as_of_snapshot: 2026-03-14
+  expected_result:
+    - {product_family: DEMO-STANDARD, period: 2026-Q1, adjustment: 150,  note: "+100 new customer, +50 promotion"}
+    - {product_family: DEMO-PREMIUM,  period: 2026-Q1, adjustment: 0,    note: "Only row is Draft. Genuine zero, not 'no adjustment made'."}
+    - {product_family: DEMO-PREMIUM,  period: 2026-Q2, adjustment: -50,  note: "Negative. Competitor launch expected to reduce uptake."}
+    - {product_family: DEMO-EDGE,     period: 2026-Q3, adjustment: 120,  note: "Pilot conversion assumed."}
+  total_check:
+    value: 220
+    note: Net across the snapshot. Baseline 2650 + adjustment 220 = agreed 2870.
+  adjustment_share:
+    value: 7.7
+    note: 220 of 2870 units, so roughly 8% of the agreed plan comes from judgement rather than history.
+  edge_cases:
+    - name: Negative adjustment
+      scenario: DEMO-PREMIUM / 2026-Q2 carries an adjustment of -50 against a baseline of 800.
+      expected_behaviour: >-
+        Report the sign. Presenting an absolute value would hide that the review deliberately
+        lowered the plan, which is a materially different decision from raising it.
+    - name: Net cancellation
+      scenario: >-
+        Two families in one period are adjusted +200 and -200, and the net reads zero.
+      expected_behaviour: >-
+        Do not report "no adjustment". Net zero after 400 units of movement is not the same as an
+        unadjusted plan, and the distinction matters to anyone judging plan stability.
+    - name: Judgement-dominated line
+      scenario: DEMO-EDGE / 2026-Q3 is 120 adjustment on a 500 baseline - about a fifth of the agreed figure.
+      expected_behaviour: >-
+        Surface it with its reason. A reviewer should be able to see that this number rests
+        largely on an assumption about pilot conversion.
+
+evidence:
+  traceability_statement: Shows where the number claims to come from, so a reviewer can follow the chain.
+  quality_disclaimer: >-
+    A source reference demonstrates traceability only. It does not mean the data has been
+    profiled, reconciled or certified, and it certainly does not mean the judgement was sound.
+  references:
+    - kind: Semantic layer measure
+      ref: plan/_runtime/registry.json -> measures['planning.demand.adjustment']
+    - kind: Object mapping
+      ref: plan/objects/demo-demand-adjustment
+    - kind: Concept
+      ref: plan/concepts/forecast-value-add
+    - kind: Concept
+      ref: plan/concepts/consensus-demand-planning
+    - kind: Governed terms
+      ref: plan/terms/index.yaml -> Demand Adjustment, Forecast Value Add
+
+expected_versus_actual:
+  items:
+    - topic: Calculation
+      documented_expectation: SUM(adjustment_quantity), signed, with approval and plan-version filters.
+      currently_executed: Implemented, with the same evidence trail as Planned Demand.
+      gap: false
+    - topic: Identity check
+      documented_expectation: baseline + adjustment must reconcile to the agreed quantity.
+      currently_executed: Implemented at GET /api/measures/reconcile.
+      gap: false
+    - topic: Adjustment reasons
+      documented_expectation: >-
+        Reasons are carried alongside the number so a reviewer can judge the adjustment, not just
+        its size.
+      currently_executed: >-
+        Reasons are stored on the rows but are not yet surfaced in the evidence panel, and are
+        free text rather than controlled codes, so they cannot be analysed.
+      gap: true
+    - topic: Absolute versus net adjustment
+      documented_expectation: >-
+        Report absolute adjustment alongside the net, so cancelling movements are not mistaken
+        for an unadjusted plan.
+      currently_executed: Only the net figure is computed.
+      gap: true
+
+open_questions:
+  - Should adjustment reasons move to a controlled code list so they become analysable?
+  - Should the demo report absolute alongside net adjustment to expose cancelling movements?
+  - >-
+    Should a threshold on adjustment share flag judgement-dominated lines for review, and if so
+    who owns that threshold?

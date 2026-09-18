@@ -1,0 +1,93 @@
+type: MetricContextIndex
+id: plan/metric-context
+domain: plan
+title: Metric Context & Evidence
+note: >-
+  Authored business context for governed measures. This catalog is hand-authored and
+  human-stewarded. It is deliberately NOT produced by the metric generator and must never
+  be overwritten by regeneration of plan/metrics/index.yaml.
+example_notice: >-
+  ILLUSTRATIVE EXAMPLE. Every measure, field, owner role, system and number referenced in this
+  catalog is invented for public demonstration of the SCOPE workflow. Nothing here describes
+  a real organisation, a real data platform, or a real planning process.
+authoring_rules:
+  - Business context is authored by people, not generated from the semantic layer.
+  - Calculation contracts are agreed demo rules, not production definitions.
+  - Owner entries name fictional roles only, never individuals.
+  - Where the application does not yet implement a documented rule, say so explicitly.
+records:
+  - id: plan/metric-context/planning-demand
+    measure_key: planning.demand
+    name: Planned Demand
+    file: planning-demand.yaml
+    status: Draft for review
+  - id: plan/metric-context/planning-demand-baseline
+    measure_key: planning.demand.baseline
+    name: Demand Baseline
+    file: planning-demand-baseline.yaml
+    status: Draft for review
+  - id: plan/metric-context/planning-demand-adjustment
+    measure_key: planning.demand.adjustment
+    name: Demand Adjustment
+    file: planning-demand-adjustment.yaml
+    status: Draft for review
+  - id: plan/metric-context/planning-demand-accuracy
+    measure_key: planning.demand.forecast.accuracy
+    name: Forecast Accuracy, Bias and Value Add
+    file: planning-demand-accuracy.yaml
+    status: Draft for review
+    also_covers: [planning.demand.forecast.bias, planning.demand.fva]
+  - id: plan/metric-context/planning-coverage
+    measure_key: planning.coverage
+    name: Supply Coverage
+    file: planning-coverage.yaml
+    status: Draft for review
+    note: >-
+      The first supply-side record. Deliberately carries two business owner roles, because the
+      numerator and the denominator are owned by different functions.
+  - id: plan/metric-context/planning-gap
+    measure_key: planning.gap
+    name: Planning Gap
+    file: planning-gap.yaml
+    status: Draft for review
+    note: >-
+      Read beside Supply Coverage. The ratio says how well the plan is covered; the gap says how
+      many units are missing, which is the figure an action is sized against.
+  - id: plan/metric-context/planning-component-shortage
+    measure_key: planning.component.shortage
+    name: Component Shortage
+    file: planning-component-shortage.yaml
+    status: Draft for review
+    note: >-
+      The layer that explains the family-level gap. Shortages are floored per part before being
+      summed, because surplus of one component cannot substitute for scarcity of another.
+  - id: plan/metric-context/planning-buffer
+    measure_key: planning.buffer.days_of_supply
+    name: Buffer Days of Supply and Coverage
+    file: planning-buffer.yaml
+    status: Draft for review
+    also_covers: [planning.buffer.coverage]
+  - id: plan/metric-context/execution-attainment
+    measure_key: execution.build.attainment
+    name: Build Schedule Attainment
+    file: execution-attainment.yaml
+    status: Draft for review
+    note: >-
+      The first execution record. Execution tables carry no plan version filter, because a
+      completed build is a fact and cannot be superseded by a newer plan.
+  - id: plan/metric-context/execution-delivery
+    measure_key: execution.delivery.otd
+    name: Supplier Delivery Performance
+    file: execution-delivery.yaml
+    status: Draft for review
+    also_covers: [execution.delivery.otif, execution.po.fulfilment, execution.receipt.lag]
+    note: >-
+      Four measures in one record because their disagreement over the same order lines is the
+      point, not an inconsistency to be reconciled away.
+identity:
+  statement: planning.demand.baseline + planning.demand.adjustment = planning.demand
+  why: >-
+    Keeping the machine's view and the human's view separately, and requiring them to reconcile
+    to the agreed plan, is what lets the organisation later ask how much of its plan was evidence
+    and how much was opinion.
+  checked_by: GET /api/measures/reconcile

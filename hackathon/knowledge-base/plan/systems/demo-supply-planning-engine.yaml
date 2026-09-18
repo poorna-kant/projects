@@ -1,0 +1,37 @@
+type: System
+id: plan/systems/demo-supply-planning-engine
+name: Demo Supply Planning Engine
+display_name: Demo Supply Planning Engine
+domain: plan
+aliases: [supply engine, MRP engine, component explosion engine]
+role: >-
+  ILLUSTRATIVE EXAMPLE. Explodes the approved demand plan through a bill of materials into
+  component requirements, nets those against inventory and incoming supply, and publishes a
+  supportability position for each product family and period. Invented system for the public
+  demonstration.
+capabilities:
+  - name: Bill of materials explosion
+    description: Converts an agreed demand quantity into gross component requirements.
+  - name: Requirement netting
+    description: Nets gross requirements against on-hand stock and scheduled receipts.
+  - name: Supportability assessment
+    description: Publishes how much of each family the supply plan can support, and the gating part.
+  - name: Buffer evaluation
+    description: Compares held safety stock against target, in quantity and in days of supply.
+boundaries:
+  - >-
+    Publishes a single supportable quantity. It does not decompose that figure into the stock,
+    receipts and capacity behind it, so a reviewer cannot tell whether a position rests on goods
+    in hand or on a promise that may slip. This is a recorded gap in the demo.
+  - >-
+    Counts scheduled receipts as available. A promised arrival date is a supplier's intention,
+    not a fact, so supportability is optimistic by construction.
+  - >-
+    Nets against total on-hand stock including the buffer. Safety stock that is meant to be
+    untouched is therefore treated as available, which flatters coverage.
+  - Assesses feasibility; it does not decide priority. Which family gets the scarce part is a human decision.
+  - Does not re-open the demand plan. It reports what cannot be supported rather than reducing the ask.
+owner_role: Supply Planning Lead (fictional demo role)
+provides_objects:
+  - plan/objects/demo-supply
+  - plan/objects/demo-component

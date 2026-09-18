@@ -1,0 +1,240 @@
+type: MetricContext
+id: plan/metric-context/planning-demand-accuracy
+domain: plan
+measure_key: planning.demand.forecast.accuracy
+also_covers:
+  - planning.demand.forecast.bias
+  - planning.demand.fva
+name: Forecast Accuracy, Bias and Value Add
+status: Draft for review
+version: 0.1.0
+
+example_notice: >-
+  ILLUSTRATIVE EXAMPLE. This record documents invented measures over an invented dataset,
+  created to demonstrate how business context and evidence are governed in SCOPE. It is not a
+  production definition and must not be reused as one.
+
+# ---------------------------------------------------------------------------
+# Standard industry meaning, in general supply-chain terms
+# ---------------------------------------------------------------------------
+industry_definition:
+  note: >-
+    Described in general, widely used supply-chain planning language, written for this demo.
+    It is not a quotation from any standards body, certification syllabus or published
+    dictionary, and no organisation's house definition is reproduced here.
+  standard_usage: >-
+    Across demand planning practice, three different questions are asked about a finished
+    forecast, and they are deliberately kept as three separate measures because each one
+    hides what the others reveal.
+
+    Forecast accuracy asks how far the forecast was from what actually happened, ignoring
+    direction. It is most commonly expressed as one hundred minus the mean absolute percentage
+    error, so that a larger number means a better forecast.
+
+    Forecast bias asks whether the forecast leaned consistently high or consistently low. Errors
+    keep their sign and are allowed to cancel, so a forecast that misses badly in both directions
+    can look almost unbiased. Bias is the measure that exposes a systematic tendency, which is
+    usually a correctable process habit rather than bad luck.
+
+    Forecast value add asks whether each step of human intervention improved the forecast
+    compared with leaving the statistical baseline alone. It is the discipline that stops
+    forecasting effort being assumed valuable simply because it was expensive.
+  why_all_three: >-
+    Accuracy without bias cannot tell you which way to correct. Bias without accuracy can look
+    excellent while the forecast is wildly wrong in alternating directions. Neither can tell you
+    whether the effort spent adjusting the forecast was worth spending; only value add does that.
+  common_conventions_that_vary:
+    - >-
+      Whether percentage error is divided by actual or by forecast. This demo divides by actual,
+      which is the more common convention, but it means a period with zero actual has no defined
+      error.
+    - >-
+      Whether periods are weighted equally or by volume. This demo weights every product-family
+      period equally, so a small volatile family can dominate the headline.
+    - Whether accuracy is reported at item, family or total level. Aggregation almost always flatters the result.
+  demo_position: >-
+    The demo fixes one convention for each of these and states it, rather than leaving it to the
+    reader. The point is not that these choices are correct in general; it is that an unstated
+    convention is how two teams end up reporting different accuracy for the same forecast.
+
+business_context:
+  plain_english: >-
+    Was the plan any good, did it lean one way, and did arguing with the maths help?
+  what_it_measures: >-
+    How closely the agreed demand plan matched what actually happened in periods that have
+    closed, whether it erred high or low, and whether human adjustment improved on the
+    statistical baseline or degraded it.
+  why_it_matters: >-
+    Every other demand measure describes intent. These three are the only ones that describe
+    outcome. Without them a planning organisation can improve its process indefinitely without
+    evidence that anything got better, and the demand review becomes a ritual rather than a
+    control.
+  unit: percent for accuracy and bias, percentage points for value add
+  grain: One score per product family, per closed planning period, aggregated to a headline.
+  planning_context: >-
+    Reviewed after a period closes, in the retrospective step of the planning cycle rather than
+    in the forward-looking demand review. Deliberately separated so that the forum agreeing the
+    next plan is not also the forum grading its own previous one in the same breath.
+
+inclusions:
+  - Closed periods only, where demand for the period is complete and reconciled.
+  - Product families that have both a forecast and an actual.
+exclusions:
+  - Open and partially elapsed periods. Scoring a forecast against a partial actual overstates accuracy.
+  - Periods with zero actual demand, because percentage error has no denominator there.
+  - Any period whose actuals have not been reconciled.
+
+interpretation:
+  read_it_as: "Evidence about how this planning process performed on periods that are finished."
+  do_not_read_it_as:
+    - A judgement on individual people. These are process measures.
+    - Predictive. Past accuracy constrains confidence in the current plan; it does not set it.
+    - Comparable across organisations, product mixes or aggregation levels without checking the conventions match.
+  common_misreadings:
+    - >-
+      Reading high accuracy as a healthy process when it was achieved on a stable, high-volume
+      family while the volatile families that actually needed forecasting were missed badly.
+    - >-
+      Reading negative forecast value add as proof that human judgement is worthless. Over six
+      product-family periods it proves nothing at all. It is a prompt to look, not a verdict.
+    - >-
+      Treating near-zero bias as good when accuracy is poor. It usually means the forecast is
+      missing in both directions by similar amounts, which is worse, not better.
+
+stewardship:
+  business_owner_role: Demand Planning Lead (fictional demo role)
+  data_steward_role: Planning Data Steward (fictional demo role)
+  technical_owner_role: Planning Semantic Layer Engineer (fictional demo role)
+  note: Fictional placeholder roles. No real person is named or implied.
+
+source_mapping:
+  disclaimer: An agreed demo contract over an invented table. Not a production mapping.
+  object: plan/objects/demo-demand-actual
+  primary_table: demo.demand_actual
+  separation_rationale: >-
+    Actuals are held in a different file from the plan on purpose. In standard practice they
+    arrive from order or shipment history, owned by a different function and landing on a
+    different date. Keeping them apart means the team being scored cannot edit the scoreboard.
+  fields:
+    - name: actual_quantity
+      role: Denominator and comparison base
+      description: What actually materialised in the closed period.
+    - name: consensus_forecast
+      role: The agreed plan as it stood when the period was locked
+    - name: baseline_forecast
+      role: The untouched statistical forecast, retained for value add
+    - name: product_family
+      role: Dimension
+    - name: period
+      role: Dimension and date column
+    - name: closed_on
+      role: Evidence that the period was reconciled before being scored
+
+dimensions:
+  supported: [product_family, period]
+  not_supported:
+    - name: plan_version
+      reason: >-
+        Actuals are compared against the plan as it stood when the period locked. Re-scoring
+        against a later plan version would let the forecast be corrected after the fact.
+    - name: snapshot_date
+      reason: Closed-period actuals do not vary by planning snapshot.
+
+calculation_contract:
+  disclaimer: An agreed demo rule, not a production specification.
+  accuracy:
+    expression: 100 - AVERAGE(ABS(consensus_forecast - actual) / actual) * 100
+    percentage_convention: Expressed 0-100. Values below zero are possible and are reported, not clamped to zero.
+    weighting: Every product-family period counts equally. Not volume-weighted.
+  bias:
+    expression: 100 * SUM(consensus_forecast - actual) / SUM(actual)
+    sign_convention: Positive means the plan was too high. Negative means too low.
+    weighting: Volume-weighted by construction, because totals are summed before dividing.
+  forecast_value_add:
+    expression: baseline MAPE - consensus MAPE
+    unit: percentage points
+    sign_convention: Positive means judgement improved on the baseline. Negative means it made things worse.
+  zero_actual_handling: >-
+    A period with zero actual demand is excluded from accuracy and value add, because percentage
+    error has no denominator. It is reported as an exclusion with its reason, never treated as a
+    100% miss and never silently dropped.
+  additivity:
+    note: >-
+      None of these three are additive. Adding two accuracy percentages produces a meaningless
+      number. They must be recalculated at the level they are to be read at.
+
+snapshot_context:
+  mode: ClosedPeriod
+  rule: >-
+    Scored only after a period is closed and reconciled, with the closing date carried on the
+    record. This measure does not move with the planning snapshot.
+
+worked_example:
+  disclaimer: Entirely invented rows, shipped in plan/_data/demo-demand-actuals.json.
+  periods_scored: 6
+  expected_result:
+    accuracy_percent: 88.09
+    bias_percent: 6.16
+    forecast_value_add_points: -3.08
+  reading: >-
+    Accuracy looks respectable and bias is mildly positive, meaning the plan ran a little high.
+    Forecast value add is negative, which says that across these six periods the untouched
+    statistical baseline would have been more accurate than the plan the demand review agreed.
+    A headline accuracy of 88% would have hidden that entirely.
+  edge_cases:
+    - name: Judgement made it worse
+      scenario: >-
+        DEMO-EDGE was forecast at 560 against an actual of 410 in 2025-Q3, where the statistical
+        baseline had said 500. Judgement moved the number further from reality, twice.
+      expected_behaviour: >-
+        Report the negative value add plainly rather than softening it. This is the single most
+        useful output of the measure and the reason the baseline is preserved at all.
+    - name: Low bias, poor accuracy
+      scenario: Errors in opposite directions across families largely offset in the bias calculation.
+      expected_behaviour: >-
+        Both numbers are reported side by side, never bias alone, so the cancellation is visible.
+    - name: Open period requested
+      scenario: A reader asks for accuracy on 2026-Q1, which has not closed.
+      expected_behaviour: >-
+        Return nothing for that period and say why. Do not compute a partial score.
+
+evidence:
+  traceability_statement: Shows where the number claims to come from, so a reviewer can follow the chain.
+  quality_disclaimer: >-
+    A source reference demonstrates traceability only. It does not mean the data has been
+    profiled, reconciled or certified.
+  references:
+    - kind: Semantic layer measures
+      ref: plan/_runtime/registry.json -> planning.demand.forecast.accuracy, .bias, planning.demand.fva
+    - kind: Dataset
+      ref: plan/_data/demo-demand-actuals.json
+    - kind: Concept
+      ref: plan/concepts/forecast-value-add
+    - kind: Governed terms
+      ref: plan/terms/index.yaml -> Forecast Accuracy, Forecast Bias, Forecast Value Add
+
+expected_versus_actual:
+  items:
+    - topic: Accuracy, bias and value add
+      documented_expectation: Calculated over closed periods with per-period detail exposed.
+      currently_executed: Implemented, returning the per-period breakdown alongside the headline.
+      gap: false
+    - topic: Volume weighting
+      documented_expectation: >-
+        A volume-weighted accuracy variant is usually reported next to the unweighted one, because
+        the two answer different questions.
+      currently_executed: Not implemented. Only the equally-weighted MAPE form is calculated.
+      gap: true
+    - topic: Statistical significance
+      documented_expectation: >-
+        Forecast value add should be tested over enough periods to distinguish signal from noise.
+      currently_executed: >-
+        Not implemented. Six product-family periods is far too small a sample, and the demo says
+        so in the result rather than implying the number is conclusive.
+      gap: true
+    - topic: Lag-based accuracy
+      documented_expectation: >-
+        Accuracy is normally reported at a stated forecast lag, because a forecast made one month
+        out and one made six months out are not comparable.
+      currently_executed: Not implemented. The demo dataset holds no lag dimension.
+      gap: true

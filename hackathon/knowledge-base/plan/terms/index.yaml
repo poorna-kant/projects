@@ -1,29 +1,606 @@
 type: Glossary
 id: plan/terms
 domain: plan
-description: Synthetic glossary for the public demo.
+description: >-
+  ILLUSTRATIVE EXAMPLE. Generic, industry-standard planning vocabulary for the public demo.
+  Each term carries a short working definition and a note on how the term is generally used in
+  supply-chain planning practice. Those notes are written for this demo in general professional
+  language; they are not quotations from any standards body, certification syllabus or published
+  dictionary, and they reproduce no organisation's house definitions.
+stage_note: >-
+  Every term declares the planning stage it belongs to, so the workflow map groups it correctly
+  instead of guessing from keywords. Terms marked 'all' are cross-cutting governance vocabulary
+  that applies to every stage.
 terms:
+
+  # ---------------------------------------------------------------- demand ---
   - id: plan/terms/demand-plan
     term: Demand Plan
     category: Planning
+    stage: demand
     definition: A time-phased statement of expected product demand used to coordinate supply decisions.
-    aliases: [demand forecast, plan]
-    see_also: [Supply Plan, Plan Version]
+    industry_definition: >-
+      Generally used for the agreed, forward-looking view of demand at a stated product and time
+      aggregation. Its authority comes from cross-functional agreement rather than from
+      statistical quality, which is why it is approved rather than merely published.
+    aliases: [demand forecast, plan, consensus forecast]
+    see_also: [Consensus Demand, Plan of Record, Supply Plan]
+
+  - id: plan/terms/statistical-baseline
+    term: Statistical Baseline
+    category: Planning
+    stage: demand
+    definition: >-
+      The unadjusted forecast produced from history before any human judgement is applied. Kept
+      separately so the machine's view remains distinguishable after adjustment.
+    industry_definition: >-
+      Commonly generated at the start of a planning cycle and frozen. Preserving it is what makes
+      later intervention auditable; once overwritten, no one can ask whether the adjustment helped.
+    aliases: [baseline, statistical forecast, machine forecast]
+    see_also: [Demand Adjustment, Forecast Value Add, Consensus Demand]
+
+  - id: plan/terms/demand-adjustment
+    term: Demand Adjustment
+    category: Planning
+    stage: demand
+    definition: >-
+      A signed human change applied to the statistical baseline during the demand review,
+      recorded with the reason it was made.
+    industry_definition: >-
+      The mechanism by which knowledge absent from history - a signed contract, a promotion, a
+      discontinued line - enters the plan. Practice treats the reason as part of the record,
+      because an adjustment without a reason cannot be reviewed or reversed intelligently.
+    aliases: [override, judgemental adjustment, consensus adjustment]
+    see_also: [Statistical Baseline, Forecast Value Add, Demand Review]
+
+  - id: plan/terms/consensus-demand
+    term: Consensus Demand
+    category: Planning
+    stage: demand
+    definition: >-
+      The single agreed demand number reached by reconciling the statistical baseline with
+      commercial judgement. Equals baseline plus adjustment.
+    industry_definition: >-
+      Often called the one number. Its purpose is to stop functions planning against private
+      forecasts, which is a coordination failure rather than a forecasting failure.
+    aliases: [agreed demand, one number]
+    see_also: [Statistical Baseline, Demand Adjustment, Plan of Record]
+
+  - id: plan/terms/unconstrained-demand
+    term: Unconstrained Demand
+    category: Planning
+    stage: demand
+    definition: >-
+      Demand stated without regard to supply feasibility - what the business intends to fulfil,
+      before any check on whether it can.
+    industry_definition: >-
+      Deliberately kept unconstrained so the size of the supply problem stays visible. Constraining
+      demand at source hides shortfalls by quietly redefining what was wanted.
+    aliases: [gross demand, unconstrained plan]
+    see_also: [Constrained Demand, Planning Gap, Consensus Demand]
+
+  - id: plan/terms/demand-review
+    term: Demand Review
+    category: Process
+    stage: demand
+    definition: >-
+      The recurring forum where the baseline is challenged, adjustments are debated, and a
+      single demand number is agreed and approved.
+    industry_definition: >-
+      The demand step of a sales and operations planning cycle. Its output is a decision, not an
+      analysis, which is why attendance and authority to commit matter as much as data quality.
+    aliases: [consensus meeting, demand consensus, S&OP demand step]
+    see_also: [Consensus Demand, Plan of Record, Demand Adjustment]
+
+  - id: plan/terms/planning-horizon
+    term: Planning Horizon
+    category: Planning
+    stage: demand
+    definition: The span of future periods the plan covers, divided into buckets of differing firmness.
+    industry_definition: >-
+      Conventionally set long enough to cover the longest cumulative lead time being planned
+      against. A horizon shorter than that lead time means decisions are already being taken
+      outside the plan.
+    aliases: [horizon, planning window]
+    see_also: [Time Fence, Planning Period, Lead Time]
+
+  - id: plan/terms/time-fence
+    term: Time Fence
+    category: Planning
+    stage: demand
+    definition: >-
+      The boundary inside which the plan is committed and changes require an exception, because
+      supply has already acted on it.
+    industry_definition: >-
+      Exists to convert a forecast into something supply can commit against. Changes inside the
+      fence are not forbidden, but they are exceptions with a cost, and are expected to be visible.
+    aliases: [frozen period, freeze horizon, firm zone]
+    see_also: [Planning Horizon, Plan Churn]
+
+  - id: plan/terms/planning-period
+    term: Planning Period
+    category: Planning
+    stage: demand
+    definition: The time bucket demand is planned into. The grain at which every quantity is expressed.
+    industry_definition: >-
+      Usually coarser further out and finer nearer in, reflecting that distant precision is
+      spurious. Comparing figures across different bucket sizes without restating them is a
+      frequent source of false variance.
+    aliases: [period, bucket, time bucket]
+    see_also: [Planning Horizon, Product Family]
+
+  - id: plan/terms/product-family
+    term: Product Family
+    category: Planning
+    stage: demand
+    definition: >-
+      The product grouping demand is planned at. Aggregate forecasts are more stable than their
+      parts, so planning happens at family rather than item level.
+    industry_definition: >-
+      Reflects the general principle that aggregation reduces relative forecast error. Families
+      are normally defined by shared demand behaviour rather than by marketing hierarchy.
+    aliases: [family, planning family, product group]
+    see_also: [Aggregation Level, Planning Period, Demand Plan]
+
+  - id: plan/terms/aggregation-level
+    term: Aggregation Level
+    category: Planning
+    stage: demand
+    definition: The product and time grain a figure is stated at, and therefore the grain it may be compared at.
+    industry_definition: >-
+      Accuracy almost always improves as aggregation rises, so an accuracy figure quoted without
+      its level is not interpretable. Practice is to state the level alongside the number.
+    aliases: [grain, level of aggregation]
+    see_also: [Product Family, Planning Period, Forecast Accuracy]
+
+  - id: plan/terms/forecast-lag
+    term: Forecast Lag
+    category: Measures
+    stage: demand
+    definition: How far ahead of the period a forecast was made, used to make accuracy comparisons fair.
+    industry_definition: >-
+      A forecast made one period out and one made six periods out are not comparable. Accuracy is
+      conventionally reported at a stated lag for this reason.
+    aliases: [lag, forecast horizon offset]
+    see_also: [Forecast Accuracy, Planning Horizon]
+
+  - id: plan/terms/forecast-accuracy
+    term: Forecast Accuracy
+    category: Measures
+    stage: demand
+    definition: >-
+      How close the forecast was to actual demand, ignoring direction. Commonly expressed as one
+      hundred minus mean absolute percentage error.
+    industry_definition: >-
+      Measured only on closed periods. Because errors are taken as absolute values, accuracy says
+      nothing about whether the forecast leaned high or low; bias answers that.
+    aliases: [MAPE, forecast error]
+    see_also: [Forecast Bias, Forecast Value Add, Aggregation Level]
+
+  - id: plan/terms/forecast-bias
+    term: Forecast Bias
+    category: Measures
+    stage: demand
+    definition: Whether the forecast leaned consistently high or consistently low over time.
+    industry_definition: >-
+      Errors keep their sign and may cancel, so a forecast can be wildly inaccurate yet nearly
+      unbiased. Persistent one-directional bias is generally treated as a correctable process
+      habit rather than as chance.
+    aliases: [bias, signed error]
+    see_also: [Forecast Accuracy, Forecast Value Add]
+
+  - id: plan/terms/forecast-value-add
+    term: Forecast Value Add
+    category: Measures
+    stage: demand
+    definition: >-
+      Whether human adjustment improved on the statistical baseline or degraded it, measured by
+      comparing the error of each against actuals.
+    industry_definition: >-
+      The discipline that stops forecasting effort being assumed valuable because it was
+      expensive. A negative result is a legitimate and common finding, and is the reason the
+      baseline is preserved at all.
+    aliases: [FVA]
+    see_also: [Statistical Baseline, Demand Adjustment, Forecast Accuracy]
+
+  - id: plan/terms/plan-churn
+    term: Plan Churn
+    category: Measures
+    stage: demand
+    definition: >-
+      How much the plan for a given period moves between snapshots. Expected in open periods,
+      an exception inside the time fence.
+    industry_definition: >-
+      Also described as plan nervousness. It measures movement, not error - a plan moving towards
+      reality is improving - so it is read beside accuracy rather than instead of it.
+    aliases: [plan stability, nervousness, forecast churn]
+    see_also: [Snapshot, Time Fence, Forecast Accuracy]
+
+  - id: plan/terms/demand-segmentation
+    term: Demand Segmentation
+    category: Planning
+    stage: demand
+    definition: Grouping products by demand behaviour so that each group is forecast and reviewed differently.
+    industry_definition: >-
+      Commonly splits high-volume stable demand from low-volume erratic demand, because a single
+      forecasting method and a single accuracy target across both will serve neither well.
+    aliases: [segmentation, ABC-XYZ]
+    see_also: [Intermittent Demand, Product Family, Forecast Accuracy]
+
+  - id: plan/terms/intermittent-demand
+    term: Intermittent Demand
+    category: Planning
+    stage: demand
+    definition: Demand that occurs sporadically, with many zero periods between orders.
+    industry_definition: >-
+      Standard percentage-error measures behave badly here, because periods of zero actual have no
+      denominator. Practice is to use different methods and different accuracy measures for these
+      items rather than to report them alongside stable demand.
+    aliases: [lumpy demand, sporadic demand]
+    see_also: [Demand Segmentation, Forecast Accuracy]
+
+  - id: plan/terms/seasonality
+    term: Seasonality
+    category: Planning
+    stage: demand
+    definition: A repeating within-year pattern in demand that a forecast is expected to reproduce.
+    industry_definition: >-
+      Distinguished from trend and from one-off events. Confusing a promotion with seasonality
+      teaches the model to repeat a pattern that will not recur.
+    aliases: [seasonal profile, seasonal index]
+    see_also: [Statistical Baseline, Demand Adjustment]
+
+  - id: plan/terms/new-product-introduction
+    term: New Product Introduction
+    category: Planning
+    stage: demand
+    definition: Demand planning for a product with no demand history of its own.
+    industry_definition: >-
+      Typically forecast by analogy to a comparable product, so the plan rests almost entirely on
+      judgement. These lines are conventionally flagged, because normal accuracy expectations do
+      not apply to them.
+    aliases: [NPI, new product forecast]
+    see_also: [Demand Adjustment, Statistical Baseline]
+
+  # ---------------------------------------------------------------- supply ---
   - id: plan/terms/supply-plan
     term: Supply Plan
     category: Planning
+    stage: supply
     definition: A time-phased statement of available supply and planned production used to satisfy demand.
-    aliases: [production plan]
-    see_also: [Demand Plan, Coverage]
+    industry_definition: >-
+      The feasibility-aware counterpart to the demand plan. Produced by supply review, against the
+      approved demand plan rather than against any private forecast.
+    aliases: [production plan, supply review output]
+    see_also: [Demand Plan, Coverage, Constrained Demand]
+
   - id: plan/terms/coverage
     term: Coverage
     category: Measures
+    stage: supply
     definition: The share of planned demand that available or committed supply can satisfy for a defined horizon.
-    aliases: [supportability]
-    see_also: [Demand Plan, Supply Plan]
+    industry_definition: >-
+      Conventionally a percentage of demand, which makes the denominator decisive: coverage against
+      unconstrained demand and coverage against an already-constrained plan are different numbers
+      and are routinely confused.
+    aliases: [supportability, supply coverage]
+    see_also: [Constrained Demand, Planning Gap, Supply Plan]
+
+  - id: plan/terms/constrained-demand
+    term: Constrained Demand
+    category: Planning
+    stage: supply
+    definition: >-
+      The portion of demand that available materials, capacity and lead times can actually
+      support. An output of supply planning, not demand planning.
+    industry_definition: >-
+      Represents what can realistically be delivered. Quoting it as the demand plan erases the
+      shortfall, which is why the unconstrained figure is retained alongside it.
+    aliases: [supportable demand, constrained plan]
+    see_also: [Unconstrained Demand, Planning Gap, Coverage]
+
+  - id: plan/terms/planning-gap
+    term: Planning Gap
+    category: Measures
+    stage: supply
+    definition: >-
+      Unconstrained demand minus constrained demand. The shortfall the organisation must
+      resolve by buying more, building more, or re-prioritising.
+    industry_definition: >-
+      The output that makes supply review actionable. A gap of zero usually means demand was
+      constrained before it was stated, not that supply is sufficient.
+    aliases: [gap, shortfall, supply gap]
+    see_also: [Unconstrained Demand, Constrained Demand, Coverage]
+
+  - id: plan/terms/bill-of-materials
+    term: Bill of Materials
+    category: Planning
+    stage: supply
+    definition: The structured list of components required to build one unit of a finished product.
+    industry_definition: >-
+      The mechanism that converts a demand quantity into component requirements. Demand stated in
+      finished units cannot be compared with component availability until it is exploded through
+      this structure.
+    aliases: [BOM, product structure]
+    see_also: [Supply Plan, Constrained Demand]
+
+  - id: plan/terms/lead-time
+    term: Lead Time
+    category: Planning
+    stage: supply
+    definition: The elapsed time between committing to a supply action and the result being available.
+    industry_definition: >-
+      Determines how far ahead the plan must be firm to be actionable, and therefore where the
+      time fence sits. Cumulative lead time across a multi-level structure is usually far longer
+      than any single step.
+    aliases: [replenishment lead time, procurement lead time]
+    see_also: [Time Fence, Planning Horizon, Supply Plan]
+
+  - id: plan/terms/master-production-schedule
+    term: Master Production Schedule
+    category: Planning
+    stage: supply
+    definition: The agreed statement of what will be built, in what quantity, in which period.
+    industry_definition: >-
+      Sits between the demand plan and detailed execution. It is a commitment rather than a
+      forecast, and diverges from the demand plan wherever capacity or materials constrain it.
+    aliases: [MPS, build plan]
+    see_also: [Supply Plan, Constrained Demand, Bill of Materials]
+
+  - id: plan/terms/available-to-promise
+    term: Available to Promise
+    category: Measures
+    stage: supply
+    definition: The uncommitted supply that can still be promised to new demand in a given period.
+    industry_definition: >-
+      Derived from planned supply less what is already committed. Answers a different question
+      from coverage: what is left, rather than what proportion is satisfied.
+    aliases: [ATP]
+    see_also: [Coverage, Supply Plan, Master Production Schedule]
+
+  # ------------------------------------------------------------ governance ---
+  - id: plan/terms/plan-of-record
+    term: Plan of Record
+    category: Governance
+    stage: all
+    definition: >-
+      The single approved, versioned plan the organisation commits to act on. Authority comes
+      from approval, not from being the most recent or most accurate view.
+    industry_definition: >-
+      Distinguishes the plan being executed from newer or better analyses that have not been
+      approved. A more accurate unapproved number does not replace it until it goes through
+      approval, because coordination depends on everyone using the same one.
+    aliases: [POR, approved plan]
+    see_also: [Plan Version, Demand Review, Consensus Demand]
+
   - id: plan/terms/plan-version
     term: Plan Version
     category: Governance
+    stage: all
     definition: An immutable published release of approved planning knowledge and calculation rules.
-    aliases: [published version, snapshot]
-    see_also: [Demand Plan]
+    industry_definition: >-
+      Immutability is what makes a past decision explainable. If a version can be edited in place,
+      no one can later reconstruct what was known when a commitment was made.
+    aliases: [published version, plan revision]
+    see_also: [Plan of Record, Snapshot, Demand Plan]
+
+  - id: plan/terms/snapshot
+    term: Snapshot
+    category: Governance
+    stage: all
+    definition: >-
+      A capture of planning data as it stood at a point in time. A planning figure is not
+      reproducible unless its snapshot is stated.
+    industry_definition: >-
+      Distinct from plan version: a version is what was approved, a snapshot is what the data
+      looked like on a given day. Two people can quote the same version and still disagree if they
+      read different snapshots.
+    aliases: [as-of, as-of date, data capture]
+    see_also: [Plan Version, Plan Churn]
+
+  # ------------------------------------------------- supply planning (more) ---
+  - id: plan/terms/supportability
+    term: Supportability
+    category: Supply
+    stage: supply
+    definition: The quantity a supply plan can support for a product family and period, after parts, capacity and lead time are considered.
+    industry_definition: >-
+      Generally used for the answer to "how much of this could we actually build?", assessed
+      before any commitment is made. What may be counted towards it - stock on hand, scheduled
+      receipts, capacity, or some combination - is a local decision and a frequent source of
+      disagreement, because each choice makes the answer look different.
+    aliases: [supportable quantity, buildable quantity]
+    see_also: [Coverage, Planning Gap, Gating Component]
+
+  - id: plan/terms/gating-component
+    term: Gating Component
+    category: Supply
+    stage: supply
+    definition: The part that limits how much of a product family can be supported in a period.
+    industry_definition: >-
+      Commonly called the constraint, the limiting part or the pacing item. A product is only as
+      buildable as its scarcest component, so a single part can cap an otherwise healthy plan.
+      Identifying it is what turns a shortfall from a number into an action.
+    aliases: [constraint part, limiting part, pacing item]
+    see_also: [Component Shortage, Bill of Materials, Lead Time]
+
+  - id: plan/terms/component-shortage
+    term: Component Shortage
+    category: Supply
+    stage: supply
+    definition: Gross component requirement that remains uncovered after on-hand stock and scheduled receipts.
+    industry_definition: >-
+      Generally expressed as a net requirement after netting inventory and incoming supply against
+      gross need. Shortages are normally floored at zero per part before being summed, because
+      surplus of one component cannot substitute for scarcity of another.
+    aliases: [net requirement, part shortage, short parts]
+    see_also: [Gating Component, Bill of Materials, Scheduled Receipts]
+
+  - id: plan/terms/scheduled-receipts
+    term: Scheduled Receipts
+    category: Supply
+    stage: supply
+    definition: Supply already ordered and expected to arrive within the period, not yet received.
+    industry_definition: >-
+      Counted as incoming supply when netting requirements. Treating a scheduled receipt as
+      certain is a common source of optimism, since a promised date is a supplier's intention
+      rather than a fact until the goods arrive.
+    aliases: [on order, incoming supply, open orders]
+    see_also: [Component Shortage, Lead Time, On-Time Delivery]
+
+  - id: plan/terms/safety-stock
+    term: Safety Stock
+    category: Buffer
+    stage: buffer
+    definition: Inventory held deliberately above expected need, to absorb variability in demand and supply.
+    industry_definition: >-
+      Sized against the variability it is meant to absorb and the lead time over which the
+      organisation is exposed, rather than set as a flat quantity. Safety stock is a deliberate,
+      funded decision; inventory that simply accumulates is not safety stock, it is excess.
+    aliases: [buffer, buffer stock, cushion]
+    see_also: [Days of Supply, Buffer Coverage, Excess and Obsolete]
+
+  - id: plan/terms/days-of-supply
+    term: Days of Supply
+    category: Buffer
+    stage: buffer
+    definition: How many days the held buffer would last at the average rate of consumption.
+    industry_definition: >-
+      Converts a quantity into time, which is what makes it comparable across parts of very
+      different sizes. It is only meaningful when read against lead time - a week of cover behind
+      a twelve-week replenishment is a week of warning, not protection.
+    aliases: [DOS, days of cover, coverage days]
+    see_also: [Safety Stock, Lead Time, Buffer Coverage]
+
+  - id: plan/terms/buffer-coverage
+    term: Buffer Coverage
+    category: Buffer
+    stage: buffer
+    definition: The share of components holding at least their target buffer.
+    industry_definition: >-
+      Usually expressed as a count of parts rather than a quantity, on the reasoning that a build
+      is stopped by any one missing part and not by the average part. This makes it the right
+      shape for a risk question and the wrong shape for a value question.
+    aliases: [buffer health, buffer attainment]
+    see_also: [Days of Supply, Safety Stock]
+
+  - id: plan/terms/capacity
+    term: Capacity
+    category: Supply
+    stage: supply
+    definition: The volume that can be produced or processed in a period, independent of whether parts are available.
+    industry_definition: >-
+      Distinguished from material availability because the two constrain independently. A plan can
+      have every part on hand and still be unbuildable for want of a line, a test cell or people,
+      and the remedies for the two are entirely different.
+    aliases: [throughput capacity, capability]
+    see_also: [Supportability, Master Production Schedule]
+
+  # -------------------------------------------------------------- execution ---
+  - id: plan/terms/build-order
+    term: Build Order
+    category: Execution
+    stage: execution
+    definition: An instruction to build a stated quantity of a product family, at a site, within a period.
+    industry_definition: >-
+      Generally the point where a plan becomes an executable commitment with an owner and a date.
+      Unlike a plan it is not superseded by a newer version; it is completed, cancelled or left
+      open, and it records what was actually done.
+    aliases: [work order, production order, build]
+    see_also: [Schedule Attainment, Master Production Schedule]
+
+  - id: plan/terms/schedule-attainment
+    term: Schedule Attainment
+    category: Execution
+    stage: execution
+    definition: How much of the build plan was actually built, as a share of what was planned.
+    industry_definition: >-
+      Measures adherence to the plan rather than whether the plan was right, which is its main
+      limitation. A plan lowered to match a known shortage can attain fully while still leaving
+      demand unmet, so it is normally read beside the planning gap.
+    aliases: [build attainment, plan attainment, adherence]
+    see_also: [Build Order, Planning Gap, Plan versus Actual]
+
+  - id: plan/terms/purchase-order
+    term: Purchase Order
+    category: Execution
+    stage: execution
+    definition: A commitment to buy a stated quantity of a component from a supplier, against a promised date.
+    industry_definition: >-
+      Carries both a quantity and a date, which is why supplier performance needs at least two
+      measures. A line can satisfy one and fail the other, and reporting only the kinder of the
+      two is a well-known way to overstate performance.
+    aliases: [PO, order line, supply order]
+    see_also: [On-Time Delivery, On-Time In-Full, Fulfilment Rate]
+
+  - id: plan/terms/on-time-delivery
+    term: On-Time Delivery
+    category: Execution
+    stage: execution
+    definition: The share of received order lines that arrived on or before the promised date.
+    industry_definition: >-
+      Counts lines against a date and ignores quantity entirely, so a line that arrived punctually
+      with half the units still counts as on time. Whether the promised date or the originally
+      requested date is used changes the answer materially, and the choice is often left unstated.
+    aliases: [OTD, delivery performance, on-time performance]
+    see_also: [On-Time In-Full, Receipt Lag, Purchase Order]
+
+  - id: plan/terms/on-time-in-full
+    term: On-Time In-Full
+    category: Execution
+    stage: execution
+    definition: The share of received order lines that arrived both on or before the promised date and complete.
+    industry_definition: >-
+      Always equal to or harsher than on-time delivery, because it applies both tests to the same
+      lines. The gap between the two is itself informative: it is made up of deliveries that hit
+      the date and missed the quantity.
+    aliases: [OTIF, perfect order, DIFOT]
+    see_also: [On-Time Delivery, Fulfilment Rate]
+
+  - id: plan/terms/fulfilment-rate
+    term: Fulfilment Rate
+    category: Execution
+    stage: execution
+    definition: The share of ordered units actually received.
+    industry_definition: >-
+      Weighted by volume rather than by line, which is why it frequently disagrees with the
+      line-counting delivery measures over exactly the same orders. Both readings are correct;
+      they answer different questions, and quoting whichever is more flattering is the usual abuse.
+    aliases: [fill rate, receipt rate, quantity fulfilment]
+    see_also: [On-Time In-Full, Purchase Order]
+
+  - id: plan/terms/receipt-lag
+    term: Receipt Lag
+    category: Execution
+    stage: execution
+    definition: The number of days between the promised receipt date and the actual receipt date.
+    industry_definition: >-
+      Reported as a signed figure so that early arrivals are visible as well as late ones, since
+      goods arriving far ahead of need carry real cash and storage cost. Mean and median usually
+      differ sharply, because a small number of very late lines drag the average.
+    aliases: [delivery lag, schedule variance, days late]
+    see_also: [On-Time Delivery, Lead Time, Scheduled Receipts]
+
+  - id: plan/terms/plan-versus-actual
+    term: Plan versus Actual
+    category: Execution
+    stage: execution
+    definition: The comparison of what was planned against what actually happened, once a period has closed.
+    industry_definition: >-
+      The closing step of the planning cycle, and the only point at which plan quality can be
+      judged rather than asserted. Its value depends entirely on the plan having been captured and
+      frozen beforehand, which is why immutable plan versions matter.
+    aliases: [variance analysis, actuals comparison]
+    see_also: [Schedule Attainment, Forecast Accuracy, Plan Version]
+
+  - id: plan/terms/excess-and-obsolete
+    term: Excess and Obsolete
+    category: Execution
+    stage: execution
+    definition: Inventory held beyond foreseeable need, or no longer usable in any current product.
+    industry_definition: >-
+      Excess is a timing problem and obsolete is a design or lifecycle problem, and they are
+      usually reported together despite having different causes and different remedies. Both are
+      commonly the downstream consequence of a demand plan that was lowered after supply committed.
+    aliases: [E&O, excess inventory, obsolescence]
+    see_also: [Safety Stock, Coverage, Plan Churn]

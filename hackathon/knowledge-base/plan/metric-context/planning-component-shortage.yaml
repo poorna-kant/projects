@@ -1,0 +1,271 @@
+type: MetricContext
+id: plan/metric-context/planning-component-shortage
+domain: plan
+measure_key: planning.component.shortage
+name: Component Shortage
+status: Draft for review
+version: 0.1.0
+
+example_notice: >-
+  ILLUSTRATIVE EXAMPLE. This record documents an invented measure over an invented dataset,
+  created to demonstrate how business context and evidence are governed in SCOPE. It is not a
+  production definition and must not be reused as one.
+
+industry_definition:
+  note: >-
+    Described in general, widely used supply-chain planning language, written for this demo. It
+    is not a quotation from any standards body, certification syllabus or published dictionary,
+    and no organisation's house definition is reproduced here.
+  standard_usage: >-
+    In common supply-chain practice, component shortage measures the parts that are missing after
+    current stock and expected receipts are compared with gross requirement. It sits below the
+    family supply plan and explains why a finished-product plan cannot be fully supported.
+
+    The count is a simple unit count, but the operating meaning is not simple. A missing long-lead
+    accelerator card and a missing short-lead cable can both count as one unit short while creating
+    very different recovery problems.
+  typical_cycle_position: >-
+    Calculated during supply assessment and material review, before the family supportable
+    quantity is finalised.
+  what_practitioners_argue_about:
+    - Whether scheduled receipts should count when the supplier is late or uncertain.
+    - Whether buffers should be protected or consumed before declaring a shortage.
+    - Whether shortages should be valued equally when lead times differ.
+    - Whether null supply signals should be treated as zero or excluded as unknown.
+  demo_position: >-
+    The demo calculates shortage as gross requirement less on hand less scheduled receipts,
+    floored at zero for each component and product family before summing. Null scheduled receipts
+    mean unknown, not zero. A spare cable harness cannot substitute for a missing accelerator card.
+
+business_context:
+  plain_english: >-
+    Which parts are short, and by how many units.
+  what_it_measures: >-
+    The positive unit shortfall at component, product family and period level after on-hand stock
+    and scheduled receipts are applied to gross requirement.
+  why_it_matters: >-
+    Family-level coverage tells the business there is a short supply position. Component shortage
+    explains the physical reason. It turns an abstract gap into a part, a lead time and a recovery
+    problem.
+
+    This layer explains the 150-unit family-level gap for DEMO-STANDARD. DEMO-PART-A is short by
+    150 units, which is why DEMO-STANDARD coverage is 90%.
+  unit: units
+  grain: One value per component, product family, planning period, plan version and snapshot.
+  planning_context: >-
+    Produced by material planning as evidence for the supply review and for any change to the
+    supportable finished-product quantity.
+
+inclusions:
+  - Current-version component rows for the selected snapshot.
+  - Rows with known gross requirement, on-hand quantity and scheduled receipts.
+  - Positive shortages after line-level flooring.
+exclusions:
+  - Superseded plan versions.
+  - Rows with null scheduled receipts, because the receipt position is unknown.
+  - Component surplus, which is not netted against shortage on another component.
+
+interpretation:
+  read_it_as: "The missing component units after known supply has been counted."
+  do_not_read_it_as:
+    - A count of finished products that can be built.
+    - A priority ranking. The measure treats every part alike unless read with lead time and buffer.
+    - Permission to substitute one component's surplus for another component's shortage.
+  common_misreadings:
+    - >-
+      Summing net requirements before flooring. That lets spare harnesses hide missing cards.
+    - >-
+      Treating a null scheduled receipt as zero. Unknown is not the same as no receipt.
+    - >-
+      Reading 220 short units as one problem. It is two component problems with different lead times.
+  read_alongside: >-
+    Planning Gap, Supply Coverage, component lead time, buffer quantity and supplier delivery lag.
+
+stewardship:
+  business_owner_role: Material Planning Lead (fictional demo role)
+  co_owner_role: Supply Planning Lead (fictional demo role)
+  data_steward_role: Planning Data Steward (fictional demo role)
+  technical_owner_role: Planning Semantic Layer Engineer (fictional demo role)
+  note: Fictional placeholder roles. No real person is named or implied.
+
+source_mapping:
+  disclaimer: An agreed demo contract over an invented table. Not a production mapping.
+  system: plan/systems/demo-planning-workbench
+  object: plan/objects/demo-component
+  primary_table: demo.component
+  measure_column: gross_requirement
+  fields:
+    - name: gross_requirement
+      role: Requirement input
+      description: Component units required for the family and period.
+    - name: on_hand
+      role: Supply input
+      description: Component units already available in the demo position.
+    - name: scheduled_receipts
+      role: Supply input
+      description: Component units expected from scheduled receipts; null means unknown.
+    - name: component_id
+      role: Grain key
+      description: Demo component identifier.
+    - name: product_family
+      role: Grain key
+      description: Demo product family using the component.
+    - name: period
+      role: Grain key
+      description: Planning period for the requirement.
+    - name: lead_time_days
+      role: Risk context
+      description: Indicative replenishment lead time used to interpret severity.
+    - name: buffer_quantity
+      role: Risk context
+      description: Planned buffer units held for the component.
+    - name: plan_version
+      role: Filter
+      description: Latest plan version in the selected snapshot only.
+    - name: snapshot_date
+      role: Snapshot key
+      description: Date of the component evidence.
+
+dimensions:
+  supported: [component_id, product_family, period, supplier]
+  not_supported:
+    - name: build order
+      reason: The component table is a planning position, not an execution build-order record.
+    - name: customer
+      reason: The demo component table has no customer grain.
+
+calculation_contract:
+  disclaimer: An agreed demo rule, not a production specification.
+  aggregate: sum
+  expression: SUM(MAX(gross_requirement - on_hand - scheduled_receipts, 0))
+
+  shortage_rule:
+    definition: MAX(gross_requirement - on_hand - scheduled_receipts, 0)
+    level: component, product_family and period
+    note: >-
+      Flooring happens per component before summing. Components are not interchangeable in this
+      measure.
+
+  input_rule:
+    gross_requirement: Required units for the component row.
+    on_hand: Known units available at the snapshot.
+    scheduled_receipts: Known expected receipt units. Null is excluded as unknown.
+
+  null_handling: >-
+    Null scheduled receipts are excluded and reported. DEMO-PART-E is excluded for this reason.
+    The demo does not read null as zero, because that would create a confident 750-unit shortage
+    from an unanswered supply question.
+
+  severity_context: >-
+    The shortage count treats every part alike. Lead time and buffer explain why equal shortages
+    may require different action.
+
+  scope_filters:
+    - plan_version = the latest version present in the selected snapshot
+    - snapshot_date = the selected snapshot
+
+  additivity:
+    within_snapshot: Additive only after component-level flooring.
+    across_snapshot: Not additive.
+
+snapshot_context:
+  mode: LatestSnapshot
+  run_date_column: snapshot_date
+  rule: Resolve to the most recent snapshot unless an as-of date is supplied, and always state which was used.
+
+worked_example:
+  disclaimer: Entirely invented rows, shipped in plan/_data/demo-components.json.
+  as_of_snapshot: 2026-03-14
+  plan_version: v3
+  expected_result:
+    - component_id: DEMO-PART-A
+      product_family: DEMO-STANDARD
+      period: 2026-Q1
+      calculation: 1500 - 400 - 950
+      shortage_units: 150
+      lead_time_days: 84
+      note: Explains the DEMO-STANDARD family coverage of 90%.
+    - component_id: DEMO-PART-B
+      product_family: DEMO-STANDARD
+      period: 2026-Q1
+      calculation: 3000 - 1800 - 1400
+      shortage_units: 0
+      spare_units: 200
+      note: Covered.
+    - component_id: DEMO-PART-B
+      product_family: DEMO-PREMIUM
+      period: 2026-Q2
+      calculation: 1500 - 600 - 900
+      shortage_units: 0
+      spare_units: 0
+      note: Exactly covered.
+    - component_id: DEMO-PART-C
+      product_family: DEMO-EDGE
+      period: 2026-Q3
+      calculation: 620 - 150 - 400
+      shortage_units: 70
+      lead_time_days: 126
+      buffer_quantity: 0
+      note: Worst risk combination in the demo.
+    - component_id: DEMO-PART-D
+      product_family: DEMO-EDGE
+      period: 2026-Q3
+      calculation: 1240 - 900 - 500
+      shortage_units: 0
+      spare_units: 160
+      note: Covered.
+    - component_id: DEMO-PART-E
+      product_family: DEMO-PREMIUM
+      period: 2026-Q2
+      shortage_units: excluded
+      note: Scheduled receipts are null, so the position is unknown.
+  total_check:
+    value: 220
+    unit: units
+    component_count: 2
+    note: DEMO-PART-A contributes 150 and DEMO-PART-C contributes 70.
+  edge_cases:
+    - name: Component non-substitution
+      scenario: DEMO-PART-D has spare units while DEMO-PART-C is short.
+      expected_behaviour: Keep DEMO-PART-C shortage at 70. A spare cable harness does not replace an accelerator card.
+    - name: Null receipt position
+      scenario: DEMO-PART-E has null scheduled receipts.
+      expected_behaviour: Exclude and report as unknown, not zero.
+    - name: Equal count, unequal risk
+      scenario: A short-lead part and a 126-day part show the same shortage count.
+      expected_behaviour: Report the same units but read severity with lead time and buffer.
+
+evidence:
+  traceability_statement: Shows where the component number claims to come from, so a reviewer can follow the chain.
+  quality_disclaimer: >-
+    A source reference demonstrates traceability only. It does not mean receipts are firm, stock is
+    usable, or lead times are reliable.
+  references:
+    - kind: Semantic layer measure
+      ref: plan/_runtime/registry.json -> measures['planning.component.shortage']
+    - kind: Object mapping
+      ref: plan/objects/demo-component
+    - kind: Object mapping
+      ref: plan/objects/demo-supply
+    - kind: Governed terms
+      ref: plan/terms/index.yaml -> Component Shortage, Scheduled Receipt, Buffer
+
+expected_versus_actual:
+  items:
+    - topic: Calculation
+      documented_expectation: SUM(MAX(gross_requirement - on_hand - scheduled_receipts, 0)), floored by component before summing.
+      currently_executed: Documented against the invented component table.
+      gap: false
+    - topic: Null handling
+      documented_expectation: Null scheduled receipts are excluded and reported as unknown.
+      currently_executed: DEMO-PART-E is excluded from the worked total.
+      gap: false
+    - topic: Severity weighting
+      documented_expectation: Shortages should be prioritised using lead time, buffer and build impact.
+      currently_executed: Units are counted equally; severity is context only.
+      gap: true
+
+open_questions:
+  - Should component shortage be published with a lead-time severity band?
+  - Should protected buffer be excluded from available supply before calculating shortage?
+  - Who decides when a scheduled receipt is firm enough to count?
